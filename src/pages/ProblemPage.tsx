@@ -7,7 +7,7 @@ import type { Problem } from '../types';
 export default function ProblemPage() {
     const { listId, problemId } = useParams();
     const navigate = useNavigate();
-    const { state, addProblem, updateProblem, updateList, deleteList } = useStore();
+    const { state, addProblem, updateProblem, updateList, deleteList, deleteProblem } = useStore();
 
     const [newSubtaskName, setNewSubtaskName] = useState('');
     const [isAdding, setIsAdding] = useState(false);
@@ -71,6 +71,21 @@ export default function ProblemPage() {
         // window.confirm might be blocked or causing issues
         deleteList(list.id);
         navigate('/');
+    };
+
+    const handleDeleteProblem = () => {
+        if (currentProblem) {
+            deleteProblem(list.id, currentProblem.id);
+            // Navigate up one level
+            if (breadcrumbs.length > 1) {
+                // breadcrumbs has the full path. The parent is at index length-2
+                const parent = breadcrumbs[breadcrumbs.length - 2];
+                navigate(`/list/${list.id}/problem/${parent.id}`);
+            } else {
+                // If top level problem, go back to list
+                navigate(`/list/${list.id}`);
+            }
+        }
     };
 
     return (
@@ -138,9 +153,21 @@ export default function ProblemPage() {
                         </div>
                     ) : (
                         <div style={{ flex: 1 }}>
-                            <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', wordBreak: 'break-word' }}>
-                                {currentProblem.name}
-                            </h1>
+                            <input
+                                type="text"
+                                value={currentProblem.name}
+                                onChange={(e) => updateProblem(list.id, currentProblem!.id, { name: e.target.value })}
+                                style={{
+                                    fontSize: '2rem',
+                                    fontWeight: '700',
+                                    marginBottom: '1rem',
+                                    width: '100%',
+                                    border: 'none',
+                                    outline: 'none',
+                                    backgroundColor: 'transparent',
+                                    fontFamily: 'inherit'
+                                }}
+                            />
                             <textarea
                                 value={currentProblem.notes || ''}
                                 onChange={handleNotesChange}
@@ -155,48 +182,49 @@ export default function ProblemPage() {
                                     lineHeight: '1.6',
                                     border: 'none', // Make notes cleaner too
                                     outline: 'none',
-                                    backgroundColor: 'transparent'
+                                    backgroundColor: 'transparent',
+                                    fontFamily: 'inherit'
                                 }}
                             />
                         </div>
                     )}
 
-                    {!currentProblem && (
-                        <div
-                            style={{ position: 'relative' }}
-                            onClick={(e) => e.stopPropagation()}
+                    <div
+                        style={{ position: 'relative' }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            type="button"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setIsMenuOpen(!isMenuOpen);
+                            }}
+                            style={{
+                                padding: '0.5rem',
+                                cursor: 'pointer',
+                                color: '#888',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                            aria-label="Menu"
                         >
-                            <button
-                                type="button"
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setIsMenuOpen(!isMenuOpen);
-                                }}
-                                style={{
-                                    padding: '0.5rem',
-                                    cursor: 'pointer',
-                                    color: '#888',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                                aria-label="Menu"
-                            >
-                                <MoreHorizontal size={24} />
-                            </button>
-                            {isMenuOpen && (
-                                <div style={{
-                                    position: 'absolute',
-                                    top: '100%',
-                                    right: 0,
-                                    backgroundColor: '#fff',
-                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                    borderRadius: '8px',
-                                    padding: '0.5rem',
-                                    zIndex: 10,
-                                    minWidth: '160px',
-                                    border: '1px solid #f0f0f0'
-                                }}>
+                            <MoreHorizontal size={24} />
+                        </button>
+                        {isMenuOpen && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: 0,
+                                backgroundColor: '#fff',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                borderRadius: '8px',
+                                padding: '0.5rem',
+                                zIndex: 10,
+                                minWidth: '160px',
+                                border: '1px solid #f0f0f0'
+                            }}>
+                                {!currentProblem ? (
                                     <button
                                         type="button"
                                         onClick={(e) => {
@@ -218,10 +246,32 @@ export default function ProblemPage() {
                                         <Trash2 size={16} />
                                         Delete List
                                     </button>
-                                </div>
-                            )}
-                        </div>
-                    )}
+                                ) : (
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteProblem();
+                                        }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.75rem',
+                                            padding: '0.75rem 1rem',
+                                            width: '100%',
+                                            color: '#ef4444',
+                                            fontWeight: '500',
+                                            textAlign: 'left',
+                                            fontSize: '0.9rem',
+                                        }}
+                                    >
+                                        <Trash2 size={16} />
+                                        Delete Task
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </header>
 

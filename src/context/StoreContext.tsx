@@ -8,6 +8,7 @@ interface StoreContextType {
     updateProblem: (listId: string, problemId: string, updates: Partial<Problem>) => void;
     updateList: (listId: string, updates: Partial<List>) => void;
     deleteList: (listId: string) => void;
+    deleteProblem: (listId: string, problemId: string) => void;
     // We might need more specific actions or a generic dispatch
 }
 
@@ -129,8 +130,31 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }));
     };
 
+    const findProblemAndDelete = (problems: Problem[], problemId: string): boolean => {
+        for (let i = 0; i < problems.length; i++) {
+            if (problems[i].id === problemId) {
+                problems.splice(i, 1);
+                return true;
+            }
+            if (findProblemAndDelete(problems[i].subproblems, problemId)) return true;
+        }
+        return false;
+    };
+
+    const deleteProblem = (listId: string, problemId: string) => {
+        setState(prev => {
+            const newLists = prev.lists.map(list => {
+                if (list.id !== listId) return list;
+                const updatedList = structuredClone(list);
+                findProblemAndDelete(updatedList.problems, problemId);
+                return updatedList;
+            });
+            return { lists: newLists };
+        });
+    };
+
     return (
-        <StoreContext.Provider value={{ state, addList, addProblem, updateProblem, updateList, deleteList }}>
+        <StoreContext.Provider value={{ state, addList, addProblem, updateProblem, updateList, deleteList, deleteProblem }}>
             {children}
         </StoreContext.Provider>
     );
