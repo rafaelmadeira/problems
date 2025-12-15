@@ -4,6 +4,7 @@ export interface Problem {
   notes: string;
   dueDate: string | null;
   priority: 'today' | 'this_week' | 'later' | 'someday';
+  status: 'to_do' | 'doing' | 'waiting' | 'done';
   subproblems: Problem[];
   completed: boolean;
 }

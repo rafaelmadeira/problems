@@ -314,6 +314,33 @@ export default function ProblemPage() {
                                     </select>
                                 </div>
 
+                                {/* Status */}
+                                <div style={{ color: '#888', fontSize: '0.95rem' }}>Status</div>
+                                <div>
+                                    <select
+                                        value={currentProblem.status || 'to_do'}
+                                        onChange={(e) => updateProblem(list.id, currentProblem!.id, { status: e.target.value as Problem['status'] })}
+                                        style={{
+                                            appearance: 'none',
+                                            backgroundColor: 'transparent',
+                                            border: 'none',
+                                            fontSize: '0.95rem',
+                                            color: '#111',
+                                            cursor: 'pointer',
+                                            padding: 0,
+                                            fontFamily: 'inherit',
+                                            textDecoration: 'underline',
+                                            textUnderlineOffset: '3px',
+                                            textDecorationColor: '#ddd'
+                                        }}
+                                    >
+                                        <option value="to_do">To Do</option>
+                                        <option value="doing">Doing</option>
+                                        <option value="waiting">Waiting</option>
+                                        <option value="done">Done</option>
+                                    </select>
+                                </div>
+
                                 {/* Due Date */}
                                 <div style={{ color: '#888', fontSize: '0.95rem' }}>Due Date</div>
                                 <div>
