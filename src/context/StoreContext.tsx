@@ -9,6 +9,7 @@ interface StoreContextType {
     updateList: (listId: string, updates: Partial<List>) => void;
     deleteList: (listId: string) => void;
     deleteProblem: (listId: string, problemId: string) => void;
+    reorderLists: (newLists: List[]) => void;
     // We might need more specific actions or a generic dispatch
 }
 
@@ -153,8 +154,15 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
     };
 
+    const reorderLists = (newLists: List[]) => {
+        setState(prev => ({
+            ...prev,
+            lists: newLists
+        }));
+    };
+
     return (
-        <StoreContext.Provider value={{ state, addList, addProblem, updateProblem, updateList, deleteList, deleteProblem }}>
+        <StoreContext.Provider value={{ state, addList, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderLists }}>
             {children}
         </StoreContext.Provider>
     );

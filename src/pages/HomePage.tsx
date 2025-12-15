@@ -4,9 +4,10 @@ import { Link } from 'react-router-dom';
 import { Plus, ChevronRight } from 'lucide-react';
 
 export default function HomePage() {
-    const { state, addList } = useStore();
+    const { state, addList, reorderLists } = useStore();
     const [isCreating, setIsCreating] = useState(false);
     const [newListName, setNewListName] = useState('');
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
@@ -17,47 +18,86 @@ export default function HomePage() {
         }
     };
 
+    const handleDragStart = (index: number) => {
+        setDraggedIndex(index);
+    };
+
+    const handleDragEnter = (targetIndex: number) => {
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+        const newLists = [...state.lists];
+        const draggedItem = newLists[draggedIndex];
+
+        // Remove dragged item
+        newLists.splice(draggedIndex, 1);
+        // Insert at new position
+        newLists.splice(targetIndex, 0, draggedItem);
+
+        reorderLists(newLists);
+        setDraggedIndex(targetIndex);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+    };
+
     return (
         <div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {state.lists.map(list => {
+                {state.lists.map((list, index) => {
                     const count = list.problems.length;
                     return (
-                        <Link
+                        <div
                             key={list.id}
-                            to={`/list/${list.id}`}
+                            draggable
+                            onDragStart={() => handleDragStart(index)}
+                            onDragEnter={() => handleDragEnter(index)}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={(e) => e.preventDefault()}
                             style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                padding: '1.5rem',
-                                backgroundColor: '#f9f9f9',
-                                borderRadius: '12px',
-                                transition: 'background-color 0.2s'
+                                cursor: 'move' // Indicate draggable
                             }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0f0f0'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
                         >
-                            <div>
-                                <h2 style={{ fontSize: '1.25rem', fontWeight: '600' }}>{list.name}</h2>
-                                {list.description && <p style={{ color: '#888', marginTop: '0.25rem' }}>{list.description}</p>}
-                            </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                {count > 0 && (
-                                    <span style={{
-                                        backgroundColor: '#e5e5e5',
-                                        padding: '0.25rem 0.75rem',
-                                        borderRadius: '999px',
-                                        fontSize: '0.875rem',
-                                        fontWeight: '600',
-                                        color: '#333'
-                                    }}>
-                                        {count}
-                                    </span>
-                                )}
-                                <ChevronRight size={20} color="#ccc" />
-                            </div>
-                        </Link>
+                            <Link
+                                to={`/list/${list.id}`}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '1.5rem',
+                                    backgroundColor: draggedIndex === index ? '#f0f0f0' : '#f9f9f9', // Visual feedback
+                                    borderRadius: '12px',
+                                    transition: 'background-color 0.2s',
+                                    opacity: draggedIndex === index ? 0.5 : 1 // Dim dragged item
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (draggedIndex === null) e.currentTarget.style.backgroundColor = '#f0f0f0';
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (draggedIndex === null) e.currentTarget.style.backgroundColor = '#f9f9f9';
+                                }}
+                            >
+                                <div>
+                                    <h2 style={{ fontSize: '1.25rem', fontWeight: '600' }}>{list.name}</h2>
+                                    {list.description && <p style={{ color: '#888', marginTop: '0.25rem' }}>{list.description}</p>}
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                    {count > 0 && (
+                                        <span style={{
+                                            backgroundColor: '#e5e5e5',
+                                            padding: '0.25rem 0.75rem',
+                                            borderRadius: '999px',
+                                            fontSize: '0.875rem',
+                                            fontWeight: '600',
+                                            color: '#333'
+                                        }}>
+                                            {count}
+                                        </span>
+                                    )}
+                                    <ChevronRight size={20} color="#ccc" />
+                                </div>
+                            </Link>
+                        </div>
                     );
                 })}
             </div>
