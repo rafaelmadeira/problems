@@ -44,7 +44,7 @@ export default function HomePage() {
     return (
         <div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {state.lists.map((list, index) => {
+                {state.lists.filter(l => l.id !== 'inbox').map((list, index) => {
                     const count = list.problems.length;
                     return (
                         <div
