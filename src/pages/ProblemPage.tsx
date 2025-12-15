@@ -277,27 +277,46 @@ export default function ProblemPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {subElements.map(child => {
-                    const childCount = child.subproblems.length;
+                    const childCount = child.subproblems.filter(p => !p.completed).length;
                     return (
                         <div
                             key={child.id}
+                            onClick={() => navigate(`/list/${list.id}/problem/${child.id}`)}
                             style={{
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 padding: '1rem',
-                                borderBottom: '1px solid #f0f0f0'
+                                borderBottom: '1px solid #f0f0f0',
+                                cursor: 'pointer',
+                                transition: 'background-color 0.2s',
+                                borderRadius: '8px'
                             }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                 <button
-                                    onClick={() => toggleComplete(child)}
-                                    style={{ color: child.completed ? '#22c55e' : '#e5e5e5' }}
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        toggleComplete(child);
+                                    }}
+                                    style={{
+                                        color: child.completed ? '#22c55e' : '#e5e5e5',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0
+                                    }}
                                 >
                                     <CheckCircle2 size={24} fill={child.completed ? "#22c55e" : "transparent"} color={child.completed ? "#fff" : "#e5e5e5"} />
                                 </button>
                                 <Link
                                     to={`/list/${list.id}/problem/${child.id}`}
+                                    onClick={(e) => e.stopPropagation()}
                                     style={{
                                         fontSize: '1.1rem',
                                         textDecoration: child.completed ? 'line-through' : 'none',
@@ -312,14 +331,20 @@ export default function ProblemPage() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                                 {childCount > 0 && (
                                     <span style={{
-                                        color: '#888',
-                                        fontSize: '0.9rem',
-                                        fontWeight: '500'
+                                        backgroundColor: '#e5e5e5',
+                                        padding: '0.25rem 0.75rem',
+                                        borderRadius: '999px',
+                                        fontSize: '0.875rem',
+                                        fontWeight: '600',
+                                        color: '#333'
                                     }}>
-                                        {childCount} subtasks
+                                        {childCount}
                                     </span>
                                 )}
-                                <Link to={`/list/${list.id}/problem/${child.id}`}>
+                                <Link
+                                    to={`/list/${list.id}/problem/${child.id}`}
+                                    onClick={(e) => e.stopPropagation()}
+                                >
                                     <ChevronRight size={20} color="#e5e5e5" />
                                 </Link>
                             </div>
