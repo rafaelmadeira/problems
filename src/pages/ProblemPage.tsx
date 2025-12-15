@@ -221,7 +221,7 @@ export default function ProblemPage() {
                 <Link to="/" style={{ color: 'inherit' }}>Home</Link>
                 <ChevronRight size={14} />
                 {!currentProblem ? (
-                    <span style={{ fontWeight: 'bold', color: '#333' }}>{list.name}</span>
+                    <span style={{ fontWeight: 600, color: '#333' }}>{list.name}</span>
                 ) : (
                     <Link to={`/list/${list.id}`} style={{ color: 'inherit' }}>{list.name}</Link>
                 )}
@@ -239,7 +239,7 @@ export default function ProblemPage() {
                 {currentProblem && (
                     <>
                         <ChevronRight size={14} />
-                        <span style={{ fontWeight: 'bold', color: '#333' }}>{currentProblem.name}</span>
+                        <span style={{ fontWeight: 600, color: '#333' }}>{currentProblem.name}</span>
                     </>
                 )}
             </nav>
