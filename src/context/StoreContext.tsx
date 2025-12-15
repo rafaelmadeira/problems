@@ -71,7 +71,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             notes: data.notes,
             dueDate: data.dueDate,
             priority: data.priority,
-            status: 'to_do',
+            status: 'to_solve',
             subproblems: [],
             completed: false
         };

@@ -10,13 +10,15 @@ export default function ProblemPage() {
     const { state, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderProblems, moveProblemToList } = useStore();
 
     const [newSubtaskName, setNewSubtaskName] = useState('');
-    const [newPriority, setNewPriority] = useState<Problem['priority']>('today');
+    const [newPriority, setNewPriority] = useState<Problem['priority']>('someday');
     const [newDueDate, setNewDueDate] = useState('');
     const [newNotes, setNewNotes] = useState('');
     const [isAdding, setIsAdding] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [isMoveListOpen, setIsMoveListOpen] = useState(false);
+
+    const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
 
     // 1. Find the List
     const list = state.lists.find(l => l.id === listId);
@@ -67,7 +69,7 @@ export default function ProblemPage() {
                 notes: newNotes
             });
             setNewSubtaskName('');
-            setNewPriority('today');
+            setNewPriority('someday');
             setNewDueDate('');
             setNewNotes('');
             setIsAdding(false);
@@ -81,7 +83,22 @@ export default function ProblemPage() {
     };
 
     const toggleComplete = (p: Problem) => {
-        updateProblem(list.id, p.id, { completed: !p.completed });
+        const newCompleted = !p.completed;
+        updateProblem(list.id, p.id, {
+            completed: newCompleted,
+            status: newCompleted ? 'solved' : 'to_solve'
+        });
+
+        if (newCompleted) {
+            setSolvedMessages(prev => ({ ...prev, [p.id]: true }));
+            setTimeout(() => {
+                setSolvedMessages(prev => {
+                    const next = { ...prev };
+                    delete next[p.id];
+                    return next;
+                });
+            }, 2000);
+        }
     };
 
     const handleDeleteList = () => {
@@ -318,8 +335,14 @@ export default function ProblemPage() {
                                 <div style={{ color: '#888', fontSize: '0.95rem' }}>Status</div>
                                 <div>
                                     <select
-                                        value={currentProblem.status || 'to_do'}
-                                        onChange={(e) => updateProblem(list.id, currentProblem!.id, { status: e.target.value as Problem['status'] })}
+                                        value={currentProblem.status || 'to_solve'}
+                                        onChange={(e) => {
+                                            const newStatus = e.target.value as Problem['status'];
+                                            updateProblem(list.id, currentProblem!.id, {
+                                                status: newStatus,
+                                                completed: newStatus === 'solved'
+                                            });
+                                        }}
                                         style={{
                                             appearance: 'none',
                                             backgroundColor: 'transparent',
@@ -334,10 +357,10 @@ export default function ProblemPage() {
                                             textDecorationColor: '#ddd'
                                         }}
                                     >
-                                        <option value="to_do">To Do</option>
-                                        <option value="doing">Doing</option>
-                                        <option value="waiting">Waiting</option>
-                                        <option value="done">Done</option>
+                                        <option value="to_solve">To Solve</option>
+                                        <option value="solving">Solving</option>
+                                        <option value="blocked">Blocked</option>
+                                        <option value="solved">Solved!</option>
                                     </select>
                                 </div>
 
@@ -509,6 +532,14 @@ export default function ProblemPage() {
                 </div>
             </header>
 
+            <style>{`
+                @keyframes fadeOutUp {
+                    0% { opacity: 1; transform: translateX(-50%) translateY(0); }
+                    70% { opacity: 1; transform: translateX(-50%) translateY(-5px); }
+                    100% { opacity: 0; transform: translateX(-50%) translateY(-15px); }
+                }
+            `}</style>
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {subElements.map((child, index) => {
                     const childCount = child.subproblems.filter(p => !p.completed).length;
@@ -541,24 +572,57 @@ export default function ProblemPage() {
                             }}
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleComplete(child);
-                                    }}
-                                    style={{
-                                        color: child.completed ? '#22c55e' : '#e5e5e5',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        background: 'none',
-                                        border: 'none',
-                                        padding: 0
-                                    }}
-                                >
-                                    <CheckCircle2 size={24} fill={child.completed ? "#22c55e" : "transparent"} color={child.completed ? "#fff" : "#e5e5e5"} />
-                                </button>
+                                <div style={{ position: 'relative' }}>
+                                    {solvedMessages[child.id] && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            bottom: '100%',
+                                            left: '50%',
+                                            transform: 'translateX(-50%)',
+                                            backgroundColor: '#22c55e',
+                                            color: 'white',
+                                            padding: '4px 8px',
+                                            borderRadius: '6px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: '600',
+                                            whiteSpace: 'nowrap',
+                                            animation: 'fadeOutUp 2s ease-out forwards',
+                                            pointerEvents: 'none',
+                                            marginBottom: '8px',
+                                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                                        }}>
+                                            Problem solved!
+                                            <div style={{
+                                                position: 'absolute',
+                                                top: '100%',
+                                                left: '50%',
+                                                transform: 'translateX(-50%)',
+                                                borderLeft: '4px solid transparent',
+                                                borderRight: '4px solid transparent',
+                                                borderTop: '4px solid #22c55e'
+                                            }} />
+                                        </div>
+                                    )}
+                                    <button
+                                        title="solve problem"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            toggleComplete(child);
+                                        }}
+                                        style={{
+                                            color: child.completed ? '#22c55e' : '#e5e5e5',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: 0
+                                        }}
+                                    >
+                                        <CheckCircle2 size={24} fill={child.completed ? "#22c55e" : "transparent"} color={child.completed ? "#fff" : "#e5e5e5"} />
+                                    </button>
+                                </div>
                                 <Link
                                     to={`/list/${list.id}/problem/${child.id}`}
                                     onClick={(e) => e.stopPropagation()}
