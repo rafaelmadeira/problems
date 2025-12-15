@@ -7,10 +7,13 @@ import { CheckCircle2 } from 'lucide-react';
 function App() {
   const { state } = useStore();
 
-  // Calculate total recursive problems
+  // Calculate total recursive problems (only incomplete)
   const countProblems = (problems: any[]): number => {
-    let count = problems.length; // Count these problems
+    let count = 0;
     for (const p of problems) {
+      if (!p.completed) {
+        count += 1;
+      }
       count += countProblems(p.subproblems);
     }
     return count;
