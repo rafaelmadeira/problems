@@ -95,11 +95,30 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
     };
 
+    // Helper to recursively mark children
+    const setCompletionRecursively = (problems: Problem[], completed: boolean) => {
+        for (const p of problems) {
+            p.completed = completed;
+            p.status = completed ? 'solved' : 'to_solve';
+            if (p.subproblems.length > 0) {
+                setCompletionRecursively(p.subproblems, completed);
+            }
+        }
+    };
+
     // Helper to find and update
     const findProblemAndUpdate = (problems: Problem[], problemId: string, updates: Partial<Problem>): boolean => {
         for (let i = 0; i < problems.length; i++) {
             if (problems[i].id === problemId) {
-                problems[i] = { ...problems[i], ...updates };
+                // Apply updates
+                const updatedProblem = { ...problems[i], ...updates };
+
+                // Recursive Logic: If 'completed' field is present, apply to all children
+                if (updates.completed !== undefined && updatedProblem.subproblems.length > 0) {
+                    setCompletionRecursively(updatedProblem.subproblems, updates.completed);
+                }
+
+                problems[i] = updatedProblem;
                 return true;
             }
             if (findProblemAndUpdate(problems[i].subproblems, problemId, updates)) return true;
