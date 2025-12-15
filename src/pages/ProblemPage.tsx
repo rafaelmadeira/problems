@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight, Plus, CheckCircle2 } from 'lucide-react';
+import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2 } from 'lucide-react';
 import type { Problem } from '../types';
 
 export default function ProblemPage() {
     const { listId, problemId } = useParams();
-    const { state, addProblem, updateProblem } = useStore();
+    const navigate = useNavigate();
+    const { state, addProblem, updateProblem, updateList, deleteList } = useStore();
 
     const [newSubtaskName, setNewSubtaskName] = useState('');
     const [isAdding, setIsAdding] = useState(false);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     // 1. Find the List
     const list = state.lists.find(l => l.id === listId);
 
     // 2. Find the Problem and Path (if problemId exists)
-    // Helper to find path: returns array of Problems + the target Problem
     const findPath = (problems: Problem[], targetId: string, currentPath: Problem[] = []): Problem[] | null => {
         for (const p of problems) {
             if (p.id === targetId) {
@@ -39,17 +40,12 @@ export default function ProblemPage() {
         }
     }
 
-    // If problemId provided but not found
     if (problemId && !currentProblem) {
         return <div style={{ padding: '2rem' }}>Problem not found</div>;
     }
 
-    // 3. Determine View Data
-    // If no problemId, we are at List root
-    const title = currentProblem ? currentProblem.name : list.name;
-    const description = currentProblem ? currentProblem.notes : list.description;
+    // View Data
     const subElements = currentProblem ? currentProblem.subproblems : list.problems;
-    // For List Root, parentId is null. For Problem, parentId is currentProblem.id
     const currentParentId = currentProblem ? currentProblem.id : null;
 
     const handleAdd = (e: React.FormEvent) => {
@@ -67,20 +63,27 @@ export default function ProblemPage() {
         }
     };
 
-    // Toggle complete?
     const toggleComplete = (p: Problem) => {
         updateProblem(list.id, p.id, { completed: !p.completed });
     };
 
+    const handleDeleteList = () => {
+        // window.confirm might be blocked or causing issues
+        deleteList(list.id);
+        navigate('/');
+    };
+
     return (
-        <div>
+        <div style={{ position: 'relative', minHeight: '100vh' }} onClick={() => setIsMenuOpen(false)}>
             {/* Breadcrumbs */}
             <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', color: '#888', fontSize: '0.9rem' }}>
                 <Link to="/" style={{ color: 'inherit' }}>Home</Link>
                 <ChevronRight size={14} />
-                <Link to={`/list/${list.id}`} style={{ fontWeight: !currentProblem ? 'bold' : 'normal', color: !currentProblem ? '#333' : 'inherit' }}>
-                    {list.name}
-                </Link>
+                {!currentProblem ? (
+                    <span style={{ fontWeight: 'bold', color: '#333' }}>{list.name}</span>
+                ) : (
+                    <Link to={`/list/${list.id}`} style={{ color: 'inherit' }}>{list.name}</Link>
+                )}
                 {breadcrumbs.slice(0, -1).map(p => (
                     <React.Fragment key={p.id}>
                         <ChevronRight size={14} />
@@ -95,28 +98,131 @@ export default function ProblemPage() {
                 )}
             </nav>
 
-            <header style={{ marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', wordBreak: 'break-word' }}>
-                    {title}
-                </h1>
-                {currentProblem ? (
-                    <textarea
-                        value={description || ''}
-                        onChange={handleNotesChange}
-                        placeholder="Notes..."
-                        maxLength={500}
-                        style={{
-                            width: '100%',
-                            minHeight: '100px',
-                            fontSize: '1rem',
-                            color: '#555',
-                            resize: 'none',
-                            lineHeight: '1.6'
-                        }}
-                    />
-                ) : (
-                    <p style={{ color: '#555', lineHeight: '1.6' }}>{description}</p>
-                )}
+            <header style={{ marginBottom: '2rem', position: 'relative' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
+                    {!currentProblem ? (
+                        <div style={{ flex: 1 }}>
+                            <input
+                                type="text"
+                                value={list.name}
+                                onChange={(e) => updateList(list.id, { name: e.target.value })}
+                                style={{
+                                    fontSize: '2rem',
+                                    fontWeight: '700',
+                                    marginBottom: '1rem',
+                                    width: '100%',
+                                    border: 'none',
+                                    outline: 'none',
+                                    backgroundColor: 'transparent',
+                                    fontFamily: 'inherit'
+                                }}
+                            />
+                            <textarea
+                                value={list.description || ''}
+                                onChange={(e) => updateList(list.id, { description: e.target.value })}
+                                placeholder="Description..."
+                                maxLength={500}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '100px',
+                                    fontSize: '1rem',
+                                    color: '#555',
+                                    resize: 'none',
+                                    lineHeight: '1.6',
+                                    border: 'none',
+                                    outline: 'none',
+                                    backgroundColor: 'transparent',
+                                    fontFamily: 'inherit'
+                                }}
+                            />
+                        </div>
+                    ) : (
+                        <div style={{ flex: 1 }}>
+                            <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '1rem', wordBreak: 'break-word' }}>
+                                {currentProblem.name}
+                            </h1>
+                            <textarea
+                                value={currentProblem.notes || ''}
+                                onChange={handleNotesChange}
+                                placeholder="Notes..."
+                                maxLength={500}
+                                style={{
+                                    width: '100%',
+                                    minHeight: '100px',
+                                    fontSize: '1rem',
+                                    color: '#555',
+                                    resize: 'none',
+                                    lineHeight: '1.6',
+                                    border: 'none', // Make notes cleaner too
+                                    outline: 'none',
+                                    backgroundColor: 'transparent'
+                                }}
+                            />
+                        </div>
+                    )}
+
+                    {!currentProblem && (
+                        <div
+                            style={{ position: 'relative' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                type="button"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setIsMenuOpen(!isMenuOpen);
+                                }}
+                                style={{
+                                    padding: '0.5rem',
+                                    cursor: 'pointer',
+                                    color: '#888',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                                aria-label="Menu"
+                            >
+                                <MoreHorizontal size={24} />
+                            </button>
+                            {isMenuOpen && (
+                                <div style={{
+                                    position: 'absolute',
+                                    top: '100%',
+                                    right: 0,
+                                    backgroundColor: '#fff',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                    borderRadius: '8px',
+                                    padding: '0.5rem',
+                                    zIndex: 10,
+                                    minWidth: '160px',
+                                    border: '1px solid #f0f0f0'
+                                }}>
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleDeleteList();
+                                        }}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.75rem',
+                                            padding: '0.75rem 1rem',
+                                            width: '100%',
+                                            color: '#ef4444',
+                                            fontWeight: '500',
+                                            textAlign: 'left',
+                                            fontSize: '0.9rem',
+                                        }}
+                                    >
+                                        <Trash2 size={16} />
+                                        Delete List
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
             </header>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -185,7 +291,8 @@ export default function ProblemPage() {
                                 fontSize: '1.1rem',
                                 borderBottom: '2px solid #333',
                                 padding: '0.5rem',
-                                flex: 1
+                                flex: 1,
+                                fontFamily: 'inherit'
                             }}
                             onBlur={() => !newSubtaskName && setIsAdding(false)}
                         />
@@ -196,7 +303,8 @@ export default function ProblemPage() {
                                 backgroundColor: '#333',
                                 color: '#fff',
                                 borderRadius: '8px',
-                                fontWeight: '600'
+                                fontWeight: '600',
+                                fontFamily: 'inherit'
                             }}
                         >
                             Add
@@ -210,7 +318,8 @@ export default function ProblemPage() {
                             alignItems: 'center',
                             gap: '0.5rem',
                             color: '#888',
-                            padding: '0.5rem 0'
+                            padding: '0.5rem 0',
+                            fontFamily: 'inherit'
                         }}
                     >
                         <Plus size={20} />
@@ -218,7 +327,6 @@ export default function ProblemPage() {
                     </button>
                 )}
             </div>
-
         </div>
     );
 }
