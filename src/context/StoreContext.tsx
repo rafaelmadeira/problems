@@ -37,6 +37,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     });
 
     useEffect(() => {
+        // Migration: Rename "📥 Inbox" to "Inbox"
+        const inbox = state.lists.find(l => l.id === 'inbox');
+        if (inbox && inbox.name === '📥 Inbox') {
+            setState(prev => ({
+                ...prev,
+                lists: prev.lists.map(l => l.id === 'inbox' ? { ...l, name: 'Inbox' } : l)
+            }));
+        }
+    }, [state.lists]); // Check when lists change, though essentially runs once on load if needed.
+
+    useEffect(() => {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }, [state]);
 

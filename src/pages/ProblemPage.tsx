@@ -434,7 +434,7 @@ export default function ProblemPage() {
                                 padding: '0.5rem',
                                 cursor: 'pointer',
                                 color: '#888',
-                                display: 'flex',
+                                display: (!currentProblem && list.id === 'inbox') ? 'none' : 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}
