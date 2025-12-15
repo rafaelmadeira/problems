@@ -3,6 +3,7 @@ export interface Problem {
   name: string;
   notes: string;
   dueDate: string | null;
+  priority: 'today' | 'this_week' | 'later' | 'someday';
   subproblems: Problem[];
   completed: boolean;
 }

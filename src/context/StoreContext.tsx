@@ -4,7 +4,7 @@ import type { AppState, List, Problem } from '../types';
 interface StoreContextType {
     state: AppState;
     addList: (name: string) => void;
-    addProblem: (parentId: string | null, listId: string, name: string) => void;
+    addProblem: (parentId: string | null, listId: string, data: { name: string, priority: Problem['priority'], dueDate: string | null, notes: string }) => void;
     updateProblem: (listId: string, problemId: string, updates: Partial<Problem>) => void;
     updateList: (listId: string, updates: Partial<List>) => void;
     deleteList: (listId: string) => void;
@@ -64,12 +64,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return false;
     };
 
-    const addProblem = (parentId: string | null, listId: string, name: string) => {
+    const addProblem = (parentId: string | null, listId: string, data: { name: string, priority: Problem['priority'], dueDate: string | null, notes: string }) => {
         const newProblem: Problem = {
             id: crypto.randomUUID(),
-            name,
-            notes: '',
-            dueDate: null,
+            name: data.name,
+            notes: data.notes,
+            dueDate: data.dueDate,
+            priority: data.priority,
             subproblems: [],
             completed: false
         };

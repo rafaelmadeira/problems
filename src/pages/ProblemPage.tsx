@@ -10,6 +10,9 @@ export default function ProblemPage() {
     const { state, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderProblems, moveProblemToList } = useStore();
 
     const [newSubtaskName, setNewSubtaskName] = useState('');
+    const [newPriority, setNewPriority] = useState<Problem['priority']>('today');
+    const [newDueDate, setNewDueDate] = useState('');
+    const [newNotes, setNewNotes] = useState('');
     const [isAdding, setIsAdding] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -57,8 +60,16 @@ export default function ProblemPage() {
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
         if (newSubtaskName.trim()) {
-            addProblem(currentParentId, list.id, newSubtaskName.trim());
+            addProblem(currentParentId, list.id, {
+                name: newSubtaskName.trim(),
+                priority: newPriority,
+                dueDate: newDueDate || null,
+                notes: newNotes
+            });
             setNewSubtaskName('');
+            setNewPriority('today');
+            setNewDueDate('');
+            setNewNotes('');
             setIsAdding(false);
         }
     };
@@ -256,39 +267,106 @@ export default function ProblemPage() {
                         </div>
                     ) : (
                         <div style={{ flex: 1 }}>
+                            {/* Task Name */}
                             <input
                                 type="text"
                                 value={currentProblem.name}
                                 onChange={(e) => updateProblem(list.id, currentProblem!.id, { name: e.target.value })}
                                 style={{
-                                    fontSize: '2rem',
+                                    fontSize: '1.5rem',
                                     fontWeight: '700',
-                                    marginBottom: '1rem',
+                                    marginBottom: '1.5rem',
                                     width: '100%',
                                     border: 'none',
                                     outline: 'none',
                                     backgroundColor: 'transparent',
-                                    fontFamily: 'inherit'
+                                    fontFamily: 'inherit',
+                                    color: '#111'
                                 }}
                             />
-                            <textarea
-                                value={currentProblem.notes || ''}
-                                onChange={handleNotesChange}
-                                placeholder="Notes..."
-                                maxLength={500}
-                                style={{
-                                    width: '100%',
-                                    minHeight: '100px',
-                                    fontSize: '1rem',
-                                    color: '#555',
-                                    resize: 'none',
-                                    lineHeight: '1.6',
-                                    border: 'none', // Make notes cleaner too
-                                    outline: 'none',
-                                    backgroundColor: 'transparent',
-                                    fontFamily: 'inherit'
-                                }}
-                            />
+
+                            {/* Task Details Grid */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '0.5rem 1rem', alignItems: 'center' }}>
+                                {/* Priority */}
+                                <div style={{ color: '#888', fontSize: '0.95rem' }}>Priority</div>
+                                <div>
+                                    <select
+                                        value={currentProblem.priority || 'today'}
+                                        onChange={(e) => updateProblem(list.id, currentProblem!.id, { priority: e.target.value as Problem['priority'] })}
+                                        style={{
+                                            appearance: 'none',
+                                            backgroundColor: 'transparent',
+                                            border: 'none',
+                                            fontSize: '0.95rem',
+                                            color: '#111',
+                                            cursor: 'pointer',
+                                            padding: 0,
+                                            fontFamily: 'inherit',
+                                            textDecoration: 'underline',
+                                            textUnderlineOffset: '3px',
+                                            textDecorationColor: '#ddd'
+                                        }}
+                                    >
+                                        <option value="today">Today</option>
+                                        <option value="this_week">This Week</option>
+                                        <option value="later">Later</option>
+                                        <option value="someday">Someday</option>
+                                    </select>
+                                </div>
+
+                                {/* Due Date */}
+                                <div style={{ color: '#888', fontSize: '0.95rem' }}>Due Date</div>
+                                <div>
+                                    <input
+                                        type="date"
+                                        value={currentProblem.dueDate || ''}
+                                        onChange={(e) => updateProblem(list.id, currentProblem!.id, { dueDate: e.target.value || null })}
+                                        style={{
+                                            border: 'none',
+                                            backgroundColor: 'transparent',
+                                            fontSize: '0.95rem',
+                                            color: '#111',
+                                            fontFamily: 'inherit',
+                                            cursor: 'pointer',
+                                            padding: 0
+                                        }}
+                                    />
+                                </div>
+
+                                {/* Notes */}
+                                <div style={{ color: '#888', fontSize: '0.95rem', alignSelf: 'flex-start', marginTop: '0.2rem' }}>Notes</div>
+                                <div>
+                                    <textarea
+                                        value={currentProblem.notes || ''}
+                                        onChange={(e) => {
+                                            handleNotesChange(e);
+                                            // Auto-resize
+                                            e.target.style.height = 'auto';
+                                            e.target.style.height = e.target.scrollHeight + 'px';
+                                        }}
+                                        onFocus={(e) => {
+                                            e.target.style.height = 'auto';
+                                            e.target.style.height = e.target.scrollHeight + 'px';
+                                        }}
+                                        placeholder="Add notes..."
+                                        rows={1}
+                                        style={{
+                                            width: '100%',
+                                            fontSize: '0.95rem',
+                                            color: '#111',
+                                            resize: 'none',
+                                            lineHeight: '1.5',
+                                            border: 'none',
+                                            outline: 'none',
+                                            backgroundColor: 'transparent',
+                                            fontFamily: 'inherit',
+                                            padding: 0,
+                                            overflow: 'hidden',
+                                            minHeight: '24px'
+                                        }}
+                                    />
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -494,54 +572,145 @@ export default function ProblemPage() {
                 })}
             </div>
 
+            {/* New Task Modal */}
+            {isAdding && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 100
+                }} onClick={() => setIsAdding(false)}>
+                    <div style={{
+                        backgroundColor: '#fff',
+                        padding: '1.5rem',
+                        borderRadius: '12px',
+                        width: '400px',
+                        maxWidth: '90%',
+                    }} onClick={e => e.stopPropagation()}>
+                        <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <input
+                                autoFocus
+                                type="text"
+                                placeholder="Task name"
+                                value={newSubtaskName}
+                                onChange={e => setNewSubtaskName(e.target.value)}
+                                style={{
+                                    fontSize: '1.25rem',
+                                    fontWeight: '600',
+                                    padding: '0.5rem',
+                                    border: '1px solid #ddd',
+                                    borderRadius: '6px',
+                                    width: '100%',
+                                    fontFamily: 'inherit'
+                                }}
+                            />
+
+                            <div style={{ display: 'flex', gap: '1rem' }}>
+                                <select
+                                    value={newPriority}
+                                    onChange={e => setNewPriority(e.target.value as Problem['priority'])}
+                                    style={{
+                                        padding: '0.5rem',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        flex: 1,
+                                        fontFamily: 'inherit'
+                                    }}
+                                >
+                                    <option value="today">Today</option>
+                                    <option value="this_week">This Week</option>
+                                    <option value="later">Later</option>
+                                    <option value="someday">Someday</option>
+                                </select>
+                                <input
+                                    type="date"
+                                    value={newDueDate}
+                                    onChange={e => setNewDueDate(e.target.value)}
+                                    style={{
+                                        padding: '0.5rem',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        flex: 1,
+                                        fontFamily: 'inherit'
+                                    }}
+                                />
+                            </div>
+
+                            <textarea
+                                placeholder="Notes"
+                                value={newNotes}
+                                onChange={e => setNewNotes(e.target.value)}
+                                rows={3}
+                                style={{
+                                    padding: '0.5rem',
+                                    borderRadius: '6px',
+                                    border: '1px solid #ddd',
+                                    fontFamily: 'inherit',
+                                    resize: 'none'
+                                }}
+                            />
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                                <button
+                                    type="submit"
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        backgroundColor: '#333',
+                                        color: '#fff',
+                                        borderRadius: '8px',
+                                        fontWeight: '600',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Save
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAdding(false)}
+                                    style={{
+                                        padding: '0.75rem 1.5rem',
+                                        backgroundColor: '#f0f0f0',
+                                        color: '#333',
+                                        borderRadius: '8px',
+                                        fontWeight: '600',
+                                        border: 'none',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <div style={{ marginTop: '2rem' }}>
-                {isAdding ? (
-                    <form onSubmit={handleAdd} style={{ display: 'flex', gap: '0.5rem' }}>
-                        <input
-                            autoFocus
-                            type="text"
-                            placeholder="New task..."
-                            value={newSubtaskName}
-                            onChange={e => setNewSubtaskName(e.target.value)}
-                            style={{
-                                fontSize: '1.1rem',
-                                borderBottom: '2px solid #333',
-                                padding: '0.5rem',
-                                flex: 1,
-                                fontFamily: 'inherit'
-                            }}
-                            onBlur={() => !newSubtaskName && setIsAdding(false)}
-                        />
-                        <button
-                            type="submit"
-                            style={{
-                                padding: '0.5rem 1rem',
-                                backgroundColor: '#333',
-                                color: '#fff',
-                                borderRadius: '8px',
-                                fontWeight: '600',
-                                fontFamily: 'inherit'
-                            }}
-                        >
-                            Add
-                        </button>
-                    </form>
-                ) : (
-                    <button
-                        onClick={() => setIsAdding(true)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            color: '#888',
-                            padding: '0.5rem 0',
-                            fontFamily: 'inherit'
-                        }}
-                    >
-                        <Plus size={20} />
-                        <span>New task</span>
-                    </button>
-                )}
+                <button
+                    onClick={() => setIsAdding(true)}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        color: '#888',
+                        padding: '0.5rem 0',
+                        fontFamily: 'inherit',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '1rem'
+                    }}
+                >
+                    <Plus size={20} />
+                    <span>New task</span>
+                </button>
             </div>
         </div>
     );
