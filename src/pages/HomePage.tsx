@@ -52,6 +52,10 @@ export default function HomePage() {
 
     return (
         <div>
+            {/* Breadcrumb consistency */}
+            <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', color: '#888', fontSize: '0.9rem' }}>
+                <span style={{ fontWeight: 'bold', color: '#333' }}>Home</span>
+            </nav>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {visibleLists.map((list, index) => {
                     const count = list.problems.length;
