@@ -87,6 +87,13 @@ export default function TodayPage() {
                     100% { opacity: 0; transform: translateX(-50%) translateY(-15px); }
                 }
             `}</style>
+
+            <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', color: '#888', fontSize: '0.9rem' }}>
+                <Link to="/" style={{ color: 'inherit' }}>Home</Link>
+                <ChevronRight size={14} />
+                <span style={{ fontWeight: 600, color: '#333' }}>Today</span>
+            </nav>
+
             <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem' }}>Today</h1>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
