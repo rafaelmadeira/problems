@@ -9,6 +9,9 @@ export default function HomePage() {
     const [newListName, setNewListName] = useState('');
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
+    const visibleLists = state.lists.filter(l => l.id !== 'inbox');
+    const inboxList = state.lists.find(l => l.id === 'inbox');
+
     const handleCreate = (e: React.FormEvent) => {
         e.preventDefault();
         if (newListName.trim()) {
@@ -25,15 +28,21 @@ export default function HomePage() {
     const handleDragEnter = (targetIndex: number) => {
         if (draggedIndex === null || draggedIndex === targetIndex) return;
 
-        const newLists = [...state.lists];
-        const draggedItem = newLists[draggedIndex];
+        // Clone visible lists only
+        const newVisibleLists = [...visibleLists];
+        const draggedItem = newVisibleLists[draggedIndex];
 
         // Remove dragged item
-        newLists.splice(draggedIndex, 1);
+        newVisibleLists.splice(draggedIndex, 1);
         // Insert at new position
-        newLists.splice(targetIndex, 0, draggedItem);
+        newVisibleLists.splice(targetIndex, 0, draggedItem);
 
-        reorderLists(newLists);
+        // Reconstruct full list state (Inbox always first if it exists, roughly)
+        // Or better, just preserve Inbox's original position or push it to top?
+        // Let's assume Inbox should be at top.
+        const newFullLists = inboxList ? [inboxList, ...newVisibleLists] : newVisibleLists;
+
+        reorderLists(newFullLists);
         setDraggedIndex(targetIndex);
     };
 
@@ -44,7 +53,7 @@ export default function HomePage() {
     return (
         <div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {state.lists.filter(l => l.id !== 'inbox').map((list, index) => {
+                {visibleLists.map((list, index) => {
                     const count = list.problems.length;
                     return (
                         <div
