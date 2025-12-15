@@ -7,12 +7,13 @@ import type { Problem } from '../types';
 export default function ProblemPage() {
     const { listId, problemId } = useParams();
     const navigate = useNavigate();
-    const { state, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderProblems } = useStore();
+    const { state, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderProblems, moveProblemToList } = useStore();
 
     const [newSubtaskName, setNewSubtaskName] = useState('');
     const [isAdding, setIsAdding] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [isMoveListOpen, setIsMoveListOpen] = useState(false);
 
     // 1. Find the List
     const list = state.lists.find(l => l.id === listId);
@@ -48,6 +49,10 @@ export default function ProblemPage() {
     // View Data
     const subElements = currentProblem ? currentProblem.subproblems : list.problems;
     const currentParentId = currentProblem ? currentProblem.id : null;
+
+    // Check if it's a top-level task (root task)
+    // A top-level task has breadcrumbs length of 1 (just itself)
+    const isRootTask = breadcrumbs.length === 1 && currentProblem;
 
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
@@ -89,6 +94,16 @@ export default function ProblemPage() {
         }
     };
 
+    const handleMoveToList = (targetListId: string) => {
+        if (currentProblem && list) {
+            moveProblemToList(currentProblem.id, list.id, targetListId);
+            setIsMoveListOpen(false);
+            // Navigate to the new location or home? 
+            // Let's navigate to the target list to show it moved.
+            navigate(`/list/${targetListId}/problem/${currentProblem.id}`);
+        }
+    };
+
     const handleDragStart = (index: number) => {
         setDraggedIndex(index);
     };
@@ -113,7 +128,66 @@ export default function ProblemPage() {
     };
 
     return (
-        <div style={{ position: 'relative', minHeight: '100vh' }} onClick={() => setIsMenuOpen(false)}>
+        <div style={{ position: 'relative', minHeight: '100vh' }} onClick={() => { setIsMenuOpen(false); setIsMoveListOpen(false); }}>
+            {/* Move List Modal */}
+            {isMoveListOpen && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 100
+                }} onClick={(e) => {
+                    e.stopPropagation();
+                    setIsMoveListOpen(false);
+                }}>
+                    <div style={{
+                        backgroundColor: '#fff',
+                        padding: '1.5rem',
+                        borderRadius: '12px',
+                        width: '300px',
+                        maxWidth: '90%',
+                        maxHeight: '80vh',
+                        overflowY: 'auto'
+                    }} onClick={e => e.stopPropagation()}>
+                        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Move to...</h3>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {state.lists.map(l => (
+                                l.id !== list.id && (
+                                    <button
+                                        key={l.id}
+                                        onClick={() => handleMoveToList(l.id)}
+                                        style={{
+                                            padding: '0.75rem',
+                                            textAlign: 'left',
+                                            backgroundColor: '#f9f9f9',
+                                            border: 'none',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontWeight: '500'
+                                        }}
+                                    >
+                                        {l.name}
+                                    </button>
+                                )
+                            ))}
+                            {state.lists.length <= 1 && <p style={{ color: '#888' }}>No other lists available.</p>}
+                        </div>
+                        <button
+                            onClick={() => setIsMoveListOpen(false)}
+                            style={{ marginTop: '1rem', width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '8px', background: 'none', cursor: 'pointer' }}
+                        >
+                            Cancel
+                        </button>
+                    </div>
+                </div>
+            )}
+
             {/* Breadcrumbs */}
             <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', color: '#888', fontSize: '0.9rem' }}>
                 <Link to="/" style={{ color: 'inherit' }}>Home</Link>
@@ -276,27 +350,53 @@ export default function ProblemPage() {
                                         Delete List
                                     </button>
                                 ) : (
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteProblem();
-                                        }}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.75rem',
-                                            padding: '0.75rem 1rem',
-                                            width: '100%',
-                                            color: '#ef4444',
-                                            fontWeight: '500',
-                                            textAlign: 'left',
-                                            fontSize: '0.9rem',
-                                        }}
-                                    >
-                                        <Trash2 size={16} />
-                                        Delete Task
-                                    </button>
+                                    <>
+                                        {isRootTask && (
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setIsMenuOpen(false);
+                                                    setIsMoveListOpen(true);
+                                                }}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.75rem',
+                                                    padding: '0.75rem 1rem',
+                                                    width: '100%',
+                                                    color: '#333',
+                                                    fontWeight: '500',
+                                                    textAlign: 'left',
+                                                    fontSize: '0.9rem',
+                                                }}
+                                            >
+                                                <ChevronRight size={16} />
+                                                Move to list
+                                            </button>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteProblem();
+                                            }}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.75rem',
+                                                padding: '0.75rem 1rem',
+                                                width: '100%',
+                                                color: '#ef4444',
+                                                fontWeight: '500',
+                                                textAlign: 'left',
+                                                fontSize: '0.9rem',
+                                            }}
+                                        >
+                                            <Trash2 size={16} />
+                                            Delete Task
+                                        </button>
+                                    </>
                                 )}
                             </div>
                         )}

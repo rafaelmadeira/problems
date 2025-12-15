@@ -11,6 +11,7 @@ interface StoreContextType {
     deleteProblem: (listId: string, problemId: string) => void;
     reorderLists: (newLists: List[]) => void;
     reorderProblems: (listId: string, parentProblemId: string | null, newProblems: Problem[]) => void;
+    moveProblemToList: (problemId: string, fromListId: string, toListId: string) => void;
     // We might need more specific actions or a generic dispatch
 }
 
@@ -190,8 +191,62 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
     };
 
+    const moveProblemToList = (problemId: string, fromListId: string, toListId: string) => {
+        setState(prev => {
+            // 1. Find the problem in the source list and remove it
+            const fromList = prev.lists.find(l => l.id === fromListId);
+            if (!fromList) return prev;
+
+            // Deep clone needed because we are going to mutate it
+            // Actually, we can just rebuild the lists array
+
+            let problemToMove: Problem | undefined;
+
+            // Helper to find and remove from source (assuming root task per requirement, but let's be safe and search recursively if we wanted, but user said root tasks only. 
+            // However, to be robust, let's just look in top level first as user requirement implies root/parent tasks)
+            // But 'deleteProblem' already handles recursive finding. We can reuse that approach but we need the object back.
+
+            // Let's implement a specific find-and-remove that returns the object.
+            const findRemoveReturn = (problems: Problem[]): Problem | undefined => {
+                for (let i = 0; i < problems.length; i++) {
+                    if (problems[i].id === problemId) {
+                        const [removed] = problems.splice(i, 1);
+                        return removed;
+                    }
+                    // Recursive search just in case, though UI limits to root
+                    const found = findRemoveReturn(problems[i].subproblems);
+                    if (found) return found;
+                }
+                return undefined;
+            };
+
+            const newLists = prev.lists.map(list => {
+                if (list.id === fromListId) {
+                    const updatedList = structuredClone(list);
+                    problemToMove = findRemoveReturn(updatedList.problems);
+                    return updatedList;
+                }
+                return list;
+            });
+
+            if (!problemToMove) return prev; // Problem not found
+
+            // 2. Add to target list
+            const finalLists = newLists.map(list => {
+                if (list.id === toListId) {
+                    const updatedList = structuredClone(list);
+                    updatedList.problems.push(problemToMove!);
+                    return updatedList;
+                }
+                return list;
+            });
+
+            return { lists: finalLists };
+        });
+    };
+
     return (
-        <StoreContext.Provider value={{ state, addList, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderLists, reorderProblems }}>
+        <StoreContext.Provider value={{ state, addList, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderLists, reorderProblems, moveProblemToList }}>
             {children}
         </StoreContext.Provider>
     );
