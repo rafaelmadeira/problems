@@ -126,7 +126,12 @@ export default function ProblemPage() {
                 {breadcrumbs.slice(0, -1).map(p => (
                     <React.Fragment key={p.id}>
                         <ChevronRight size={14} />
-                        <Link to={`/list/${list.id}/problem/${p.id}`}>{p.name}</Link>
+                        <Link
+                            to={`/list/${list.id}/problem/${p.id}`}
+                            style={{ fontWeight: p.name.endsWith('!') ? 'bold' : 'normal' }}
+                        >
+                            {p.name}
+                        </Link>
                     </React.Fragment>
                 ))}
                 {currentProblem && (
@@ -356,7 +361,8 @@ export default function ProblemPage() {
                                         fontSize: '1.1rem',
                                         textDecoration: child.completed ? 'line-through' : 'none',
                                         color: child.completed ? '#aaa' : '#333',
-                                        cursor: 'pointer'
+                                        cursor: 'pointer',
+                                        fontWeight: child.name.endsWith('!') ? 'bold' : 'normal',
                                     }}
                                 >
                                     {child.name}
