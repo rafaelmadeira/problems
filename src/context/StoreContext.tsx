@@ -121,7 +121,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 problems[i] = updatedProblem;
                 return true;
             }
-            if (findProblemAndUpdate(problems[i].subproblems, problemId, updates)) return true;
+            if (findProblemAndUpdate(problems[i].subproblems, problemId, updates)) {
+                // Recursive Parent Status Update:
+                // If the update set a status other than 'to_solve', ensure this parent is at least 'solving'.
+                // Condition: Child is active (status != to_solve) AND Parent is inactive (status == to_solve).
+                if (updates.status && updates.status !== 'to_solve') {
+                    if (!problems[i].status || problems[i].status === 'to_solve') {
+                        problems[i] = { ...problems[i], status: 'solving' };
+                    }
+                }
+                return true;
+            }
         }
         return false;
     };
