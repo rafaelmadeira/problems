@@ -265,12 +265,21 @@ export default function ProblemPage() {
                             />
                             <textarea
                                 value={list.description || ''}
-                                onChange={(e) => updateList(list.id, { description: e.target.value })}
+                                onChange={(e) => {
+                                    updateList(list.id, { description: e.target.value });
+                                    e.target.style.height = 'auto';
+                                    e.target.style.height = e.target.scrollHeight + 'px';
+                                }}
+                                onFocus={(e) => {
+                                    e.target.style.height = 'auto';
+                                    e.target.style.height = e.target.scrollHeight + 'px';
+                                }}
                                 placeholder="Description..."
                                 maxLength={500}
+                                rows={1}
                                 style={{
                                     width: '100%',
-                                    minHeight: '100px',
+                                    // minHeight: '100px', // Removed fixed height
                                     fontSize: '1rem',
                                     color: '#555',
                                     resize: 'none',
@@ -278,7 +287,9 @@ export default function ProblemPage() {
                                     border: 'none',
                                     outline: 'none',
                                     backgroundColor: 'transparent',
-                                    fontFamily: 'inherit'
+                                    fontFamily: 'inherit',
+                                    overflow: 'hidden',
+                                    minHeight: '24px' // Consistent with single line
                                 }}
                             />
                         </div>

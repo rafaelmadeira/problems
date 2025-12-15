@@ -14,16 +14,16 @@ const TaskNode = ({
     depth = 0,
     toggleComplete,
     solvedMessages,
-    isCollapsed,
-    onToggleCollapse
+    isExpanded,
+    onToggleExpand
 }: {
     problem: Problem,
     listId: string,
     depth?: number,
     toggleComplete: (p: Problem, listId: string) => void,
     solvedMessages: { [key: string]: boolean },
-    isCollapsed: boolean,
-    onToggleCollapse: (id: string) => void
+    isExpanded: boolean,
+    onToggleExpand: (id: string) => void
 }) => {
     const navigate = useNavigate();
 
@@ -71,11 +71,11 @@ const TaskNode = ({
                     <div
                         onClick={(e) => {
                             e.stopPropagation();
-                            onToggleCollapse(problem.id);
+                            onToggleExpand(problem.id);
                         }}
                         style={{ padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     >
-                        {isCollapsed ? <ChevronRightIcon size={16} color="#888" /> : <ChevronDown size={16} color="#888" />}
+                        {isExpanded ? <ChevronDown size={16} color="#888" /> : <ChevronRightIcon size={16} color="#888" />}
                     </div>
                 ) : (
                     // Spacer
@@ -163,32 +163,23 @@ const TaskNode = ({
                 </div>
             </div>
 
-            {/* Recursively render children if not collapsed */}
-            {!isCollapsed && hasRelevantChildren && (
+            {/* Recursively render children if expanded */}
+            {isExpanded && hasRelevantChildren && (
                 <div>
                     {problem.subproblems
                         .filter(child => hasUnfinishedDescendants(child))
                         .map(child => (
-                            <TaskNode
+                            <RecursiveTaskNode
                                 key={child.id}
                                 problem={child}
                                 listId={listId}
                                 depth={depth + 1}
                                 toggleComplete={toggleComplete}
                                 solvedMessages={solvedMessages}
-                                isCollapsed={false} // Children expand state logic? Just inherited or independent? Independent usually.
-                            // Actually we need to pass down the collapsed state for children too.
-                            // But wait, the map is flat by ID.
-                            // So we just pass the handler and look up status.
-                            // Wait, TaskNode can't lookup safely without context or props.
-                            // I'll change TaskNode to accept `collapsedIds` map or better yet, pure props.
-                            // Re-design: TaskNode connects to look up its OWN state? No. 
-                            // Let's pass the map and let TaskNode read `collapsedIds[child.id]`.
-                            // For the child itself? No, for the current node's children visibility?
-                            // "isCollapsed" prop is for the CURRENT node's children visibility.
-                            // So when rendering children, we need to pass THEIR state.
-
-                            // Actually, simpler: Pass the whole map.
+                                expandedIds={null} // Pass map below
+                                onToggleExpand={onToggleExpand}
+                            // Hack: RecursiveTaskNode needs to be connected or pass map
+                            // I will fix RecursiveTaskNode below to receive map
                             />
                         ))
                     }
@@ -198,28 +189,63 @@ const TaskNode = ({
     );
 };
 
-// Re-defining TaskNode to accept map creates prop drilling or context need.
-// Let's just pass `collapsedIds` map.
+// Recursive Wrapper to handle props
 const RecursiveTaskNode = ({
     problem,
     listId,
     depth = 0,
     toggleComplete,
     solvedMessages,
-    collapsedIds,
-    onToggleCollapse
+    expandedIds,
+    onToggleExpand
 }: {
     problem: Problem,
     listId: string,
     depth?: number,
     toggleComplete: (p: Problem, listId: string) => void,
     solvedMessages: { [key: string]: boolean },
-    collapsedIds: { [key: string]: boolean },
-    onToggleCollapse: (id: string) => void
+    expandedIds: { [key: string]: boolean } | null, // null check handled inside? No, passed from parent
+    onToggleExpand: (id: string) => void
+}) => {
+    // If we call RecursiveTaskNode from TaskNode, we need to pass expandedIds.
+    // In TaskNode above I put `expandedIds={null}` which is wrong.
+    // I need to redefine TaskNode to accept the map too?
+    // Let's merge them into one `TaskNode` definition to avoid confusion and use the map.
+
+    // BUT, the initial TaskNode definition was cleaner. 
+    // Let's use `RecursiveTaskNode` as the MAIN component used by everything.
+    return (
+        <InternalTaskNode
+            problem={problem}
+            listId={listId}
+            depth={depth}
+            toggleComplete={toggleComplete}
+            solvedMessages={solvedMessages}
+            expandedIds={expandedIds || {}}
+            onToggleExpand={onToggleExpand}
+        />
+    );
+}
+
+const InternalTaskNode = ({
+    problem,
+    listId,
+    depth,
+    toggleComplete,
+    solvedMessages,
+    expandedIds,
+    onToggleExpand
+}: {
+    problem: Problem,
+    listId: string,
+    depth: number,
+    toggleComplete: (p: Problem, listId: string) => void,
+    solvedMessages: { [key: string]: boolean },
+    expandedIds: { [key: string]: boolean },
+    onToggleExpand: (id: string) => void
 }) => {
     const navigate = useNavigate();
 
-    // Helper (same as before)
     const hasUnfinishedDescendants = (p: Problem): boolean => {
         if (!p.completed && (p.status === 'solving' || p.status === 'blocked')) return true;
         return p.subproblems.some(child => hasUnfinishedDescendants(child));
@@ -230,7 +256,7 @@ const RecursiveTaskNode = ({
 
     if (!isSelfUnfinished && !hasRelevantChildren) return null;
 
-    const isCollapsed = collapsedIds[problem.id] || false;
+    const isExpanded = expandedIds[problem.id] || false;
 
     return (
         <div style={{ marginLeft: depth > 0 ? '1.5rem' : '0' }}>
@@ -261,11 +287,11 @@ const RecursiveTaskNode = ({
                     <div
                         onClick={(e) => {
                             e.stopPropagation();
-                            onToggleCollapse(problem.id);
+                            onToggleExpand(problem.id);
                         }}
                         style={{ padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                     >
-                        {isCollapsed ? <ChevronRightIcon size={16} color="#888" /> : <ChevronDown size={16} color="#888" />}
+                        {isExpanded ? <ChevronDown size={16} color="#888" /> : <ChevronRightIcon size={16} color="#888" />}
                     </div>
                 ) : (
                     <div style={{ width: 20 }} />
@@ -350,20 +376,20 @@ const RecursiveTaskNode = ({
                 </div>
             </div>
 
-            {!isCollapsed && hasRelevantChildren && (
+            {isExpanded && hasRelevantChildren && (
                 <div>
                     {problem.subproblems
                         .filter(child => hasUnfinishedDescendants(child))
                         .map(child => (
-                            <RecursiveTaskNode
+                            <InternalTaskNode
                                 key={child.id}
                                 problem={child}
                                 listId={listId}
                                 depth={depth + 1}
                                 toggleComplete={toggleComplete}
                                 solvedMessages={solvedMessages}
-                                collapsedIds={collapsedIds}
-                                onToggleCollapse={onToggleCollapse}
+                                expandedIds={expandedIds}
+                                onToggleExpand={onToggleExpand}
                             />
                         ))
                     }
@@ -378,7 +404,9 @@ export default function UnfinishedPage() {
     const navigate = useNavigate();
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
 
-    const [collapsedIds, setCollapsedIds] = useState<{ [id: string]: boolean }>({});
+    // CHANGED: Default state is empty {} meaning everything is COLLAPSED (because undefined/false = collapsed).
+    // Using positive logic "expandedIds".
+    const [expandedIds, setExpandedIds] = useState<{ [id: string]: boolean }>({});
     const [menuOpen, setMenuOpen] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
@@ -393,8 +421,8 @@ export default function UnfinishedPage() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const toggleCollapse = (id: string) => {
-        setCollapsedIds(prev => ({ ...prev, [id]: !prev[id] }));
+    const toggleExpand = (id: string) => {
+        setExpandedIds(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
     // Helper: Collect ALL IDs (lists and recursive tasks with children)
@@ -403,10 +431,6 @@ export default function UnfinishedPage() {
 
         const traverse = (problems: Problem[]) => {
             for (const p of problems) {
-                // Check match logic same as render: if it has relevant children, it's collapsible
-                const isSelfUnfinished = !p.completed && (p.status === 'solving' || p.status === 'blocked');
-                // Wait, we need the SAME logic as render "hasRelevantChildren".
-                // We can duplicate the helper.
                 const hasUnfinishedDescendants = (prob: Problem): boolean => {
                     if (!prob.completed && (prob.status === 'solving' || prob.status === 'blocked')) return true;
                     return prob.subproblems.some(child => hasUnfinishedDescendants(child));
@@ -415,7 +439,6 @@ export default function UnfinishedPage() {
                 if (p.subproblems.some(child => hasUnfinishedDescendants(child))) {
                     ids.push(p.id);
                 }
-                // And traverse
                 traverse(p.subproblems);
             }
         };
@@ -425,9 +448,7 @@ export default function UnfinishedPage() {
             return p.subproblems.some(child => hasUnfinishedDescendantsMain(child));
         };
 
-        // Lists
         for (const list of state.lists) {
-            // Check if list is visible
             if (list.problems.some(p => hasUnfinishedDescendantsMain(p))) {
                 ids.push(list.id);
                 traverse(list.problems);
@@ -437,46 +458,45 @@ export default function UnfinishedPage() {
         return ids;
     };
 
-    // Actions
+    // Actions - Inverted Logic
     const collapseAll = () => {
-        const allIds = getAllCollapsibleIds();
-        const newCollapsed: { [id: string]: boolean } = {};
-        for (const id of allIds) newCollapsed[id] = true;
-        setCollapsedIds(newCollapsed);
+        // Set all specific IDs to false or just clear map. Clearing is cleaner (default collapsed).
+        setExpandedIds({});
         setMenuOpen(false);
     };
 
     const expandAll = () => {
-        setCollapsedIds({});
+        const allIds = getAllCollapsibleIds();
+        const newExpanded: { [id: string]: boolean } = {};
+        for (const id of allIds) newExpanded[id] = true;
+        setExpandedIds(newExpanded);
         setMenuOpen(false);
     };
 
     // Determine disabled states
     const allIds = getAllCollapsibleIds();
-    // Expand All disabled if ALL are ALREADY NOT collapsed (i.e. size of collapsedIds matching valid IDs is 0? No.)
-    // Expanded means NOT in collapsedIds map or false.
-    // If collpasedIds is empty, everything is expanded.
-    // Wait, are they collapsed by default? No, default false.
-    // So if collapsedIds is empty, Expand All is disabled (already expanded)? Yes.
-    // Check if ANY valid ID is currently true in collapsedIds.
-    // const anyCollapsed = allIds.some(id => collapsedIds[id] === true);
-    // actually safer:
+    // Default (empty map) = All Collapsed.
+    // If ANY ID is true, then we can Collapse All.
+    // If ANY ID is false (or missing), then we can Expand All.
+
     let anyCollapsed = false;
     let anyExpanded = false;
 
     for (const id of allIds) {
-        if (collapsedIds[id]) {
-            anyCollapsed = true;
-        } else {
+        if (expandedIds[id]) {
             anyExpanded = true;
+        } else {
+            anyCollapsed = true; // Implicitly collapsed
         }
     }
 
-    const canCollapseAll = anyExpanded; // If any is expanded, we can collapse all.
-    const canExpandAll = anyCollapsed; // If any is collapsed, we can expand all.
+    // logic naming:
+    // canCollapseAll = if there is at least one thing expanded.
+    const canCollapseAll = anyExpanded;
+    // canExpandAll = if there is at least one thing collapsed.
+    const canExpandAll = anyCollapsed;
 
 
-    // Previous logic helpers
     const hasUnfinishedDescendants = (p: Problem): boolean => {
         if (!p.completed && (p.status === 'solving' || p.status === 'blocked')) return true;
         return p.subproblems.some(child => hasUnfinishedDescendants(child));
@@ -533,7 +553,6 @@ export default function UnfinishedPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative' }}>
                 <h1 style={{ fontSize: '2rem', fontWeight: '700', margin: 0 }}>Unfinished</h1>
 
-                {/* Menu Button */}
                 <div ref={menuRef} style={{ position: 'relative' }}>
                     <button
                         onClick={() => setMenuOpen(!menuOpen)}
@@ -616,7 +635,7 @@ export default function UnfinishedPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 {visibleLists.map(list => {
-                    const isCollapsed = collapsedIds[list.id];
+                    const isExpanded = expandedIds[list.id] || false;
 
                     const countStrict = (problems: Problem[]): number => {
                         let c = 0;
@@ -631,7 +650,7 @@ export default function UnfinishedPage() {
                     return (
                         <div key={list.id}>
                             <div
-                                onClick={() => toggleCollapse(list.id)}
+                                onClick={() => toggleExpand(list.id)}
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -641,24 +660,32 @@ export default function UnfinishedPage() {
                                     userSelect: 'none'
                                 }}
                             >
-                                {isCollapsed ? <ChevronRightIcon size={20} /> : <ChevronDown size={20} />}
+                                {isExpanded ? <ChevronDown size={20} /> : <ChevronRightIcon size={20} />}
                                 <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0 }}>{list.name}</h2>
                                 <span style={{ color: '#888', fontSize: '0.9rem', fontWeight: 'normal' }}>({unfinishedCount})</span>
                             </div>
 
-                            {!isCollapsed && (
+                            {isExpanded && (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                     {list.problems
                                         .filter(p => hasUnfinishedDescendants(p))
                                         .map(p => (
-                                            <RecursiveTaskNode
+                                            <InternalTaskNode
                                                 key={p.id}
                                                 problem={p}
                                                 listId={list.id}
+                                                depth={0} // Reset depth for children logic inside
+                                                // Actually depth was passed to marginLeft
+                                                // List level starts at depth 0.
+                                                // Wait, TaskNode had default 0.
+                                                // Here we call InternalTaskNode directly.
+                                                // Let's check depth logic.
+                                                // InternalTaskNode uses depth for marginLeft.
+                                                // If we start at 0 here, first items have 0 margin. Correct.
                                                 toggleComplete={toggleComplete}
                                                 solvedMessages={solvedMessages}
-                                                collapsedIds={collapsedIds}
-                                                onToggleCollapse={toggleCollapse}
+                                                expandedIds={expandedIds}
+                                                onToggleExpand={toggleExpand}
                                             />
                                         ))
                                     }
