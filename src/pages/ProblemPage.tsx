@@ -7,11 +7,12 @@ import type { Problem } from '../types';
 export default function ProblemPage() {
     const { listId, problemId } = useParams();
     const navigate = useNavigate();
-    const { state, addProblem, updateProblem, updateList, deleteList, deleteProblem } = useStore();
+    const { state, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderProblems } = useStore();
 
     const [newSubtaskName, setNewSubtaskName] = useState('');
     const [isAdding, setIsAdding] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
     // 1. Find the List
     const list = state.lists.find(l => l.id === listId);
@@ -86,6 +87,29 @@ export default function ProblemPage() {
                 navigate(`/list/${list.id}`);
             }
         }
+    };
+
+    const handleDragStart = (index: number) => {
+        setDraggedIndex(index);
+    };
+
+    const handleDragEnter = (targetIndex: number) => {
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
+
+        const newProblems = [...subElements];
+        const draggedItem = newProblems[draggedIndex];
+
+        // Remove dragged item
+        newProblems.splice(draggedIndex, 1);
+        // Insert at new position
+        newProblems.splice(targetIndex, 0, draggedItem);
+
+        reorderProblems(list.id, currentParentId, newProblems);
+        setDraggedIndex(targetIndex);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
     };
 
     return (
@@ -276,11 +300,16 @@ export default function ProblemPage() {
             </header>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {subElements.map(child => {
+                {subElements.map((child, index) => {
                     const childCount = child.subproblems.filter(p => !p.completed).length;
                     return (
                         <div
                             key={child.id}
+                            draggable
+                            onDragStart={() => handleDragStart(index)}
+                            onDragEnter={() => handleDragEnter(index)}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={(e) => e.preventDefault()}
                             onClick={() => navigate(`/list/${list.id}/problem/${child.id}`)}
                             style={{
                                 display: 'flex',
@@ -288,12 +317,18 @@ export default function ProblemPage() {
                                 justifyContent: 'space-between',
                                 padding: '1rem',
                                 borderBottom: '1px solid #f0f0f0',
-                                cursor: 'pointer',
+                                cursor: 'pointer', // Indicates clickable. 'move' cursor on drag area would be better but this is fine for now.
                                 transition: 'background-color 0.2s',
-                                borderRadius: '8px'
+                                borderRadius: '8px',
+                                backgroundColor: draggedIndex === index ? '#f0f0f0' : 'transparent',
+                                opacity: draggedIndex === index ? 0.5 : 1
                             }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                            onMouseEnter={(e) => {
+                                if (draggedIndex === null) e.currentTarget.style.backgroundColor = '#f9f9f9';
+                            }}
+                            onMouseLeave={(e) => {
+                                if (draggedIndex === null) e.currentTarget.style.backgroundColor = 'transparent';
+                            }}
                         >
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                 <button

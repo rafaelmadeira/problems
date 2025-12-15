@@ -10,6 +10,7 @@ interface StoreContextType {
     deleteList: (listId: string) => void;
     deleteProblem: (listId: string, problemId: string) => void;
     reorderLists: (newLists: List[]) => void;
+    reorderProblems: (listId: string, parentProblemId: string | null, newProblems: Problem[]) => void;
     // We might need more specific actions or a generic dispatch
 }
 
@@ -161,8 +162,36 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }));
     };
 
+    const findProblemAndReorder = (problems: Problem[], parentId: string, newSubproblems: Problem[]): boolean => {
+        for (let i = 0; i < problems.length; i++) {
+            if (problems[i].id === parentId) {
+                problems[i].subproblems = newSubproblems;
+                return true;
+            }
+            if (findProblemAndReorder(problems[i].subproblems, parentId, newSubproblems)) return true;
+        }
+        return false;
+    };
+
+    const reorderProblems = (listId: string, parentProblemId: string | null, newProblems: Problem[]) => {
+        setState(prev => {
+            const newLists = prev.lists.map(list => {
+                if (list.id !== listId) return list;
+                const updatedList = structuredClone(list);
+
+                if (!parentProblemId) {
+                    updatedList.problems = newProblems;
+                } else {
+                    findProblemAndReorder(updatedList.problems, parentProblemId, newProblems);
+                }
+                return updatedList;
+            });
+            return { lists: newLists };
+        });
+    };
+
     return (
-        <StoreContext.Provider value={{ state, addList, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderLists }}>
+        <StoreContext.Provider value={{ state, addList, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderLists, reorderProblems }}>
             {children}
         </StoreContext.Provider>
     );
