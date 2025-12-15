@@ -4,7 +4,8 @@ import HomePage from './pages/HomePage';
 import ProblemPage from './pages/ProblemPage';
 import TodayPage from './pages/TodayPage';
 import UnfinishedPage from './pages/UnfinishedPage';
-import { CheckCircle2, Calendar, Target } from 'lucide-react'; // Using Target icon for Unfinished/Focus
+import ThisWeekPage from './pages/ThisWeekPage';
+import { CheckCircle2, Calendar, Target, CalendarRange } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 
 function App() {
@@ -35,6 +36,46 @@ function App() {
     return count;
   };
 
+  // Helper: Is date in current week (Monday to Sunday)?
+  // Must match ThisWeekPage logic for consistency
+  const isDateInCurrentWeek = (dateStr: string | null): boolean => {
+    if (!dateStr) return false;
+    // const d = new Date(dateStr);
+    const now = new Date();
+
+    const currentDay = now.getDay(); // 0 = Sunday
+    const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+
+    const monday = new Date(now);
+    monday.setDate(now.getDate() + diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    sunday.setHours(23, 59, 59, 999);
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const checkDate = new Date(year, month - 1, day);
+
+    return checkDate >= monday && checkDate <= sunday;
+  };
+
+  // Calculate This Week problems
+  const countWeekProblems = (problems: Problem[]): number => {
+    let count = 0;
+    for (const p of problems) {
+      if (!p.completed) {
+        const isPriorityMatch = p.priority === 'today' || p.priority === 'this_week';
+        const isDueMatch = isDateInCurrentWeek(p.dueDate);
+        if (isPriorityMatch || isDueMatch) {
+          count += 1;
+        }
+      }
+      count += countWeekProblems(p.subproblems);
+    }
+    return count;
+  };
+
   // Calculate Unfinished problems (solving or blocked)
   const countUnfinishedProblems = (problems: Problem[]): number => {
     let count = 0;
@@ -60,6 +101,10 @@ function App() {
     return acc + countUnfinishedProblems(list.problems);
   }, 0);
 
+  const weekProblemsCount = state.lists.reduce((acc, list) => {
+    return acc + countWeekProblems(list.problems);
+  }, 0);
+
 
   const title = totalProblems === 0 ? '0 problems' : `${totalProblems} problems`;
 
@@ -68,6 +113,7 @@ function App() {
   const inboxCount = inboxList ? countProblems(inboxList.problems) : 0;
   const isInboxActive = location.pathname.includes('/list/inbox');
   const isTodayActive = location.pathname === '/today';
+  const isWeekActive = location.pathname === '/week';
   const isUnfinishedActive = location.pathname === '/unfinished';
 
 
@@ -146,6 +192,39 @@ function App() {
           </Link>
 
           <Link
+            to="/week"
+            style={{
+              padding: '0.4rem 0.8rem',
+              backgroundColor: isWeekActive ? '#eee' : 'transparent',
+              borderRadius: '8px',
+              color: isWeekActive ? '#111' : '#666',
+              textDecoration: 'none',
+              fontSize: '0.9rem',
+              fontWeight: '600',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              transition: 'background-color 0.2s'
+            }}
+          >
+            <CalendarRange size={16} />
+            This Week
+            {weekProblemsCount > 0 && (
+              <span style={{
+                backgroundColor: isWeekActive ? '#333' : '#e5e5e5',
+                color: isWeekActive ? '#fff' : '#333',
+                fontSize: '0.75rem',
+                padding: '0.1rem 0.5rem',
+                borderRadius: '999px',
+                minWidth: '20px',
+                textAlign: 'center'
+              }}>
+                {weekProblemsCount}
+              </span>
+            )}
+          </Link>
+
+          <Link
             to="/unfinished"
             style={{
               padding: '0.4rem 0.8rem',
@@ -184,6 +263,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/today" element={<TodayPage />} />
+          <Route path="/week" element={<ThisWeekPage />} />
           <Route path="/unfinished" element={<UnfinishedPage />} />
           <Route path="/list/:listId" element={<ProblemPage />} />
           <Route path="/list/:listId/problem/:problemId" element={<ProblemPage />} />
