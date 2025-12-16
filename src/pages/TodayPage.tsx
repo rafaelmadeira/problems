@@ -87,10 +87,10 @@ export default function TodayPage() {
 
     // Sync Local State
     useEffect(() => {
-        if (!isDragging) {
+        if (!isDraggingRef.current) {
             setLocalDoTodayTasks(baseDoTodayTasks);
         }
-    }, [state.lists, isDragging]); // Sync when store changes OR when drag ends
+    }, [state.lists]); // Only sync when STORE changes. DO NOT sync when isDragging changes (causes revert).
 
     const toggleComplete = (p: Problem, listId: string) => {
         const newCompleted = !p.completed;
@@ -194,7 +194,7 @@ export default function TodayPage() {
                     borderBottom: '1px solid #f0f0f0',
                     cursor: isDraggable ? 'grab' : 'pointer',
                     borderRadius: '8px',
-                    opacity: isDraggingThis ? 0 : 1 // Hide original
+                    opacity: isDraggingThis ? 0.3 : 1 // Show ghosted item, not invisible
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
