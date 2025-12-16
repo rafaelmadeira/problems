@@ -20,6 +20,8 @@ export default function TodayPage() {
     const [dndTasks, setDndTasks] = useState<FlatTask[] | null>(null);
     const [draggedId, setDraggedId] = useState<string | null>(null);
     const isDraggingRef = React.useRef(false); // Ref to track actual drag state for async callbacks
+    const dndItemsRef = React.useRef<FlatTask[] | null>(null);
+    const draggedIdRef = React.useRef<string | null>(null);
 
     // Helpers
     const isOverdue = (p: Problem): boolean => {
@@ -94,6 +96,7 @@ export default function TodayPage() {
         // If not dragging, ensure dndTasks is null so we display store state
         if (!isDraggingRef.current) {
             setDndTasks(null);
+            dndItemsRef.current = null;
         }
     }, [state.lists]); // Only sync when STORE changes.
 
@@ -117,11 +120,15 @@ export default function TodayPage() {
     };
 
     // DnD Handlers (Local State)
-    const handleDragStart = (id: string, index: number) => {
+    const handleDragStart = (id: string) => {
         isDraggingRef.current = true;
+        draggedIdRef.current = id;
 
-        // Fork state
-        setDndTasks(baseDoTodayTasks);
+        // Fork state into Ref for synchronous access
+        dndItemsRef.current = [...baseDoTodayTasks];
+
+        // Trigger UI update to switch to local state
+        setDndTasks([...dndItemsRef.current]);
 
         // Delay visual update for ghost
         setTimeout(() => {
@@ -131,24 +138,29 @@ export default function TodayPage() {
         }, 0);
     };
 
-    const handleDragEnter = (targetId: string, targetIndex: number) => {
-        // We need draggedId to know WHAT is being dragged
-        // We need 'dndTasks' to be populated (it should be, since DragStart fired)
+    const handleDragEnter = (targetId: string) => {
+        const currentDraggedId = draggedIdRef.current;
+        const currentItems = dndItemsRef.current;
 
-        if (!draggedId || !dndTasks) return;
-        if (draggedId === targetId) return;
+        // Validations
+        if (!currentDraggedId || !currentItems) return;
+        if (currentDraggedId === targetId) return;
 
-        // Find current indices in the LOCAL array
-        const currentIndex = dndTasks.findIndex(t => t.problem.id === draggedId);
-        const hoverIndex = dndTasks.findIndex(t => t.problem.id === targetId);
+        // Find current indices in the REF array
+        const currentIndex = currentItems.findIndex(t => t.problem.id === currentDraggedId);
+        const hoverIndex = currentItems.findIndex(t => t.problem.id === targetId);
 
         if (currentIndex === -1 || hoverIndex === -1) return;
 
-        // Reorder
-        const newItems = [...dndTasks];
+        // Reorder Modifying Ref in place (or new copy)
+        const newItems = [...currentItems];
         const [movedItem] = newItems.splice(currentIndex, 1);
         newItems.splice(hoverIndex, 0, movedItem);
 
+        // Update Ref
+        dndItemsRef.current = newItems;
+
+        // Update UI
         setDndTasks(newItems);
     };
 
@@ -156,8 +168,8 @@ export default function TodayPage() {
         isDraggingRef.current = false;
 
         // Commit if we have changes
-        if (dndTasks) {
-            const reorderPayload = dndTasks.map((t) => ({
+        if (dndItemsRef.current) {
+            const reorderPayload = dndItemsRef.current.map((t) => ({
                 id: t.problem.id,
                 listId: t.listId
             }));
@@ -167,6 +179,8 @@ export default function TodayPage() {
         // Clean up
         setDndTasks(null); // Return to store mode
         setDraggedId(null);
+        dndItemsRef.current = null;
+        draggedIdRef.current = null;
     };
 
     const hasAnyContent = overdueTasks.length > 0 || dueTodayTasks.length > 0 || displayDoTodayTasks.length > 0;
