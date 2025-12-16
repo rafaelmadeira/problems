@@ -23,6 +23,7 @@ export default function ProblemPage() {
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
+    const [showCompleted, setShowCompleted] = useState(false);
     const dateInputRef = React.useRef<HTMLInputElement>(null);
 
     // 1. Find the List
@@ -58,6 +59,8 @@ export default function ProblemPage() {
 
     // View Data
     const subElements = currentProblem ? currentProblem.subproblems : list.problems;
+    const activeSubElements = subElements.filter(p => !p.completed);
+    const completedSubElements = subElements.filter(p => p.completed);
     const currentParentId = currentProblem ? currentProblem.id : null;
 
     // Check if it's a top-level task (root task)
@@ -144,13 +147,17 @@ export default function ProblemPage() {
     const handleDragEnter = (targetIndex: number) => {
         if (draggedIndex === null || draggedIndex === targetIndex) return;
 
-        const newProblems = [...subElements];
-        const draggedItem = newProblems[draggedIndex];
+        // Perform reorder on ACTIVE items
+        const newActive = [...activeSubElements];
+        const draggedItem = newActive[draggedIndex];
 
         // Remove dragged item
-        newProblems.splice(draggedIndex, 1);
+        newActive.splice(draggedIndex, 1);
         // Insert at new position
-        newProblems.splice(targetIndex, 0, draggedItem);
+        newActive.splice(targetIndex, 0, draggedItem);
+
+        // Combine with completed items (Active first, Completed last)
+        const newProblems = [...newActive, ...completedSubElements];
 
         reorderProblems(list.id, currentParentId, newProblems);
         setDraggedIndex(targetIndex);
@@ -793,7 +800,7 @@ export default function ProblemPage() {
             `}</style>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {subElements.map((child, index) => {
+                {activeSubElements.map((child, index) => {
                     const childCount = child.subproblems.filter(p => !p.completed).length;
                     return (
                         <div
@@ -810,7 +817,7 @@ export default function ProblemPage() {
                                 justifyContent: 'space-between',
                                 padding: '1rem',
                                 borderBottom: '1px solid #f0f0f0',
-                                cursor: 'pointer', // Indicates clickable. 'move' cursor on drag area would be better but this is fine for now.
+                                cursor: 'pointer',
                                 transition: 'background-color 0.2s',
                                 borderRadius: '8px',
                                 backgroundColor: draggedIndex === index ? '#f0f0f0' : 'transparent',
@@ -898,21 +905,185 @@ export default function ProblemPage() {
                                         borderRadius: '999px',
                                         fontSize: '0.875rem',
                                         fontWeight: '600',
-                                        color: '#333'
+                                        color: '#555'
                                     }}>
                                         {childCount}
                                     </span>
                                 )}
-                                <Link
-                                    to={`/list/${list.id}/problem/${child.id}`}
-                                    onClick={(e) => e.stopPropagation()}
-                                >
-                                    <ChevronRight size={20} color="#e5e5e5" />
-                                </Link>
+                                <div style={{ position: 'relative' }}>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                            toggleMenu(child.id);
+                                        }}
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            padding: '4px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            color: '#ccc',
+                                            transition: 'color 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.color = '#888'}
+                                        onMouseLeave={(e) => e.currentTarget.style.color = '#ccc'}
+                                    >
+                                        <MoreHorizontal size={20} />
+                                    </button>
+
+                                    {activeMenuId === child.id && (
+                                        <div
+                                            style={{
+                                                position: 'absolute',
+                                                right: 0,
+                                                top: '100%',
+                                                backgroundColor: 'white',
+                                                border: '1px solid #eee',
+                                                borderRadius: '8px',
+                                                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                                zIndex: 50,
+                                                minWidth: '150px',
+                                                overflow: 'hidden'
+                                            }}
+                                            onMouseLeave={() => setActiveMenuId(null)}
+                                        >
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleDeleteProblem(child.id);
+                                                }}
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.5rem',
+                                                    width: '100%',
+                                                    padding: '0.75rem 1rem',
+                                                    textAlign: 'left',
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    color: '#ef4444',
+                                                    fontSize: '0.9rem',
+                                                    fontWeight: 500
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                            >
+                                                <Trash2 size={16} />
+                                                Delete
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     );
                 })}
+
+                {completedSubElements.length > 0 && (
+                    <div style={{ marginTop: '2rem' }}>
+                        <button
+                            onClick={() => setShowCompleted(!showCompleted)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                background: 'none',
+                                border: 'none',
+                                color: '#888',
+                                fontSize: '0.95rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                padding: '0.5rem 0'
+                            }}
+                        >
+                            <span style={{ transform: showCompleted ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
+                                <ChevronRight size={16} />
+                            </span>
+                            {completedSubElements.length} completed tasks
+                        </button>
+
+                        {showCompleted && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+                                {completedSubElements.map((child) => {
+                                    const childCount = child.subproblems.filter(p => !p.completed).length;
+                                    return (
+                                        <div
+                                            key={child.id}
+                                            onClick={() => navigate(`/list/${list.id}/problem/${child.id}`)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '1rem',
+                                                borderBottom: '1px solid #f0f0f0',
+                                                cursor: 'pointer',
+                                                transition: 'background-color 0.2s',
+                                                borderRadius: '8px',
+                                                opacity: 0.6
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                <button
+                                                    title="unsolve problem"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleComplete(child);
+                                                    }}
+                                                    style={{
+                                                        color: '#22c55e',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        padding: 0
+                                                    }}
+                                                >
+                                                    <CheckCircle2 size={24} fill="#22c55e" color="#fff" />
+                                                </button>
+                                                <Link
+                                                    to={`/list/${list.id}/problem/${child.id}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    style={{
+                                                        fontSize: '1.1rem',
+                                                        textDecoration: 'line-through',
+                                                        color: '#aaa',
+                                                        cursor: 'pointer',
+                                                        fontWeight: child.name.endsWith('!') ? 'bold' : 'normal',
+                                                    }}
+                                                >
+                                                    {child.name}
+                                                </Link>
+                                            </div>
+
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                {childCount > 0 && (
+                                                    <span style={{
+                                                        backgroundColor: '#f0f0f0',
+                                                        padding: '0.25rem 0.75rem',
+                                                        borderRadius: '999px',
+                                                        fontSize: '0.875rem',
+                                                        fontWeight: '600',
+                                                        color: '#999'
+                                                    }}>
+                                                        {childCount}
+                                                    </span>
+                                                )}
+                                                <div style={{ width: '28px' }}></div> {/* Spacer for menu alignment if menu is omitted */}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* New Task Modal */}
