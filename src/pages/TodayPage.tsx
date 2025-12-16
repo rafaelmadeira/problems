@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { CheckCircle2, ChevronRight, Equal } from 'lucide-react';
+import { CheckCircle2, ChevronRight } from 'lucide-react';
 import type { Problem } from '../types';
 
 interface FlatTask {
@@ -168,17 +168,12 @@ export default function TodayPage() {
                     borderBottom: '1px solid #f0f0f0',
                     cursor: isDraggable ? 'grab' : 'pointer',
                     borderRadius: '8px',
-                    opacity: isDraggable && index === draggedIndex ? 0.5 : 1
+                    opacity: isDraggable && index === draggedIndex ? 0 : 1 // Hide original while dragging
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
             >
-                {/* Drag Handle if Draggable */}
-                {isDraggable && (
-                    <div style={{ marginTop: '4px', cursor: 'grab', color: '#ccc', display: 'flex', alignItems: 'center' }}>
-                        <Equal size={16} />{/* Using Equal as a simple handle representation or could import GripVertical */}
-                    </div>
-                )}
+                {/* Drag Handle Removed - Whole card is draggable */}
 
                 <div style={{ position: 'relative', paddingTop: '2px' }}>
                     {solvedMessages[problem.id] && (
@@ -214,6 +209,7 @@ export default function TodayPage() {
                     )}
                     <button
                         title="solve problem"
+                        onMouseDown={(e) => e.stopPropagation()} /* Prevent drag start on button */
                         onClick={(e) => {
                             e.stopPropagation();
                             toggleComplete(problem, listId);
@@ -244,7 +240,10 @@ export default function TodayPage() {
                     </div>
 
                     {/* Path & Details */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }} onClick={e => e.stopPropagation()}>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={e => e.stopPropagation()}
+                    >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                             {path.map((crumb, index) => {
                                 const linkPath = crumb.type === 'list'
@@ -337,7 +336,7 @@ export default function TodayPage() {
                 {/* Do Today Section */}
                 {doTodayTasks.length > 0 && (
                     <section>
-                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #1368C4', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#1368C4' }}>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#1368C4' }}>
                             Do Today
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
