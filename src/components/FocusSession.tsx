@@ -64,8 +64,13 @@ export default function FocusSession({ problem, onExit, onUpdateProblem }: Focus
 
     useEffect(() => {
         // Track if isTotalTimeRunning is true and problem is not completed
-        // This decouples "Timer Finished" (which pauses timerState) from "Total Time" (which keeps running)
         if (!isTotalTimeRunning || problem.completed) return;
+
+        // Auto-update status to 'solving' if it's currently 'to_solve' or undefined
+        if (!problem.status || problem.status === 'to_solve') {
+            console.log('FocusSession: Auto-updating status to solving');
+            onUpdateProblem(problem.id, { status: 'solving' });
+        }
 
         lastTimeRef.current = Date.now(); // Reset anchor on resume/start
 
@@ -77,7 +82,7 @@ export default function FocusSession({ problem, onExit, onUpdateProblem }: Focus
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isTotalTimeRunning, problem.completed]);
+    }, [isTotalTimeRunning, problem.completed, problem.status, problem.id, onUpdateProblem]);
 
     // 2. Timer Logic (Countdown & Stopwatch)
     useEffect(() => {
