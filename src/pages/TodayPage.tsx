@@ -19,6 +19,7 @@ export default function TodayPage() {
     const [localDoTodayTasks, setLocalDoTodayTasks] = useState<FlatTask[]>([]);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [isDragging, setIsDragging] = useState(false);
+    const isDraggingRef = React.useRef(false); // Ref to track actual drag state for async callbacks
 
     // Helpers
     const isOverdue = (p: Problem): boolean => {
@@ -113,9 +114,14 @@ export default function TodayPage() {
     // DnD Handlers (Local State)
     const handleDragStart = (index: number) => {
         setIsDragging(true);
+        isDraggingRef.current = true;
+
         // Delay to allow browser to capture full-opacity drag image
         setTimeout(() => {
-            setDraggedIndex(index);
+            // Only set dragged index if we are still dragging!
+            if (isDraggingRef.current) {
+                setDraggedIndex(index);
+            }
         }, 0);
     };
 
@@ -135,6 +141,8 @@ export default function TodayPage() {
     };
 
     const handleDragEnd = () => {
+        isDraggingRef.current = false; // Immediately disable future timeout actions
+
         // Commit to Store
         const reorderPayload = localDoTodayTasks.map((t) => ({
             id: t.problem.id,
