@@ -7,11 +7,10 @@ import type { Problem } from '../types';
 /* 
   Recursive component for rendering a task and its children 
 */
-const TaskNode = ({
+const InternalTaskNode = ({
     problem,
     listId,
-    path, // [NEW] Path prop
-    depth = 0,
+    depth,
     toggleComplete,
     solvedMessages,
     expandedIds,
@@ -19,12 +18,11 @@ const TaskNode = ({
 }: {
     problem: Problem,
     listId: string,
-    path: { id: string, name: string, type: 'list' | 'problem' }[],
     depth: number,
     toggleComplete: (p: Problem, listId: string) => void,
     solvedMessages: { [key: string]: boolean },
     expandedIds: { [key: string]: boolean },
-    onToggleExpand: (id: string, listId: string) => void
+    onToggleExpand: (id: string) => void
 }) => {
     const navigate = useNavigate();
 
@@ -58,50 +56,15 @@ const TaskNode = ({
 
     const hasMatchingDescendants = (p: Problem): boolean => {
         if (isMatch(p)) return true;
-        return p.subproblems.some(child => isMatch(child) || hasMatchingDescendants(child));
+        return p.subproblems.some(child => hasMatchingDescendants(child));
     };
 
     const isSelfMatch = isMatch(problem);
-    const hasChildrenMatch = problem.subproblems.some(child => isMatch(child) || hasMatchingDescendants(child));
+    const hasChildrenMatch = problem.subproblems.some(child => hasMatchingDescendants(child));
 
     if (!isSelfMatch && !hasChildrenMatch) return null;
 
     const isExpanded = expandedIds[problem.id] || false;
-
-    // Current path for this node (parent path + self)
-    // Actually, for display, we want the path TO this node?
-    // User said: "So the task will have 3 lines... line 3: [path]"
-    // Usually path excludes self name if title is self name.
-    // Let's assume path is Parents.
-    // Wait, the path passed in `path` prop is the path TO this node (excluding this node)?
-    // Or including?
-    // In TodayPage: `const newPath = [...currentPath, { id: p.id, name: p.name, type: 'problem' as const }];`
-    // And `currentPath` is passed to traverse.
-    // So `path` is the heritage.
-
-    // Line 3: Path styling
-    const pathElements = path.map((crumb, index) => {
-        const linkPath = crumb.type === 'list'
-            ? `/list/${crumb.id}`
-            : `/list/${listId}/problem/${crumb.id}`;
-
-        return (
-            <React.Fragment key={index}>
-                {index > 0 && <ChevronRight size={12} />}
-                <Link
-                    to={linkPath}
-                    style={{ color: '#888', textDecoration: 'none', borderBottom: '1px solid transparent' }}
-                    onMouseEnter={e => e.currentTarget.style.borderBottom = '1px solid #888'}
-                    onMouseLeave={e => e.currentTarget.style.borderBottom = '1px solid transparent'}
-                >
-                    {crumb.name}
-                </Link>
-            </React.Fragment>
-        );
-    });
-
-    const currentPath = [...path, { id: problem.id, name: problem.name, type: 'problem' as const }];
-
 
     return (
         <div style={{ marginLeft: depth > 0 ? '1.5rem' : '0' }}>
@@ -132,7 +95,7 @@ const TaskNode = ({
                     <div
                         onClick={(e) => {
                             e.stopPropagation();
-                            onToggleExpand(problem.id, listId);
+                            onToggleExpand(problem.id);
                         }}
                         style={{ padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', marginTop: '4px' }}
                     >
@@ -211,7 +174,7 @@ const TaskNode = ({
                     {isSelfMatch && (problem.priority || problem.dueDate) && (
                         <div style={{ fontSize: '0.85rem', color: '#666', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             {problem.priority && (
-                                <span style={{ textTransform: 'capitalize', fontWeight: 500 }}>
+                                <span style={{ textTransform: 'capitalize' }}>
                                     {problem.priority.replace('_', ' ')}
                                 </span>
                             )}
@@ -221,11 +184,6 @@ const TaskNode = ({
                             )}
                         </div>
                     )}
-
-                    {/* Line 3: Path */}
-                    <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '0.25rem', fontSize: '0.8rem', color: '#888' }} onClick={e => e.stopPropagation()}>
-                        {pathElements}
-                    </div>
                 </div>
             </div>
 
@@ -233,11 +191,10 @@ const TaskNode = ({
             {isExpanded && hasChildrenMatch && (
                 <div>
                     {problem.subproblems.map(child => (
-                        <TaskNode
+                        <InternalTaskNode
                             key={child.id}
                             problem={child}
                             listId={listId}
-                            path={currentPath} // Pass cumulative path
                             depth={depth + 1}
                             toggleComplete={toggleComplete}
                             solvedMessages={solvedMessages}
@@ -253,7 +210,7 @@ const TaskNode = ({
 
 export default function ThisWeekPage() {
     const { state, updateProblem } = useStore();
-    // const navigate = useNavigate(); // Unused
+    const navigate = useNavigate();
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
     const [expandedIds, setExpandedIds] = useState<{ [id: string]: boolean }>({});
     const [menuOpen, setMenuOpen] = useState(false);
@@ -270,7 +227,7 @@ export default function ThisWeekPage() {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    const toggleExpand = (id: string, listId: string) => {
+    const toggleExpand = (id: string) => {
         setExpandedIds(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
@@ -299,37 +256,57 @@ export default function ThisWeekPage() {
     };
 
     const hasMatchingDescendants = (p: Problem): boolean => {
-        if (p.completed) return false; // if complete, descendants don't matter for this view? Assume yes.
-        // Actually, if a completed parent has an incomplete matching child?
-        // "This Week" usually implies "Things to do".
-        // If parent is checked, usually children are checked.
-        // So checking p.completed is safe.
         if (isMatch(p)) return true;
         return p.subproblems.some(child => hasMatchingDescendants(child));
     };
 
-    // Flatten all root problems from all lists
-    const allRootProblems = state.lists.flatMap(list =>
-        list.problems.map(p => ({ problem: p, listId: list.id, listName: list.name }))
-    ).filter(({ problem }) => hasMatchingDescendants(problem));
+    // Filter lists
+    const visibleLists = state.lists.filter(list =>
+        list.problems.some(p => hasMatchingDescendants(p))
+    );
 
+    const toggleComplete = (p: Problem, listId: string) => {
+        const newCompleted = !p.completed;
+        updateProblem(listId, p.id, {
+            completed: newCompleted,
+            status: newCompleted ? 'solved' : 'to_solve'
+        });
 
-    // Expand/Collapse All Logic
+        if (newCompleted) {
+            setSolvedMessages(prev => ({ ...prev, [p.id]: true }));
+            setTimeout(() => {
+                setSolvedMessages(prev => {
+                    const next = { ...prev };
+                    delete next[p.id];
+                    return next;
+                });
+            }, 2000);
+        }
+    };
+
+    // Expand/Collapse All Logic - Adapted for new structure
     const getAllCollapsibleIds = (): string[] => {
         const ids: string[] = [];
+
         const traverse = (p: Problem) => {
-            // If p has relevant children, it is collapsible
             if (p.subproblems.some(child => hasMatchingDescendants(child))) {
                 ids.push(p.id);
             }
             p.subproblems.forEach(traverse);
         };
 
-        allRootProblems.forEach(({ problem }) => {
-            // Check root itself?
-            // Root is "problem".
-            traverse(problem);
-        });
+        const hasMatchingDescendantsMain = (p: Problem): boolean => {
+            if (isMatch(p)) return true;
+            return p.subproblems.some(child => hasMatchingDescendantsMain(child));
+        };
+
+        for (const list of state.lists) {
+            if (list.problems.some(p => hasMatchingDescendantsMain(p))) {
+                ids.push(list.id);
+                // Also traverse items for their expandability
+                list.problems.forEach(traverse);
+            }
+        }
         return ids;
     };
 
@@ -358,26 +335,7 @@ export default function ThisWeekPage() {
     const canExpandAll = anyCollapsed;
 
 
-    const toggleComplete = (p: Problem, listId: string) => {
-        const newCompleted = !p.completed;
-        updateProblem(listId, p.id, {
-            completed: newCompleted,
-            status: newCompleted ? 'solved' : 'to_solve'
-        });
-
-        if (newCompleted) {
-            setSolvedMessages(prev => ({ ...prev, [p.id]: true }));
-            setTimeout(() => {
-                setSolvedMessages(prev => {
-                    const next = { ...prev };
-                    delete next[p.id];
-                    return next;
-                });
-            }, 2000);
-        }
-    };
-
-    if (allRootProblems.length === 0) {
+    if (visibleLists.length === 0) {
         return (
             <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
                 <h2>No tasks for this week!</h2>
@@ -486,20 +444,60 @@ export default function ThisWeekPage() {
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {allRootProblems.map(({ problem, listId, listName }) => (
-                    <TaskNode
-                        key={problem.id}
-                        problem={problem}
-                        listId={listId}
-                        path={[{ id: listId, name: listName, type: 'list' }]} // Initial path
-                        depth={0}
-                        toggleComplete={toggleComplete}
-                        solvedMessages={solvedMessages}
-                        expandedIds={expandedIds}
-                        onToggleExpand={toggleExpand}
-                    />
-                ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {visibleLists.map(list => {
+                    const isExpanded = expandedIds[list.id] || false;
+
+                    const countMatching = (problems: Problem[]): number => {
+                        let c = 0;
+                        for (const p of problems) {
+                            if (isMatch(p)) c++;
+                            c += countMatching(p.subproblems);
+                        }
+                        return c;
+                    };
+                    const matchCount = countMatching(list.problems);
+
+                    return (
+                        <div key={list.id}>
+                            <div
+                                onClick={() => toggleExpand(list.id)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    cursor: 'pointer',
+                                    marginBottom: '1rem',
+                                    userSelect: 'none'
+                                }}
+                            >
+                                {isExpanded ? <ChevronDown size={20} /> : <ChevronRightIcon size={20} />}
+                                <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0 }}>{list.name}</h2>
+                                <span style={{ color: '#888', fontSize: '0.9rem', fontWeight: 'normal' }}>({matchCount})</span>
+                            </div>
+
+                            {isExpanded && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    {list.problems
+                                        .filter(p => hasMatchingDescendants(p))
+                                        .map(p => (
+                                            <InternalTaskNode
+                                                key={p.id}
+                                                problem={p}
+                                                listId={list.id}
+                                                depth={0}
+                                                toggleComplete={toggleComplete}
+                                                solvedMessages={solvedMessages}
+                                                expandedIds={expandedIds}
+                                                onToggleExpand={toggleExpand}
+                                            />
+                                        ))
+                                    }
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
             </div>
         </div>
     );
