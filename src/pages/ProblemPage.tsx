@@ -407,24 +407,35 @@ export default function ProblemPage() {
                                 </div>
 
                                 {/* Time Spent (Focus Mode Metadata) */}
-                                {currentProblem.totalTime ? (
-                                    <>
-                                        <div style={{ color: '#888', fontSize: '0.95rem' }}>Time Spent</div>
-                                        <div style={{ fontSize: '0.95rem', color: '#111', fontFamily: 'monospace' }}>
-                                            {(() => {
-                                                const totalSeconds = Math.floor(currentProblem.totalTime / 1000);
-                                                const hours = Math.floor(totalSeconds / 3600);
-                                                const minutes = Math.floor((totalSeconds % 3600) / 60);
-                                                const seconds = totalSeconds % 60;
+                                <div style={{ color: '#888', fontSize: '0.95rem' }}>Time Spent</div>
+                                <div style={{ fontSize: '0.95rem', color: '#111', fontFamily: 'monospace' }}>
+                                    {currentProblem.totalTime ? (
+                                        (() => {
+                                            const totalSeconds = Math.floor(currentProblem.totalTime / 1000);
+                                            const hours = Math.floor(totalSeconds / 3600);
+                                            const minutes = Math.floor((totalSeconds % 3600) / 60);
+                                            const seconds = totalSeconds % 60;
 
-                                                // Format: HH:MM:SS or just MM:SS if no hours? 
-                                                // User "Total elapsed time should track time spent... keeps running even when the 5 minute and pomodoro timers are running"
-                                                // Let's show full HH:MM:SS
-                                                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                                            })()}
-                                        </div>
-                                    </>
-                                ) : null}
+                                            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                                        })()
+                                    ) : (
+                                        <button
+                                            onClick={() => setIsFocusOpen(true)}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                padding: 0,
+                                                color: '#3b82f6', // Blue link color
+                                                textDecoration: 'underline',
+                                                cursor: 'pointer',
+                                                fontSize: '0.95rem',
+                                                fontFamily: 'inherit'
+                                            }}
+                                        >
+                                            Start focus session
+                                        </button>
+                                    )}
+                                </div>
 
                                 {/* Notes */}
                                 <div style={{ color: '#888', fontSize: '0.95rem', alignSelf: 'flex-start', marginTop: '0.2rem' }}>Notes</div>
