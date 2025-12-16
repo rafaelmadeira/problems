@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { CheckCircle2, ChevronRight } from 'lucide-react';
@@ -16,12 +16,7 @@ export default function TodayPage() {
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
 
     // START: DnD Local State
-    // We only use local state WHILE dragging. Otherwise we mirror the store directly.
-    const [dndTasks, setDndTasks] = useState<FlatTask[] | null>(null);
-    const [draggedId, setDraggedId] = useState<string | null>(null);
-    const isDraggingRef = React.useRef(false); // Ref to track actual drag state for async callbacks
-    const dndItemsRef = React.useRef<FlatTask[] | null>(null);
-    const draggedIdRef = React.useRef<string | null>(null);
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
     // Helpers
     const isOverdue = (p: Problem): boolean => {
@@ -79,26 +74,13 @@ export default function TodayPage() {
     const dueTodayTasks = allTasks.filter(t => isDueToday(t.problem));
 
     // Base Do Today (from Store)
-    const baseDoTodayTasks = allTasks
+    const doTodayTasks = allTasks
         .filter(t => isDoToday(t.problem))
         .sort((a, b) => {
             const orderA = a.problem.todayOrder ?? Number.MAX_SAFE_INTEGER;
             const orderB = b.problem.todayOrder ?? Number.MAX_SAFE_INTEGER;
             return orderA - orderB;
         });
-
-    // The tasks we actually render in the Do Today section
-    // If dragging, use the local dndTasks. If not, use the store-derived baseDoTodayTasks.
-    const displayDoTodayTasks = dndTasks ?? baseDoTodayTasks;
-
-    // Sync Local State
-    useEffect(() => {
-        // If not dragging, ensure dndTasks is null so we display store state
-        if (!isDraggingRef.current) {
-            setDndTasks(null);
-            dndItemsRef.current = null;
-        }
-    }, [state.lists]); // Only sync when STORE changes.
 
     const toggleComplete = (p: Problem, listId: string) => {
         const newCompleted = !p.completed;
@@ -119,71 +101,40 @@ export default function TodayPage() {
         }
     };
 
-    // DnD Handlers (Local State)
-    const handleDragStart = (id: string) => {
-        isDraggingRef.current = true;
-        draggedIdRef.current = id;
-
-        // Fork state into Ref for synchronous access
-        dndItemsRef.current = [...baseDoTodayTasks];
-
-        // Trigger UI update to switch to local state
-        setDndTasks([...dndItemsRef.current]);
-
-        // Delay visual update for ghost
-        setTimeout(() => {
-            if (isDraggingRef.current) {
-                setDraggedId(id);
-            }
-        }, 0);
+    // DnD Handlers (Direct Store Update - Matching ProblemPage)
+    const handleDragStart = (index: number) => {
+        setDraggedIndex(index);
     };
 
-    const handleDragEnter = (targetId: string) => {
-        const currentDraggedId = draggedIdRef.current;
-        const currentItems = dndItemsRef.current;
+    const handleDragEnter = (targetIndex: number) => {
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
 
-        // Validations
-        if (!currentDraggedId || !currentItems) return;
-        if (currentDraggedId === targetId) return;
+        // Perform reorder
+        const newItems = [...doTodayTasks];
+        const draggedItem = newItems[draggedIndex];
 
-        // Find current indices in the REF array
-        const currentIndex = currentItems.findIndex(t => t.problem.id === currentDraggedId);
-        const hoverIndex = currentItems.findIndex(t => t.problem.id === targetId);
+        // Remove dragged item
+        newItems.splice(draggedIndex, 1);
+        // Insert at new position
+        newItems.splice(targetIndex, 0, draggedItem);
 
-        if (currentIndex === -1 || hoverIndex === -1) return;
+        // Commit immediately to store
+        // We construct the payload for ALL items in the new order
+        // This effectively updates 'todayOrder' for everyone
+        const reorderPayload = newItems.map((t) => ({
+            id: t.problem.id,
+            listId: t.listId
+        }));
 
-        // Reorder Modifying Ref in place (or new copy)
-        const newItems = [...currentItems];
-        const [movedItem] = newItems.splice(currentIndex, 1);
-        newItems.splice(hoverIndex, 0, movedItem);
-
-        // Update Ref
-        dndItemsRef.current = newItems;
-
-        // Update UI
-        setDndTasks(newItems);
+        reorderTodayProblems(reorderPayload);
+        setDraggedIndex(targetIndex);
     };
 
     const handleDragEnd = () => {
-        isDraggingRef.current = false;
-
-        // Commit if we have changes
-        if (dndItemsRef.current) {
-            const reorderPayload = dndItemsRef.current.map((t) => ({
-                id: t.problem.id,
-                listId: t.listId
-            }));
-            reorderTodayProblems(reorderPayload);
-        }
-
-        // Clean up
-        setDndTasks(null); // Return to store mode
-        setDraggedId(null);
-        dndItemsRef.current = null;
-        draggedIdRef.current = null;
+        setDraggedIndex(null);
     };
 
-    const hasAnyContent = overdueTasks.length > 0 || dueTodayTasks.length > 0 || displayDoTodayTasks.length > 0;
+    const hasAnyContent = overdueTasks.length > 0 || dueTodayTasks.length > 0 || doTodayTasks.length > 0;
 
     if (!hasAnyContent) {
         return (
@@ -198,18 +149,19 @@ export default function TodayPage() {
         task: FlatTask,
         isDraggable?: boolean,
         index?: number,
-        onDragStart?: (id: string, i: number) => void,
-        onDragEnter?: (id: string, i: number) => void,
+        onDragStart?: (i: number) => void,
+        onDragEnter?: (i: number) => void,
         onDragEnd?: () => void
     }) => {
         const { problem, listId, path } = task;
-        const isDraggingThis = isDraggable && problem.id === draggedId;
+        // Access draggedIndex from parent closure (TodayPage scope)
+        const isDraggingThis = isDraggable && index !== undefined && index === draggedIndex;
 
         return (
             <div
                 draggable={isDraggable}
-                onDragStart={() => isDraggable && onDragStart && index !== undefined && onDragStart(problem.id, index)}
-                onDragEnter={() => isDraggable && onDragEnter && index !== undefined && onDragEnter(problem.id, index)}
+                onDragStart={() => isDraggable && onDragStart && index !== undefined && onDragStart(index)}
+                onDragEnter={() => isDraggable && onDragEnter && index !== undefined && onDragEnter(index)}
                 onDragEnd={onDragEnd}
                 onDragOver={e => e.preventDefault()}
                 onClick={() => navigate(`/list/${listId}/problem/${problem.id}`)}
@@ -222,7 +174,7 @@ export default function TodayPage() {
                     borderBottom: '1px solid #f0f0f0',
                     cursor: isDraggable ? 'grab' : 'pointer',
                     borderRadius: '8px',
-                    opacity: isDraggingThis ? 0.3 : 1 // Show ghosted item, not invisible
+                    opacity: isDraggingThis ? 0 : 1 // Hide original while dragging
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
@@ -382,13 +334,13 @@ export default function TodayPage() {
                     </section>
                 )}
 
-                {displayDoTodayTasks.length > 0 && (
+                {doTodayTasks.length > 0 && (
                     <section>
                         <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#1368C4' }}>
                             Do Today
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {displayDoTodayTasks.map((t, index) => (
+                            {doTodayTasks.map((t, index) => (
                                 <TaskItem
                                     key={t.problem.id}
                                     task={t}
