@@ -21,6 +21,7 @@ export default function ProblemPage() {
     const [isMoveListOpen, setIsMoveListOpen] = useState(false);
     const [isFocusOpen, setIsFocusOpen] = useState(false);
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+    const [isHistoryMenuOpen, setIsHistoryMenuOpen] = useState(false);
 
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
     const [showCompleted, setShowCompleted] = useState(false);
@@ -324,31 +325,58 @@ export default function ProblemPage() {
                     }} onClick={e => e.stopPropagation()}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Session History</h3>
-                            <button onClick={() => setIsHistoryOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
-                                <X size={20} color="#666" />
-                            </button>
-                        </div>
-
-                        <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
-                            <button
-                                onClick={handleResetHistory}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.5rem',
-                                    padding: '0.5rem 1rem',
-                                    backgroundColor: '#fff1f2',
-                                    color: '#e11d48',
-                                    border: 'none',
-                                    borderRadius: '6px',
-                                    fontSize: '0.875rem',
-                                    fontWeight: 500,
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <RotateCcw size={14} />
-                                Reset History
-                            </button>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <div style={{ position: 'relative' }}>
+                                    <button
+                                        onClick={() => setIsHistoryMenuOpen(!isHistoryMenuOpen)}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '4px' }}
+                                    >
+                                        <MoreHorizontal size={20} color="#666" />
+                                    </button>
+                                    {isHistoryMenuOpen && (
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '100%',
+                                            right: 0,
+                                            backgroundColor: '#fff',
+                                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                                            borderRadius: '8px',
+                                            border: '1px solid #eee',
+                                            zIndex: 10,
+                                            minWidth: '160px',
+                                            overflow: 'hidden'
+                                        }}>
+                                            <button
+                                                onClick={() => {
+                                                    handleResetHistory();
+                                                    setIsHistoryMenuOpen(false);
+                                                }}
+                                                style={{
+                                                    width: '100%',
+                                                    textAlign: 'left',
+                                                    padding: '0.75rem 1rem',
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.9rem',
+                                                    color: '#ef4444',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.5rem'
+                                                }}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fef2f2'}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                            >
+                                                <RotateCcw size={16} />
+                                                Reset History
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                                <button onClick={() => setIsHistoryOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px' }}>
+                                    <X size={20} color="#666" />
+                                </button>
+                            </div>
                         </div>
 
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
