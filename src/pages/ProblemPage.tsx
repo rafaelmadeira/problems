@@ -425,7 +425,7 @@ export default function ProblemPage() {
                                                 background: 'none',
                                                 border: 'none',
                                                 padding: 0,
-                                                color: '#3b82f6', // Blue link color
+                                                color: '#888', // Grey link color
                                                 textDecoration: 'underline',
                                                 cursor: 'pointer',
                                                 fontSize: '0.95rem',
