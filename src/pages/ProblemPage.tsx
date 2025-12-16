@@ -24,6 +24,7 @@ export default function ProblemPage() {
 
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
     const [showCompleted, setShowCompleted] = useState(false);
+    const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
     const dateInputRef = React.useRef<HTMLInputElement>(null);
 
     // 1. Find the List
@@ -66,6 +67,10 @@ export default function ProblemPage() {
     // Check if it's a top-level task (root task)
     // A top-level task has breadcrumbs length of 1 (just itself)
     const isRootTask = breadcrumbs.length === 1 && currentProblem;
+
+    const toggleMenu = (id: string) => {
+        setActiveMenuId(activeMenuId === id ? null : id);
+    };
 
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
