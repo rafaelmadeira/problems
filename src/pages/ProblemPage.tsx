@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X } from 'lucide-react';
+import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw } from 'lucide-react';
 import type { Problem } from '../types';
 
 import FocusSession from '../components/FocusSession';
@@ -120,17 +120,20 @@ export default function ProblemPage() {
         navigate('/');
     };
 
-    const handleDeleteProblem = () => {
-        if (currentProblem) {
-            deleteProblem(list.id, currentProblem.id);
-            // Navigate up one level
-            if (breadcrumbs.length > 1) {
-                // breadcrumbs has the full path. The parent is at index length-2
-                const parent = breadcrumbs[breadcrumbs.length - 2];
-                navigate(`/list/${list.id}/problem/${parent.id}`);
-            } else {
-                // If top level problem, go back to list
-                navigate(`/list/${list.id}`);
+    const handleDeleteProblem = (targetId?: string) => {
+        const idToDelete = targetId || currentProblem?.id;
+        if (idToDelete && list) {
+            deleteProblem(list.id, idToDelete);
+
+            // Only navigate if we deleted the current problem context
+            if (!targetId || targetId === currentProblem?.id) {
+                // Navigate up one level
+                if (breadcrumbs.length > 1) {
+                    const parent = breadcrumbs[breadcrumbs.length - 2];
+                    navigate(`/list/${list.id}/problem/${parent.id}`);
+                } else {
+                    navigate(`/list/${list.id}`);
+                }
             }
         }
     };
@@ -139,9 +142,35 @@ export default function ProblemPage() {
         if (currentProblem && list) {
             moveProblemToList(currentProblem.id, list.id, targetListId);
             setIsMoveListOpen(false);
-            // Navigate to the new location or home? 
-            // Let's navigate to the target list to show it moved.
-            navigate(`/list/${targetListId}/problem/${currentProblem.id}`);
+            navigate(`/list/${list.id}`);
+        }
+    };
+
+    const handleDeleteSession = (timestamp: number, duration: number) => {
+        if (!currentProblem) return;
+        const newSessions = (currentProblem.sessions || []).filter(s => s.startTime !== timestamp);
+        const newTotal = Math.max(0, (currentProblem.totalTime || 0) - duration);
+        updateProblem(list.id, currentProblem.id, {
+            sessions: newSessions,
+            totalTime: newTotal
+        });
+    };
+
+    const handleDeleteLegacyTime = (legacyAmount: number) => {
+        if (!currentProblem) return;
+        const newTotal = Math.max(0, (currentProblem.totalTime || 0) - legacyAmount);
+        updateProblem(list.id, currentProblem.id, {
+            totalTime: newTotal
+        });
+    };
+
+    const handleResetHistory = () => {
+        if (!currentProblem) return;
+        if (window.confirm('Are you sure you want to reset all tracking history? This cannot be undone.')) {
+            updateProblem(list.id, currentProblem.id, {
+                sessions: [],
+                totalTime: 0
+            });
         }
     };
 
@@ -300,12 +329,34 @@ export default function ProblemPage() {
                             </button>
                         </div>
 
+                        <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'flex-end' }}>
+                            <button
+                                onClick={handleResetHistory}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    padding: '0.5rem 1rem',
+                                    backgroundColor: '#fff1f2',
+                                    color: '#e11d48',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    fontSize: '0.875rem',
+                                    fontWeight: 500,
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <RotateCcw size={14} />
+                                Reset History
+                            </button>
+                        </div>
+
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
-                            {/* Table Header */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', padding: '0.5rem', borderBottom: '1px solid #eee', fontWeight: 600, color: '#666', fontSize: '0.9rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 2rem', padding: '0.5rem', borderBottom: '1px solid #eee', fontWeight: 600, color: '#666', fontSize: '0.9rem' }}>
                                 <div>Start Time</div>
                                 <div>End Time</div>
                                 <div style={{ textAlign: 'right' }}>Duration</div>
+                                <div></div>
                             </div>
 
                             {/* Sessions List */}
@@ -328,7 +379,7 @@ export default function ProblemPage() {
                                         )}
                                         {/* Sort sessions by latest first */}
                                         {[...sessions].sort((a, b) => b.startTime - a.startTime).map((session, idx) => (
-                                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', padding: '0.75rem 0.5rem', borderBottom: '1px solid #f9f9f9', fontSize: '0.95rem' }}>
+                                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 2rem', padding: '0.75rem 0.5rem', borderBottom: '1px solid #f9f9f9', fontSize: '0.95rem', alignItems: 'center' }}>
                                                 <div>{new Date(session.startTime).toLocaleString()}</div>
                                                 <div>{new Date(session.endTime).toLocaleTimeString()}</div>
                                                 <div style={{ textAlign: 'right', fontFamily: 'monospace' }}>
@@ -339,12 +390,33 @@ export default function ProblemPage() {
                                                         return `${m}m ${s}s`;
                                                     })()}
                                                 </div>
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                    <button
+                                                        onClick={() => handleDeleteSession(session.startTime, session.duration)}
+                                                        title="Delete session"
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            padding: '4px',
+                                                            color: '#ff4444',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            opacity: 0.6
+                                                        }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
                                             </div>
                                         ))}
 
                                         {/* Legacy Session Entry */}
                                         {legacyTime > 1000 && ( // Threshold of 1s to ignore rounding errors
-                                            <div style={{ display: 'grid', gridTemplateColumns: '4fr 1fr', padding: '0.75rem 0.5rem', borderBottom: '1px solid #f9f9f9', fontSize: '0.95rem', color: '#888', fontStyle: 'italic' }}>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '4fr 1fr 2rem', padding: '0.75rem 0.5rem', borderBottom: '1px solid #f9f9f9', fontSize: '0.95rem', color: '#888', fontStyle: 'italic', alignItems: 'center' }}>
                                                 <div>Legacy Time (Pre-tracking)</div>
                                                 <div style={{ textAlign: 'right', fontFamily: 'monospace' }}>
                                                     {(() => {
@@ -354,6 +426,27 @@ export default function ProblemPage() {
                                                         // const s = totalSeconds % 60; 
                                                         return h > 0 ? `${h}h ${m}m` : `${m}m`;
                                                     })()}
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                                    <button
+                                                        onClick={() => handleDeleteLegacyTime(legacyTime)}
+                                                        title="Delete legacy time"
+                                                        style={{
+                                                            background: 'none',
+                                                            border: 'none',
+                                                            cursor: 'pointer',
+                                                            padding: '4px',
+                                                            color: '#ff4444',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            opacity: 0.6
+                                                        }}
+                                                        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                                                        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.6'}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
                                                 </div>
                                             </div>
                                         )}
@@ -377,6 +470,7 @@ export default function ProblemPage() {
                     </div>
                 </div>
             )}
+
 
             <header style={{ marginBottom: '2rem', position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
@@ -991,124 +1085,126 @@ export default function ProblemPage() {
             </div>
 
             {/* New Task Modal */}
-            {isAdding && (
-                <div style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0,0,0,0.5)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    zIndex: 100
-                }} onClick={() => setIsAdding(false)}>
+            {
+                isAdding && (
                     <div style={{
-                        backgroundColor: '#fff',
-                        padding: '1.5rem',
-                        borderRadius: '12px',
-                        width: '400px',
-                        maxWidth: '90%',
-                    }} onClick={e => e.stopPropagation()}>
-                        <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            <input
-                                autoFocus
-                                type="text"
-                                placeholder="Task name"
-                                value={newSubtaskName}
-                                onChange={e => setNewSubtaskName(e.target.value)}
-                                style={{
-                                    fontSize: '1.25rem',
-                                    fontWeight: '600',
-                                    padding: '0.5rem',
-                                    border: '1px solid #ddd',
-                                    borderRadius: '6px',
-                                    width: '100%',
-                                    fontFamily: 'inherit'
-                                }}
-                            />
-
-                            <div style={{ display: 'flex', gap: '1rem' }}>
-                                <select
-                                    value={newPriority}
-                                    onChange={e => setNewPriority(e.target.value as Problem['priority'])}
-                                    style={{
-                                        padding: '0.5rem',
-                                        borderRadius: '6px',
-                                        border: '1px solid #ddd',
-                                        flex: 1,
-                                        fontFamily: 'inherit'
-                                    }}
-                                >
-                                    <option value="today">Today</option>
-                                    <option value="this_week">This Week</option>
-                                    <option value="later">Later</option>
-                                    <option value="someday">Someday</option>
-                                </select>
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0,0,0,0.5)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        zIndex: 100
+                    }} onClick={() => setIsAdding(false)}>
+                        <div style={{
+                            backgroundColor: '#fff',
+                            padding: '1.5rem',
+                            borderRadius: '12px',
+                            width: '400px',
+                            maxWidth: '90%',
+                        }} onClick={e => e.stopPropagation()}>
+                            <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <input
-                                    type="date"
-                                    value={newDueDate}
-                                    onChange={e => setNewDueDate(e.target.value)}
+                                    autoFocus
+                                    type="text"
+                                    placeholder="Task name"
+                                    value={newSubtaskName}
+                                    onChange={e => setNewSubtaskName(e.target.value)}
                                     style={{
+                                        fontSize: '1.25rem',
+                                        fontWeight: '600',
                                         padding: '0.5rem',
-                                        borderRadius: '6px',
                                         border: '1px solid #ddd',
-                                        flex: 1,
+                                        borderRadius: '6px',
+                                        width: '100%',
                                         fontFamily: 'inherit'
                                     }}
                                 />
-                            </div>
 
-                            <textarea
-                                placeholder="Notes"
-                                value={newNotes}
-                                onChange={e => setNewNotes(e.target.value)}
-                                rows={3}
-                                style={{
-                                    padding: '0.5rem',
-                                    borderRadius: '6px',
-                                    border: '1px solid #ddd',
-                                    fontFamily: 'inherit',
-                                    resize: 'none'
-                                }}
-                            />
+                                <div style={{ display: 'flex', gap: '1rem' }}>
+                                    <select
+                                        value={newPriority}
+                                        onChange={e => setNewPriority(e.target.value as Problem['priority'])}
+                                        style={{
+                                            padding: '0.5rem',
+                                            borderRadius: '6px',
+                                            border: '1px solid #ddd',
+                                            flex: 1,
+                                            fontFamily: 'inherit'
+                                        }}
+                                    >
+                                        <option value="today">Today</option>
+                                        <option value="this_week">This Week</option>
+                                        <option value="later">Later</option>
+                                        <option value="someday">Someday</option>
+                                    </select>
+                                    <input
+                                        type="date"
+                                        value={newDueDate}
+                                        onChange={e => setNewDueDate(e.target.value)}
+                                        style={{
+                                            padding: '0.5rem',
+                                            borderRadius: '6px',
+                                            border: '1px solid #ddd',
+                                            flex: 1,
+                                            fontFamily: 'inherit'
+                                        }}
+                                    />
+                                </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                                <button
-                                    type="submit"
+                                <textarea
+                                    placeholder="Notes"
+                                    value={newNotes}
+                                    onChange={e => setNewNotes(e.target.value)}
+                                    rows={3}
                                     style={{
-                                        padding: '0.75rem 1.5rem',
-                                        backgroundColor: '#333',
-                                        color: '#fff',
-                                        borderRadius: '8px',
-                                        fontWeight: '600',
-                                        border: 'none',
-                                        cursor: 'pointer'
+                                        padding: '0.5rem',
+                                        borderRadius: '6px',
+                                        border: '1px solid #ddd',
+                                        fontFamily: 'inherit',
+                                        resize: 'none'
                                     }}
-                                >
-                                    Save
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAdding(false)}
-                                    style={{
-                                        padding: '0.75rem 1.5rem',
-                                        backgroundColor: '#f0f0f0',
-                                        color: '#333',
-                                        borderRadius: '8px',
-                                        fontWeight: '600',
-                                        border: 'none',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Cancel
-                                </button>
-                            </div>
-                        </form>
+                                />
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
+                                    <button
+                                        type="submit"
+                                        style={{
+                                            padding: '0.75rem 1.5rem',
+                                            backgroundColor: '#333',
+                                            color: '#fff',
+                                            borderRadius: '8px',
+                                            fontWeight: '600',
+                                            border: 'none',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Save
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAdding(false)}
+                                        style={{
+                                            padding: '0.75rem 1.5rem',
+                                            backgroundColor: '#f0f0f0',
+                                            color: '#333',
+                                            borderRadius: '8px',
+                                            fontWeight: '600',
+                                            border: 'none',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <div style={{ marginTop: '2rem' }}>
                 <button
@@ -1131,108 +1227,110 @@ export default function ProblemPage() {
                 </button>
             </div>
 
-            {completedSubElements.length > 0 && (
-                <div style={{ marginTop: '2rem' }}>
-                    <button
-                        onClick={() => setShowCompleted(!showCompleted)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            background: 'none',
-                            border: 'none',
-                            color: '#888',
-                            fontSize: '0.95rem',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            padding: '0.5rem 0'
-                        }}
-                    >
-                        <span style={{ transform: showCompleted ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
-                            <ChevronRight size={16} />
-                        </span>
-                        {completedSubElements.length} completed tasks
-                    </button>
+            {
+                completedSubElements.length > 0 && (
+                    <div style={{ marginTop: '2rem' }}>
+                        <button
+                            onClick={() => setShowCompleted(!showCompleted)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                background: 'none',
+                                border: 'none',
+                                color: '#888',
+                                fontSize: '0.95rem',
+                                fontWeight: '600',
+                                cursor: 'pointer',
+                                padding: '0.5rem 0'
+                            }}
+                        >
+                            <span style={{ transform: showCompleted ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
+                                <ChevronRight size={16} />
+                            </span>
+                            {completedSubElements.length} completed tasks
+                        </button>
 
-                    {showCompleted && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
-                            {completedSubElements.map((child) => {
-                                const childCount = child.subproblems.filter(p => !p.completed).length;
-                                return (
-                                    <div
-                                        key={child.id}
-                                        onClick={() => navigate(`/list/${list.id}/problem/${child.id}`)}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-between',
-                                            padding: '1rem',
-                                            borderBottom: '1px solid #f0f0f0',
-                                            cursor: 'pointer',
-                                            transition: 'background-color 0.2s',
-                                            borderRadius: '8px',
-                                            opacity: 0.6
-                                        }}
-                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
-                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                    >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                            <button
-                                                title="unsolve problem"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    toggleComplete(child);
-                                                }}
-                                                style={{
-                                                    color: '#22c55e',
-                                                    cursor: 'pointer',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'center',
-                                                    background: 'none',
-                                                    border: 'none',
-                                                    padding: 0
-                                                }}
-                                            >
-                                                <CheckCircle2 size={24} fill="#22c55e" color="#fff" />
-                                            </button>
-                                            <Link
-                                                to={`/list/${list.id}/problem/${child.id}`}
-                                                onClick={(e) => e.stopPropagation()}
-                                                style={{
-                                                    fontSize: '1.1rem',
-                                                    textDecoration: 'line-through',
-                                                    color: '#aaa',
-                                                    cursor: 'pointer',
-                                                    fontWeight: child.name.endsWith('!') ? 'bold' : 'normal',
-                                                }}
-                                            >
-                                                {child.name}
-                                            </Link>
-                                        </div>
+                        {showCompleted && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+                                {completedSubElements.map((child) => {
+                                    const childCount = child.subproblems.filter(p => !p.completed).length;
+                                    return (
+                                        <div
+                                            key={child.id}
+                                            onClick={() => navigate(`/list/${list.id}/problem/${child.id}`)}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'space-between',
+                                                padding: '1rem',
+                                                borderBottom: '1px solid #f0f0f0',
+                                                cursor: 'pointer',
+                                                transition: 'background-color 0.2s',
+                                                borderRadius: '8px',
+                                                opacity: 0.6
+                                            }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                <button
+                                                    title="unsolve problem"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        toggleComplete(child);
+                                                    }}
+                                                    style={{
+                                                        color: '#22c55e',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        padding: 0
+                                                    }}
+                                                >
+                                                    <CheckCircle2 size={24} fill="#22c55e" color="#fff" />
+                                                </button>
+                                                <Link
+                                                    to={`/list/${list.id}/problem/${child.id}`}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    style={{
+                                                        fontSize: '1.1rem',
+                                                        textDecoration: 'line-through',
+                                                        color: '#aaa',
+                                                        cursor: 'pointer',
+                                                        fontWeight: child.name.endsWith('!') ? 'bold' : 'normal',
+                                                    }}
+                                                >
+                                                    {child.name}
+                                                </Link>
+                                            </div>
 
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                            {childCount > 0 && (
-                                                <span style={{
-                                                    backgroundColor: '#f0f0f0',
-                                                    padding: '0.25rem 0.75rem',
-                                                    borderRadius: '999px',
-                                                    fontSize: '0.875rem',
-                                                    fontWeight: '600',
-                                                    color: '#999'
-                                                }}>
-                                                    {childCount}
-                                                </span>
-                                            )}
-                                            <div style={{ width: '28px' }}></div> {/* Spacer for menu alignment if menu is omitted */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                {childCount > 0 && (
+                                                    <span style={{
+                                                        backgroundColor: '#f0f0f0',
+                                                        padding: '0.25rem 0.75rem',
+                                                        borderRadius: '999px',
+                                                        fontSize: '0.875rem',
+                                                        fontWeight: '600',
+                                                        color: '#999'
+                                                    }}>
+                                                        {childCount}
+                                                    </span>
+                                                )}
+                                                <div style={{ width: '28px' }}></div> {/* Spacer for menu alignment if menu is omitted */}
+                                            </div>
                                         </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )
+            }
+        </div >
     );
 }
