@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2 } from 'lucide-react';
+import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X } from 'lucide-react';
 import type { Problem } from '../types';
 
 import FocusSession from '../components/FocusSession';
@@ -20,6 +20,7 @@ export default function ProblemPage() {
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [isMoveListOpen, setIsMoveListOpen] = useState(false);
     const [isFocusOpen, setIsFocusOpen] = useState(false);
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
 
@@ -256,6 +257,114 @@ export default function ProblemPage() {
                 />
             )}
 
+            {/* History Modal */}
+            {isHistoryOpen && currentProblem && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 200
+                }} onClick={() => setIsHistoryOpen(false)}>
+                    <div style={{
+                        backgroundColor: '#fff',
+                        padding: '1.5rem',
+                        borderRadius: '12px',
+                        width: '500px', // Wider implementation
+                        maxWidth: '90%',
+                        maxHeight: '80vh',
+                        overflowY: 'auto'
+                    }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                            <h3 style={{ margin: 0 }}>Session History</h3>
+                            <button onClick={() => setIsHistoryOpen(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                                <X size={20} color="#666" />
+                            </button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+                            {/* Table Header */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', padding: '0.5rem', borderBottom: '1px solid #eee', fontWeight: 600, color: '#666', fontSize: '0.9rem' }}>
+                                <div>Start Time</div>
+                                <div>End Time</div>
+                                <div style={{ textAlign: 'right' }}>Duration</div>
+                            </div>
+
+                            {/* Sessions List */}
+                            {(() => {
+                                const sessions = currentProblem.sessions || [];
+                                const totalTime = currentProblem.totalTime || 0;
+
+                                // Calculate total session duration
+                                const sessionTotal = sessions.reduce((sum, s) => sum + s.duration, 0);
+
+                                // Identify Legacy Time
+                                const legacyTime = totalTime - sessionTotal;
+
+                                return (
+                                    <>
+                                        {sessions.length === 0 && legacyTime <= 0 && (
+                                            <div style={{ padding: '1rem', textAlign: 'center', color: '#888' }}>
+                                                No recorded sessions.
+                                            </div>
+                                        )}
+                                        {/* Sort sessions by latest first */}
+                                        {[...sessions].sort((a, b) => b.startTime - a.startTime).map((session, idx) => (
+                                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr', padding: '0.75rem 0.5rem', borderBottom: '1px solid #f9f9f9', fontSize: '0.95rem' }}>
+                                                <div>{new Date(session.startTime).toLocaleString()}</div>
+                                                <div>{new Date(session.endTime).toLocaleTimeString()}</div>
+                                                <div style={{ textAlign: 'right', fontFamily: 'monospace' }}>
+                                                    {(() => {
+                                                        const seconds = Math.floor(session.duration / 1000);
+                                                        const m = Math.floor(seconds / 60);
+                                                        const s = seconds % 60;
+                                                        return `${m}m ${s}s`;
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        ))}
+
+                                        {/* Legacy Session Entry */}
+                                        {legacyTime > 1000 && ( // Threshold of 1s to ignore rounding errors
+                                            <div style={{ display: 'grid', gridTemplateColumns: '4fr 1fr', padding: '0.75rem 0.5rem', borderBottom: '1px solid #f9f9f9', fontSize: '0.95rem', color: '#888', fontStyle: 'italic' }}>
+                                                <div>Legacy Time (Pre-tracking)</div>
+                                                <div style={{ textAlign: 'right', fontFamily: 'monospace' }}>
+                                                    {(() => {
+                                                        const totalSeconds = Math.floor(legacyTime / 1000);
+                                                        const h = Math.floor(totalSeconds / 3600);
+                                                        const m = Math.floor((totalSeconds % 3600) / 60);
+                                                        // const s = totalSeconds % 60; 
+                                                        return h > 0 ? `${h}h ${m}m` : `${m}m`;
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
+                        </div>
+
+                        <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '2px solid #f0f0f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontWeight: 600 }}>Total Time</span>
+                            <span style={{ fontFamily: 'monospace', fontSize: '1.1rem', fontWeight: 600 }}>
+                                {(() => {
+                                    const totalSeconds = Math.floor((currentProblem.totalTime || 0) / 1000);
+                                    const hours = Math.floor(totalSeconds / 3600);
+                                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                                    const seconds = totalSeconds % 60;
+                                    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                                })()}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <header style={{ marginBottom: '2rem', position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
                     {!currentProblem ? (
@@ -410,14 +519,29 @@ export default function ProblemPage() {
                                 <div style={{ color: '#888', fontSize: '0.95rem' }}>Time Spent</div>
                                 <div style={{ fontSize: '0.95rem', color: '#111', fontFamily: 'monospace' }}>
                                     {currentProblem.totalTime ? (
-                                        (() => {
-                                            const totalSeconds = Math.floor(currentProblem.totalTime / 1000);
-                                            const hours = Math.floor(totalSeconds / 3600);
-                                            const minutes = Math.floor((totalSeconds % 3600) / 60);
-                                            const seconds = totalSeconds % 60;
+                                        <button
+                                            onClick={() => setIsHistoryOpen(true)}
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                padding: 0,
+                                                cursor: 'pointer',
+                                                fontSize: '0.95rem',
+                                                fontFamily: 'monospace',
+                                                color: '#111',
+                                                textDecoration: 'underline',
+                                                textDecorationColor: '#ddd'
+                                            }}
+                                        >
+                                            {(() => {
+                                                const totalSeconds = Math.floor(currentProblem.totalTime / 1000);
+                                                const hours = Math.floor(totalSeconds / 3600);
+                                                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                                                const seconds = totalSeconds % 60;
 
-                                            return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                                        })()
+                                                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                                            })()}
+                                        </button>
                                     ) : (
                                         <button
                                             onClick={() => setIsFocusOpen(true)}

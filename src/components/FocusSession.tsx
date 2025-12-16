@@ -60,11 +60,51 @@ export default function FocusSession({ problem, onExit, onUpdateProblem }: Focus
     }, []);
 
     // 1. Continuous Session Time Tracker
+    // Discrete Session Recording: Track start time of current active segment
+    const sessionStartTimeRef = useRef<number | null>(null);
     const lastTimeRef = useRef<number>(Date.now());
+
+    // Helper to commit current session segment
+    const commitSession = useCallback(() => {
+        if (sessionStartTimeRef.current) {
+            const now = Date.now();
+            const start = sessionStartTimeRef.current;
+            const duration = now - start;
+
+            if (duration > 0) {
+                const newSession = {
+                    startTime: start,
+                    endTime: now,
+                    duration: duration
+                };
+
+                const currentSessions = problem.sessions || [];
+                const newSessions = [...currentSessions, newSession];
+                const newTotalTime = (problem.totalTime || 0) + duration;
+
+                onUpdateProblem(problem.id, {
+                    totalTime: newTotalTime,
+                    sessions: newSessions
+                });
+            }
+            sessionStartTimeRef.current = null;
+        }
+    }, [problem.id, problem.sessions, problem.totalTime, onUpdateProblem]);
 
     useEffect(() => {
         // Track if isTotalTimeRunning is true and problem is not completed
-        if (!isTotalTimeRunning || problem.completed) return;
+        if (!isTotalTimeRunning || problem.completed) {
+            // Stopped: Commit any active session
+            if (sessionStartTimeRef.current) {
+                commitSession();
+            }
+            return;
+        }
+
+        // Started
+        if (!sessionStartTimeRef.current) {
+            sessionStartTimeRef.current = Date.now();
+        }
 
         // Auto-update status to 'solving' if it's currently 'to_solve' or undefined
         if (!problem.status || problem.status === 'to_solve') {
@@ -73,16 +113,18 @@ export default function FocusSession({ problem, onExit, onUpdateProblem }: Focus
         }
 
         lastTimeRef.current = Date.now(); // Reset anchor on resume/start
+        setCurrentSessionDuration(0); // Reset local display tracker for new segment
 
         const interval = setInterval(() => {
             const now = Date.now();
-            const delta = now - lastTimeRef.current;
-            setCurrentSessionDuration(prev => prev + delta);
-            lastTimeRef.current = now;
+            // Just track accurate delta since start of this segment for display
+            if (sessionStartTimeRef.current) {
+                setCurrentSessionDuration(now - sessionStartTimeRef.current);
+            }
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isTotalTimeRunning, problem.completed, problem.status, problem.id, onUpdateProblem]);
+    }, [isTotalTimeRunning, problem.completed, problem.status, problem.id, onUpdateProblem, commitSession]);
 
     // 2. Timer Logic (Countdown & Stopwatch)
     useEffect(() => {
@@ -136,9 +178,12 @@ export default function FocusSession({ problem, onExit, onUpdateProblem }: Focus
 
 
     // Save total time on exit
+    // Save total time on exit
     const handleExit = () => {
-        const newTotal = (problem.totalTime || 0) + currentSessionDuration;
-        onUpdateProblem(problem.id, { totalTime: newTotal });
+        // Commit any running session first
+        if (sessionStartTimeRef.current) {
+            commitSession();
+        }
         onExit();
     };
 

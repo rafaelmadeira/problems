@@ -1,3 +1,9 @@
+export interface FocusSessionRecord {
+  startTime: number;
+  endTime: number;
+  duration: number;
+}
+
 export interface Problem {
   id: string;
   name: string;
@@ -7,14 +13,17 @@ export interface Problem {
   status: 'to_solve' | 'solving' | 'blocked' | 'solved';
   subproblems: Problem[];
   completed: boolean;
+  totalTime?: number;
+  sessions?: FocusSessionRecord[];
 }
 
 export interface List {
   id: string;
   name: string;
-  dueDate?: string;
+  description?: string;
+  dueDate?: string; // Is this used? List usually doesn't have due date but keeping it safe
   totalTime?: number; // Total time spent in milliseconds
-  subproblems: Problem[];
+  problems: Problem[];
 }
 
 export interface AppState {
