@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { CheckCircle2, ChevronRight } from 'lucide-react';
@@ -14,7 +14,11 @@ export default function TodayPage() {
     const { state, updateProblem, reorderTodayProblems } = useStore();
     const navigate = useNavigate();
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
+
+    // START: DnD Local State
+    const [localDoTodayTasks, setLocalDoTodayTasks] = useState<FlatTask[]>([]);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [isDragging, setIsDragging] = useState(false);
 
     // Helpers
     const isOverdue = (p: Problem): boolean => {
@@ -46,8 +50,7 @@ export default function TodayPage() {
 
         const traverse = (problems: Problem[], listId: string, currentPath: { id: string, name: string, type: 'list' | 'problem' }[]) => {
             for (const p of problems) {
-                if (!p.completed) { // Optimisation: Don't recurse into completed trees if we don't show completed
-                    // Check matches
+                if (!p.completed) {
                     if (isOverdue(p) || isDueToday(p) || isDoToday(p)) {
                         tasks.push({
                             problem: p,
@@ -56,7 +59,6 @@ export default function TodayPage() {
                         });
                     }
                 }
-
                 const newPath = [...currentPath, { id: p.id, name: p.name, type: 'problem' as const }];
                 traverse(p.subproblems, listId, newPath);
             }
@@ -73,14 +75,21 @@ export default function TodayPage() {
     const overdueTasks = allTasks.filter(t => isOverdue(t.problem));
     const dueTodayTasks = allTasks.filter(t => isDueToday(t.problem));
 
-    // Do Today: Filter AND Sort
-    const doTodayTasks = allTasks
+    // Base Do Today (from Store)
+    const baseDoTodayTasks = allTasks
         .filter(t => isDoToday(t.problem))
         .sort((a, b) => {
             const orderA = a.problem.todayOrder ?? Number.MAX_SAFE_INTEGER;
             const orderB = b.problem.todayOrder ?? Number.MAX_SAFE_INTEGER;
             return orderA - orderB;
         });
+
+    // Sync Local State
+    useEffect(() => {
+        if (!isDragging) {
+            setLocalDoTodayTasks(baseDoTodayTasks);
+        }
+    }, [state.lists, isDragging]); // Sync when store changes OR when drag ends
 
     const toggleComplete = (p: Problem, listId: string) => {
         const newCompleted = !p.completed;
@@ -101,9 +110,10 @@ export default function TodayPage() {
         }
     };
 
-    // DnD Handlers for Do Today
+    // DnD Handlers (Local State)
     const handleDragStart = (index: number) => {
-        // Delay setting state so the browser captures the element with full opacity as the drag image
+        setIsDragging(true);
+        // Delay to allow browser to capture full-opacity drag image
         setTimeout(() => {
             setDraggedIndex(index);
         }, 0);
@@ -112,29 +122,32 @@ export default function TodayPage() {
     const handleDragEnter = (targetIndex: number) => {
         if (draggedIndex === null || draggedIndex === targetIndex) return;
 
-        // Optimistic reorder
-        const items = [...doTodayTasks];
-        const draggedItem = items[draggedIndex];
-        items.splice(draggedIndex, 1);
-        items.splice(targetIndex, 0, draggedItem);
+        // Reorder LOCAL state only
+        setLocalDoTodayTasks(prev => {
+            const items = [...prev];
+            const draggedItem = items[draggedIndex];
+            items.splice(draggedIndex, 1);
+            items.splice(targetIndex, 0, draggedItem);
+            return items;
+        });
 
-        // We can't update local state easily because 'doTodayTasks' is derived.
-        // We must update the Store.
-        // Construct the update payload
-        const reorderPayload = items.map((t) => ({
-            id: t.problem.id,
-            listId: t.listId
-        }));
-
-        reorderTodayProblems(reorderPayload);
         setDraggedIndex(targetIndex);
     };
 
     const handleDragEnd = () => {
+        // Commit to Store
+        const reorderPayload = localDoTodayTasks.map((t) => ({
+            id: t.problem.id,
+            listId: t.listId
+        }));
+        reorderTodayProblems(reorderPayload);
+
+        // Reset
         setDraggedIndex(null);
+        setIsDragging(false);
     };
 
-    const hasAnyContent = overdueTasks.length > 0 || dueTodayTasks.length > 0 || doTodayTasks.length > 0;
+    const hasAnyContent = overdueTasks.length > 0 || dueTodayTasks.length > 0 || localDoTodayTasks.length > 0; // check local
 
     if (!hasAnyContent) {
         return (
@@ -154,8 +167,7 @@ export default function TodayPage() {
         onDragEnd?: () => void
     }) => {
         const { problem, listId, path } = task;
-
-        const isDragging = isDraggable && index === draggedIndex;
+        const isDraggingThis = isDraggable && index === draggedIndex;
 
         return (
             <div
@@ -174,13 +186,11 @@ export default function TodayPage() {
                     borderBottom: '1px solid #f0f0f0',
                     cursor: isDraggable ? 'grab' : 'pointer',
                     borderRadius: '8px',
-                    opacity: isDragging ? 0 : 1 // Hide the original list item (make it a gap) only AFTER drag has started
+                    opacity: isDraggingThis ? 0 : 1 // Hide original
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
             >
-                {/* Drag Handle Removed - Whole card is draggable */}
-
                 <div style={{ position: 'relative', paddingTop: '2px' }}>
                     {solvedMessages[problem.id] && (
                         <div style={{
@@ -215,7 +225,7 @@ export default function TodayPage() {
                     )}
                     <button
                         title="solve problem"
-                        onMouseDown={(e) => e.stopPropagation()} /* Prevent drag start on button */
+                        onMouseDown={(e) => e.stopPropagation()}
                         onClick={(e) => {
                             e.stopPropagation();
                             toggleComplete(problem, listId);
@@ -245,7 +255,6 @@ export default function TodayPage() {
                         {problem.name}
                     </div>
 
-                    {/* Path & Details */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }}
                         onMouseDown={(e) => e.stopPropagation()}
                         onClick={e => e.stopPropagation()}
@@ -311,7 +320,6 @@ export default function TodayPage() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
 
-                {/* Overdue Section */}
                 {overdueTasks.length > 0 && (
                     <section>
                         <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #ef4444', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#ef4444' }}>
@@ -325,7 +333,6 @@ export default function TodayPage() {
                     </section>
                 )}
 
-                {/* Due Today Section */}
                 {dueTodayTasks.length > 0 && (
                     <section>
                         <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #f59e0b', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#f59e0b' }}>
@@ -339,14 +346,13 @@ export default function TodayPage() {
                     </section>
                 )}
 
-                {/* Do Today Section */}
-                {doTodayTasks.length > 0 && (
+                {localDoTodayTasks.length > 0 && (
                     <section>
                         <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#1368C4' }}>
                             Do Today
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {doTodayTasks.map((t, index) => (
+                            {localDoTodayTasks.map((t, index) => (
                                 <TaskItem
                                     key={t.problem.id}
                                     task={t}
