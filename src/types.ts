@@ -15,6 +15,7 @@ export interface Problem {
   completed: boolean;
   totalTime?: number;
   sessions?: FocusSessionRecord[];
+  todayOrder?: number;
 }
 
 export interface List {

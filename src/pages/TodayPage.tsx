@@ -1,40 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { CheckCircle2, ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Equal } from 'lucide-react';
 import type { Problem } from '../types';
 
-/* 
-  Recursive component for rendering a task and its children 
-*/
-const InternalTaskNode = ({
-    problem,
-    listId,
-    depth,
-    toggleComplete,
-    solvedMessages,
-    expandedIds,
-    onToggleExpand
-}: {
-    problem: Problem,
-    listId: string,
-    depth: number,
-    toggleComplete: (p: Problem, listId: string) => void,
-    solvedMessages: { [key: string]: boolean },
-    expandedIds: { [key: string]: boolean },
-    onToggleExpand: (id: string) => void
-}) => {
+interface FlatTask {
+    problem: Problem;
+    listId: string;
+    path: { id: string, name: string, type: 'list' | 'problem' }[];
+}
+
+export default function TodayPage() {
+    const { state, updateProblem, reorderTodayProblems } = useStore();
     const navigate = useNavigate();
+    const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
-    // Check if node matches ANY category we care about for Today View
-    // However, since we are filtering at the top level and passing down,
-    // we may want to show the specific reason (Overdue, etc) or just show it because it's in the tree.
-    // For Today View, usually we just want to show the task.
-    // But we need to define "Is Relevant" for recursion.
-    // Relevancy = Is Overdue OR Due Today OR Priority Today.
-
+    // Helpers
     const isOverdue = (p: Problem): boolean => {
-        if (!p.dueDate) return false;
+        if (p.completed || !p.dueDate) return false;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const [y, m, d] = p.dueDate.split('-').map(Number);
@@ -43,7 +27,7 @@ const InternalTaskNode = ({
     };
 
     const isDueToday = (p: Problem): boolean => {
-        if (!p.dueDate) return false;
+        if (p.completed || !p.dueDate) return false;
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const [y, m, d] = p.dueDate.split('-').map(Number);
@@ -52,63 +36,148 @@ const InternalTaskNode = ({
     };
 
     const isDoToday = (p: Problem): boolean => {
+        if (p.completed) return false;
         return p.priority === 'today';
     };
 
-    const isRelevant = (p: Problem): boolean => {
-        if (p.completed) return false;
-        return isOverdue(p) || isDueToday(p) || isDoToday(p);
+    // Flatten logic
+    const getAllTasks = (): FlatTask[] => {
+        const tasks: FlatTask[] = [];
+
+        const traverse = (problems: Problem[], listId: string, currentPath: { id: string, name: string, type: 'list' | 'problem' }[]) => {
+            for (const p of problems) {
+                if (!p.completed) { // Optimisation: Don't recurse into completed trees if we don't show completed
+                    // Check matches
+                    if (isOverdue(p) || isDueToday(p) || isDoToday(p)) {
+                        tasks.push({
+                            problem: p,
+                            listId: listId,
+                            path: currentPath
+                        });
+                    }
+                }
+
+                const newPath = [...currentPath, { id: p.id, name: p.name, type: 'problem' as const }];
+                traverse(p.subproblems, listId, newPath);
+            }
+        };
+
+        for (const list of state.lists) {
+            traverse(list.problems, list.id, [{ id: list.id, name: list.name, type: 'list' }]);
+        }
+
+        return tasks;
     };
 
-    const hasRelevantDescendants = (p: Problem): boolean => {
-        if (isRelevant(p)) return true;
-        return p.subproblems.some(child => hasRelevantDescendants(child));
+    const allTasks = getAllTasks();
+    const overdueTasks = allTasks.filter(t => isOverdue(t.problem));
+    const dueTodayTasks = allTasks.filter(t => isDueToday(t.problem));
+
+    // Do Today: Filter AND Sort
+    const doTodayTasks = allTasks
+        .filter(t => isDoToday(t.problem))
+        .sort((a, b) => {
+            const orderA = a.problem.todayOrder ?? Number.MAX_SAFE_INTEGER;
+            const orderB = b.problem.todayOrder ?? Number.MAX_SAFE_INTEGER;
+            return orderA - orderB;
+        });
+
+    const toggleComplete = (p: Problem, listId: string) => {
+        const newCompleted = !p.completed;
+        updateProblem(listId, p.id, {
+            completed: newCompleted,
+            status: newCompleted ? 'solved' : 'to_solve'
+        });
+
+        if (newCompleted) {
+            setSolvedMessages(prev => ({ ...prev, [p.id]: true }));
+            setTimeout(() => {
+                setSolvedMessages(prev => {
+                    const next = { ...prev };
+                    delete next[p.id];
+                    return next;
+                });
+            }, 2000);
+        }
     };
 
-    const isSelfRelevant = isRelevant(problem);
-    const hasChildrenRelevant = problem.subproblems.some(child => hasRelevantDescendants(child));
+    // DnD Handlers for Do Today
+    const handleDragStart = (index: number) => {
+        setDraggedIndex(index);
+    };
 
-    if (!isSelfRelevant && !hasChildrenRelevant) return null;
+    const handleDragEnter = (targetIndex: number) => {
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
 
-    const isExpanded = expandedIds[problem.id] || false;
+        // Optimistic reorder
+        const items = [...doTodayTasks];
+        const draggedItem = items[draggedIndex];
+        items.splice(draggedIndex, 1);
+        items.splice(targetIndex, 0, draggedItem);
 
-    return (
-        <div style={{ marginLeft: depth > 0 ? '1.5rem' : '0' }}>
+        // We can't update local state easily because 'doTodayTasks' is derived.
+        // We must update the Store.
+        // Construct the update payload
+        const reorderPayload = items.map((t) => ({
+            id: t.problem.id,
+            listId: t.listId
+        }));
+
+        reorderTodayProblems(reorderPayload);
+        setDraggedIndex(targetIndex);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+    };
+
+    const hasAnyContent = overdueTasks.length > 0 || dueTodayTasks.length > 0 || doTodayTasks.length > 0;
+
+    if (!hasAnyContent) {
+        return (
+            <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
+                <h2>No tasks for today!</h2>
+                <p>You're all caught up.</p>
+            </div>
+        );
+    }
+
+    const TaskItem = ({ task, isDraggable, index, onDragStart, onDragEnter, onDragEnd }: {
+        task: FlatTask,
+        isDraggable?: boolean,
+        index?: number,
+        onDragStart?: (i: number) => void,
+        onDragEnter?: (i: number) => void,
+        onDragEnd?: () => void
+    }) => {
+        const { problem, listId, path } = task;
+        return (
             <div
-                onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/list/${listId}/problem/${problem.id}`);
-                }}
+                draggable={isDraggable}
+                onDragStart={() => isDraggable && onDragStart && index !== undefined && onDragStart(index)}
+                onDragEnter={() => isDraggable && onDragEnter && index !== undefined && onDragEnter(index)}
+                onDragEnd={onDragEnd}
+                onDragOver={e => e.preventDefault()}
+                onClick={() => navigate(`/list/${listId}/problem/${problem.id}`)}
                 style={{
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: '0.75rem',
-                    padding: '0.75rem',
+                    padding: '1rem',
+                    backgroundColor: '#fff',
                     borderBottom: '1px solid #f0f0f0',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
+                    cursor: isDraggable ? 'grab' : 'pointer',
                     borderRadius: '8px',
+                    opacity: isDraggable && index === draggedIndex ? 0.5 : 1
                 }}
-                onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor = '#f9f9f9';
-                }}
-                onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor = 'transparent';
-                }}
+                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
             >
-                {/* Expander */}
-                {hasChildrenRelevant ? (
-                    <div
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleExpand(problem.id);
-                        }}
-                        style={{ padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center', marginTop: '4px' }}
-                    >
-                        {isExpanded ? <ChevronDown size={16} color="#888" /> : <ChevronRightIcon size={16} color="#888" />}
+                {/* Drag Handle if Draggable */}
+                {isDraggable && (
+                    <div style={{ marginTop: '4px', cursor: 'grab', color: '#ccc', display: 'flex', alignItems: 'center' }}>
+                        <Equal size={16} />{/* Using Equal as a simple handle representation or could import GripVertical */}
                     </div>
-                ) : (
-                    <div style={{ width: 20 }} />
                 )}
 
                 <div style={{ position: 'relative', paddingTop: '2px' }}>
@@ -164,141 +233,58 @@ const InternalTaskNode = ({
                     </button>
                 </div>
 
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                    {/* Line 1: Name */}
+                <div style={{ flex: 1 }}>
                     <div style={{
                         fontSize: '1.1rem',
-                        color: isSelfRelevant ? '#333' : '#999',
+                        color: '#333',
                         fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
                         lineHeight: '1.4'
                     }}>
                         {problem.name}
                     </div>
 
-                    {/* Line 2: Details */}
-                    {isSelfRelevant && (problem.priority || problem.dueDate) && (
-                        <div style={{ fontSize: '0.85rem', color: '#666', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            {problem.priority && (
-                                <span style={{ textTransform: 'capitalize' }}>
-                                    {problem.priority.replace('_', ' ')}
-                                </span>
-                            )}
-                            {problem.priority && problem.dueDate && <span>&middot;</span>}
-                            {problem.dueDate && (
-                                <span style={{
-                                    color: isOverdue(problem) ? '#ef4444' : 'inherit',
-                                    fontWeight: isOverdue(problem) || isDueToday(problem) ? 'bold' : 'normal'
-                                }}>
-                                    Due {problem.dueDate}
-                                </span>
-                            )}
+                    {/* Path & Details */}
+                    <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }} onClick={e => e.stopPropagation()}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            {path.map((crumb, index) => {
+                                const linkPath = crumb.type === 'list'
+                                    ? `/list/${crumb.id}`
+                                    : `/list/${listId}/problem/${crumb.id}`;
+
+                                return (
+                                    <React.Fragment key={index}>
+                                        {index > 0 && <ChevronRight size={12} />}
+                                        <Link
+                                            to={linkPath}
+                                            style={{ color: '#888', textDecoration: 'none', borderBottom: '1px solid transparent' }}
+                                            onMouseEnter={e => e.currentTarget.style.borderBottom = '1px solid #888'}
+                                            onMouseLeave={e => e.currentTarget.style.borderBottom = '1px solid transparent'}
+                                        >
+                                            {crumb.name}
+                                        </Link>
+                                    </React.Fragment>
+                                );
+                            })}
                         </div>
-                    )}
+
+                        {(problem.priority || problem.dueDate) && (
+                            <>
+                                <span>&middot;</span>
+                                {problem.dueDate && (
+                                    <span style={{
+                                        color: isOverdue(problem) ? '#ef4444' : 'inherit',
+                                        fontWeight: isOverdue(problem) || isDueToday(problem) ? 'bold' : 'normal'
+                                    }}>
+                                        Due {problem.dueDate}
+                                    </span>
+                                )}
+                            </>
+                        )}
+                    </div>
                 </div>
-            </div>
-
-            {/* Recursion */}
-            {isExpanded && hasChildrenRelevant && (
-                <div>
-                    {problem.subproblems.map(child => (
-                        <InternalTaskNode
-                            key={child.id}
-                            problem={child}
-                            listId={listId}
-                            depth={depth + 1}
-                            toggleComplete={toggleComplete}
-                            solvedMessages={solvedMessages}
-                            expandedIds={expandedIds}
-                            onToggleExpand={onToggleExpand}
-                        />
-                    ))}
-                </div>
-            )}
-        </div>
-    );
-};
-
-
-export default function TodayPage() {
-    const { state, updateProblem } = useStore();
-    const navigate = useNavigate();
-    const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
-    const [expandedIds, setExpandedIds] = useState<{ [id: string]: boolean }>({});
-
-    const toggleExpand = (id: string) => {
-        setExpandedIds(prev => ({ ...prev, [id]: !prev[id] }));
-    };
-
-    const toggleComplete = (p: Problem, listId: string) => {
-        const newCompleted = !p.completed;
-        updateProblem(listId, p.id, {
-            completed: newCompleted,
-            status: newCompleted ? 'solved' : 'to_solve'
-        });
-
-        if (newCompleted) {
-            setSolvedMessages(prev => ({ ...prev, [p.id]: true }));
-            setTimeout(() => {
-                setSolvedMessages(prev => {
-                    const next = { ...prev };
-                    delete next[p.id];
-                    return next;
-                });
-            }, 2000);
-        }
-    };
-
-    // Filter Logic
-    const isOverdue = (p: Problem): boolean => {
-        if (p.completed || !p.dueDate) return false;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const [y, m, d] = p.dueDate.split('-').map(Number);
-        const due = new Date(y, m - 1, d);
-        return due < today;
-    };
-
-    const isDueToday = (p: Problem): boolean => {
-        if (p.completed || !p.dueDate) return false;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const [y, m, d] = p.dueDate.split('-').map(Number);
-        const due = new Date(y, m - 1, d);
-        return due.getTime() === today.getTime();
-    };
-
-    const isDoToday = (p: Problem): boolean => {
-        if (p.completed) return false;
-        return p.priority === 'today';
-    };
-
-    // Recursive Checkers
-    // We basically want to know: "Does this node or any descendant match X?"
-    const hasMatch = (p: Problem, matcher: (prob: Problem) => boolean): boolean => {
-        if (matcher(p)) return true;
-        return p.subproblems.some(child => hasMatch(child, matcher));
-    };
-
-    // Grouping Helpers
-    const getListsWithMatch = (matcher: (prob: Problem) => boolean) => {
-        return state.lists.filter(list => list.problems.some(p => hasMatch(p, matcher)));
-    };
-
-    // Prepare Sections
-    const overdueLists = getListsWithMatch(isOverdue);
-    const dueTodayLists = getListsWithMatch(isDueToday);
-    const doTodayLists = getListsWithMatch(isDoToday);
-
-    const hasAnyContent = overdueLists.length > 0 || dueTodayLists.length > 0 || doTodayLists.length > 0;
-
-    if (!hasAnyContent) {
-        return (
-            <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
-                <h2>No tasks for today!</h2>
-                <p>You're all caught up.</p>
             </div>
         );
-    }
+    };
 
     return (
         <div style={{ paddingBottom: '4rem' }}>
@@ -321,154 +307,51 @@ export default function TodayPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
 
                 {/* Overdue Section */}
-                {overdueLists.length > 0 && (
+                {overdueTasks.length > 0 && (
                     <section>
-                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #ef4444', paddingBottom: '0.5rem', marginBottom: '1.5rem', color: '#ef4444' }}>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #ef4444', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#ef4444' }}>
                             Overdue
                         </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {overdueLists.map(list => {
-                                const isExpanded = expandedIds[`overdue-${list.id}`] || false;
-                                return (
-                                    <div key={`overdue-${list.id}`}>
-                                        <div
-                                            onClick={() => toggleExpand(`overdue-${list.id}`)}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.5rem',
-                                                cursor: 'pointer',
-                                                marginBottom: '0.5rem',
-                                                userSelect: 'none'
-                                            }}
-                                        >
-                                            {isExpanded ? <ChevronDown size={20} /> : <ChevronRightIcon size={20} />}
-                                            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>{list.name}</h3>
-                                        </div>
-                                        {isExpanded && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                                {list.problems
-                                                    .filter(p => hasMatch(p, isOverdue))
-                                                    .map(p => (
-                                                        <InternalTaskNode
-                                                            key={p.id}
-                                                            problem={p}
-                                                            listId={list.id}
-                                                            depth={0}
-                                                            toggleComplete={toggleComplete}
-                                                            solvedMessages={solvedMessages}
-                                                            expandedIds={expandedIds}
-                                                            onToggleExpand={toggleExpand}
-                                                        />
-                                                    ))
-                                                }
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {overdueTasks.map(t => (
+                                <TaskItem key={t.problem.id} task={t} />
+                            ))}
                         </div>
                     </section>
                 )}
 
                 {/* Due Today Section */}
-                {dueTodayLists.length > 0 && (
+                {dueTodayTasks.length > 0 && (
                     <section>
-                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #f59e0b', paddingBottom: '0.5rem', marginBottom: '1.5rem', color: '#f59e0b' }}>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #f59e0b', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#f59e0b' }}>
                             Due Today
                         </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {dueTodayLists.map(list => {
-                                const isExpanded = expandedIds[`duetoday-${list.id}`] || false;
-                                return (
-                                    <div key={`duetoday-${list.id}`}>
-                                        <div
-                                            onClick={() => toggleExpand(`duetoday-${list.id}`)}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.5rem',
-                                                cursor: 'pointer',
-                                                marginBottom: '0.5rem',
-                                                userSelect: 'none'
-                                            }}
-                                        >
-                                            {isExpanded ? <ChevronDown size={20} /> : <ChevronRightIcon size={20} />}
-                                            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>{list.name}</h3>
-                                        </div>
-                                        {isExpanded && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                                {list.problems
-                                                    .filter(p => hasMatch(p, isDueToday))
-                                                    .map(p => (
-                                                        <InternalTaskNode
-                                                            key={p.id}
-                                                            problem={p}
-                                                            listId={list.id}
-                                                            depth={0}
-                                                            toggleComplete={toggleComplete}
-                                                            solvedMessages={solvedMessages}
-                                                            expandedIds={expandedIds}
-                                                            onToggleExpand={toggleExpand}
-                                                        />
-                                                    ))
-                                                }
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {dueTodayTasks.map(t => (
+                                <TaskItem key={t.problem.id} task={t} />
+                            ))}
                         </div>
                     </section>
                 )}
 
                 {/* Do Today Section */}
-                {doTodayLists.length > 0 && (
+                {doTodayTasks.length > 0 && (
                     <section>
-                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #3b82f6', paddingBottom: '0.5rem', marginBottom: '1.5rem', color: '#3b82f6' }}>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #1368C4', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#1368C4' }}>
                             Do Today
                         </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {doTodayLists.map(list => {
-                                const isExpanded = expandedIds[`dotoday-${list.id}`] || false;
-                                return (
-                                    <div key={`dotoday-${list.id}`}>
-                                        <div
-                                            onClick={() => toggleExpand(`dotoday-${list.id}`)}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.5rem',
-                                                cursor: 'pointer',
-                                                marginBottom: '0.5rem',
-                                                userSelect: 'none'
-                                            }}
-                                        >
-                                            {isExpanded ? <ChevronDown size={20} /> : <ChevronRightIcon size={20} />}
-                                            <h3 style={{ fontSize: '1.1rem', fontWeight: 600, margin: 0 }}>{list.name}</h3>
-                                        </div>
-                                        {isExpanded && (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                                {list.problems
-                                                    .filter(p => hasMatch(p, isDoToday))
-                                                    .map(p => (
-                                                        <InternalTaskNode
-                                                            key={p.id}
-                                                            problem={p}
-                                                            listId={list.id}
-                                                            depth={0}
-                                                            toggleComplete={toggleComplete}
-                                                            solvedMessages={solvedMessages}
-                                                            expandedIds={expandedIds}
-                                                            onToggleExpand={toggleExpand}
-                                                        />
-                                                    ))
-                                                }
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {doTodayTasks.map((t, index) => (
+                                <TaskItem
+                                    key={t.problem.id}
+                                    task={t}
+                                    isDraggable={true}
+                                    index={index}
+                                    onDragStart={handleDragStart}
+                                    onDragEnter={handleDragEnter}
+                                    onDragEnd={handleDragEnd}
+                                />
+                            ))}
                         </div>
                     </section>
                 )}
