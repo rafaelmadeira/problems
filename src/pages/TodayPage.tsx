@@ -174,7 +174,7 @@ export default function TodayPage() {
                     borderBottom: '1px solid #f0f0f0',
                     cursor: isDraggable ? 'grab' : 'pointer',
                     borderRadius: '8px',
-                    opacity: isDraggingThis ? 0 : 1 // Hide original while dragging
+                    opacity: isDraggingThis ? 0.5 : 1 // Match ProblemPage opacity
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
