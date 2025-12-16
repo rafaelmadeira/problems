@@ -103,7 +103,10 @@ export default function TodayPage() {
 
     // DnD Handlers for Do Today
     const handleDragStart = (index: number) => {
-        setDraggedIndex(index);
+        // Delay setting state so the browser captures the element with full opacity as the drag image
+        setTimeout(() => {
+            setDraggedIndex(index);
+        }, 0);
     };
 
     const handleDragEnter = (targetIndex: number) => {
@@ -151,6 +154,9 @@ export default function TodayPage() {
         onDragEnd?: () => void
     }) => {
         const { problem, listId, path } = task;
+
+        const isDragging = isDraggable && index === draggedIndex;
+
         return (
             <div
                 draggable={isDraggable}
@@ -168,7 +174,7 @@ export default function TodayPage() {
                     borderBottom: '1px solid #f0f0f0',
                     cursor: isDraggable ? 'grab' : 'pointer',
                     borderRadius: '8px',
-                    opacity: isDraggable && index === draggedIndex ? 0 : 1 // Hide original while dragging
+                    opacity: isDragging ? 0 : 1 // Hide the original list item (make it a gap) only AFTER drag has started
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
                 onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
