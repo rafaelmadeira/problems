@@ -4,6 +4,8 @@ import { useStore } from '../context/StoreContext';
 import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2 } from 'lucide-react';
 import type { Problem } from '../types';
 
+import FocusSession from '../components/FocusSession';
+
 export default function ProblemPage() {
     const { listId, problemId } = useParams();
     const navigate = useNavigate();
@@ -17,6 +19,7 @@ export default function ProblemPage() {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
     const [isMoveListOpen, setIsMoveListOpen] = useState(false);
+    const [isFocusOpen, setIsFocusOpen] = useState(false);
 
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
 
@@ -244,6 +247,15 @@ export default function ProblemPage() {
                 )}
             </nav>
 
+            {/* Focus Session Overlay */}
+            {isFocusOpen && currentProblem && (
+                <FocusSession
+                    problem={currentProblem}
+                    onExit={() => setIsFocusOpen(false)}
+                    onUpdateProblem={(id, updates) => updateProblem(list.id, id, updates)}
+                />
+            )}
+
             <header style={{ marginBottom: '2rem', position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
                     {!currentProblem ? (
@@ -394,6 +406,26 @@ export default function ProblemPage() {
                                     />
                                 </div>
 
+                                {/* Time Spent (Focus Mode Metadata) */}
+                                {currentProblem.totalTime ? (
+                                    <>
+                                        <div style={{ color: '#888', fontSize: '0.95rem' }}>Time Spent</div>
+                                        <div style={{ fontSize: '0.95rem', color: '#111', fontFamily: 'monospace' }}>
+                                            {(() => {
+                                                const totalSeconds = Math.floor(currentProblem.totalTime / 1000);
+                                                const hours = Math.floor(totalSeconds / 3600);
+                                                const minutes = Math.floor((totalSeconds % 3600) / 60);
+                                                const seconds = totalSeconds % 60;
+
+                                                // Format: HH:MM:SS or just MM:SS if no hours? 
+                                                // User "Total elapsed time should track time spent... keeps running even when the 5 minute and pomodoro timers are running"
+                                                // Let's show full HH:MM:SS
+                                                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                                            })()}
+                                        </div>
+                                    </>
+                                ) : null}
+
                                 {/* Notes */}
                                 <div style={{ color: '#888', fontSize: '0.95rem', alignSelf: 'flex-start', marginTop: '0.2rem' }}>Notes</div>
                                 <div>
@@ -490,6 +522,30 @@ export default function ProblemPage() {
                                     </button>
                                 ) : (
                                     <>
+                                        {/* Focus Action */}
+                                        <button
+                                            type="button"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setIsMenuOpen(false);
+                                                setIsFocusOpen(true);
+                                            }}
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.75rem',
+                                                padding: '0.75rem 1rem',
+                                                width: '100%',
+                                                color: '#333',
+                                                fontWeight: '500',
+                                                textAlign: 'left',
+                                                fontSize: '0.9rem',
+                                            }}
+                                        >
+                                            <CheckCircle2 size={16} /> {/* Use CheckCircle as icon or maybe something else? Lucide has Focus or Target? Using CheckCircle for now as placeholder for Focus */}
+                                            Focus
+                                        </button>
+
                                         {isRootTask && (
                                             <button
                                                 type="button"

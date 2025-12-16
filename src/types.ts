@@ -12,8 +12,9 @@ export interface Problem {
 export interface List {
   id: string;
   name: string;
-  description: string;
-  problems: Problem[];
+  dueDate?: string;
+  totalTime?: number; // Total time spent in milliseconds
+  subproblems: Problem[];
 }
 
 export interface AppState {
