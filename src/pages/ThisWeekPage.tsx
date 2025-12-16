@@ -215,7 +215,7 @@ const TaskNode = ({
                                     {problem.priority.replace('_', ' ')}
                                 </span>
                             )}
-                            {problem.priority && problem.dueDate && <span>-</span>}
+                            {problem.priority && problem.dueDate && <span>&middot;</span>}
                             {problem.dueDate && (
                                 <span>Due {problem.dueDate}</span>
                             )}
