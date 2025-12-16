@@ -23,6 +23,7 @@ export default function ProblemPage() {
     const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
+    const dateInputRef = React.useRef<HTMLInputElement>(null);
 
     // 1. Find the List
     const list = state.lists.find(l => l.id === listId);
@@ -438,7 +439,7 @@ export default function ProblemPage() {
                             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '0.5rem 1rem', alignItems: 'center' }}>
                                 {/* Priority */}
                                 <div style={{ color: '#888', fontSize: '0.95rem' }}>Priority</div>
-                                <div>
+                                <div style={{ marginTop: '-1px' }}>
                                     <select
                                         value={currentProblem.priority || 'today'}
                                         onChange={(e) => updateProblem(list.id, currentProblem!.id, { priority: e.target.value as Problem['priority'] })}
@@ -465,7 +466,7 @@ export default function ProblemPage() {
 
                                 {/* Status */}
                                 <div style={{ color: '#888', fontSize: '0.95rem' }}>Status</div>
-                                <div>
+                                <div style={{ marginTop: '-1px' }}>
                                     <select
                                         value={currentProblem.status || 'to_solve'}
                                         onChange={(e) => {
@@ -490,7 +491,7 @@ export default function ProblemPage() {
                                         }}
                                     >
                                         <option value="to_solve">To Solve</option>
-                                        <option value="solving">Solving</option>
+                                        <option value="solving">Working on it</option>
                                         <option value="blocked">Blocked</option>
                                         <option value="solved">Solved!</option>
                                     </select>
@@ -498,26 +499,70 @@ export default function ProblemPage() {
 
                                 {/* Due Date */}
                                 <div style={{ color: '#888', fontSize: '0.95rem' }}>Due Date</div>
-                                <div>
-                                    <input
-                                        type="date"
-                                        value={currentProblem.dueDate || ''}
-                                        onChange={(e) => updateProblem(list.id, currentProblem!.id, { dueDate: e.target.value || null })}
-                                        style={{
-                                            border: 'none',
-                                            backgroundColor: 'transparent',
-                                            fontSize: '0.95rem',
-                                            color: '#111',
-                                            fontFamily: 'inherit',
-                                            cursor: 'pointer',
-                                            padding: 0
-                                        }}
-                                    />
+                                <div style={{ marginTop: '-1px' }}>
+                                    {currentProblem.dueDate ? (
+                                        <input
+                                            type="date"
+                                            value={currentProblem.dueDate}
+                                            onChange={(e) => updateProblem(list.id, currentProblem!.id, { dueDate: e.target.value || null })}
+                                            style={{
+                                                border: 'none',
+                                                backgroundColor: 'transparent',
+                                                fontSize: '0.95rem',
+                                                color: '#111',
+                                                fontFamily: 'inherit',
+                                                cursor: 'pointer',
+                                                padding: 0
+                                            }}
+                                        />
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => {
+                                                    if (dateInputRef.current) {
+                                                        try {
+                                                            dateInputRef.current.showPicker();
+                                                        } catch (err) {
+                                                            // Fallback or ignore
+                                                            dateInputRef.current.click();
+                                                        }
+                                                    }
+                                                }}
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    padding: 0,
+                                                    color: '#999',
+                                                    textDecoration: 'none',
+                                                    cursor: 'pointer',
+                                                    fontSize: '0.95rem',
+                                                    fontFamily: 'sans-serif'
+                                                }}
+                                            >
+                                                Add date
+                                            </button>
+                                            <input
+                                                ref={dateInputRef}
+                                                type="date"
+                                                onChange={(e) => updateProblem(list.id, currentProblem!.id, { dueDate: e.target.value || null })}
+                                                style={{
+                                                    opacity: 0,
+                                                    position: 'absolute',
+                                                    zIndex: -1,
+                                                    width: '1px',
+                                                    height: '1px',
+                                                    overflow: 'hidden',
+                                                    top: 0,
+                                                    left: 0
+                                                }}
+                                            />
+                                        </>
+                                    )}
                                 </div>
 
                                 {/* Time Spent (Focus Mode Metadata) */}
                                 <div style={{ color: '#888', fontSize: '0.95rem' }}>Time Spent</div>
-                                <div style={{ fontSize: '0.95rem', color: '#111', fontFamily: 'monospace' }}>
+                                <div style={{ fontSize: '0.95rem', color: '#111', fontFamily: 'monospace', marginTop: '1px' }}>
                                     {currentProblem.totalTime ? (
                                         <button
                                             onClick={() => setIsHistoryOpen(true)}
@@ -549,22 +594,23 @@ export default function ProblemPage() {
                                                 background: 'none',
                                                 border: 'none',
                                                 padding: 0,
-                                                color: '#888', // Grey link color
-                                                textDecoration: 'underline',
+                                                color: '#999',
+                                                textDecoration: 'none',
                                                 cursor: 'pointer',
                                                 fontSize: '0.95rem',
-                                                fontFamily: 'inherit'
+                                                fontFamily: 'sans-serif'
                                             }}
                                         >
-                                            Start focus session
+                                            Start focus
                                         </button>
                                     )}
                                 </div>
 
                                 {/* Notes */}
-                                <div style={{ color: '#888', fontSize: '0.95rem', alignSelf: 'flex-start', marginTop: '0.2rem' }}>Notes</div>
+                                <div style={{ color: '#888', fontSize: '0.95rem', alignSelf: 'flex-start' }}>Notes</div>
                                 <div>
                                     <textarea
+                                        className="notes-textarea"
                                         value={currentProblem.notes || ''}
                                         onChange={(e) => {
                                             handleNotesChange(e);
@@ -576,7 +622,7 @@ export default function ProblemPage() {
                                             e.target.style.height = 'auto';
                                             e.target.style.height = e.target.scrollHeight + 'px';
                                         }}
-                                        placeholder="Add notes..."
+                                        placeholder="Add notes"
                                         rows={1}
                                         style={{
                                             width: '100%',
@@ -739,6 +785,10 @@ export default function ProblemPage() {
                     0% { opacity: 1; transform: translateX(-50%) translateY(0); }
                     70% { opacity: 1; transform: translateX(-50%) translateY(-5px); }
                     100% { opacity: 0; transform: translateX(-50%) translateY(-15px); }
+                }
+                .notes-textarea::placeholder {
+                    color: #999 !important;
+                    opacity: 1 !important;
                 }
             `}</style>
 

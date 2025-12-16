@@ -2,230 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { CheckCircle2, ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
-import type { Problem, List } from '../types';
-
-/* 
-  Recursive component for rendering a task and its children 
-  Only renders if the task itself is unfinished OR has unfinished children.
-*/
-const TaskNode = ({
-    problem,
-    listId,
-    depth = 0,
-    toggleComplete,
-    solvedMessages,
-    isExpanded,
-    onToggleExpand
-}: {
-    problem: Problem,
-    listId: string,
-    depth?: number,
-    toggleComplete: (p: Problem, listId: string) => void,
-    solvedMessages: { [key: string]: boolean },
-    isExpanded: boolean,
-    onToggleExpand: (id: string) => void
-}) => {
-    const navigate = useNavigate();
-
-    // Helper to check if a problem or its descendants match the filter
-    const hasUnfinishedDescendants = (p: Problem): boolean => {
-        if (!p.completed && (p.status === 'solving' || p.status === 'blocked')) return true;
-        return p.subproblems.some(child => hasUnfinishedDescendants(child));
-    };
-
-    // Current node matches?
-    const isSelfUnfinished = !problem.completed && (problem.status === 'solving' || problem.status === 'blocked');
-    const hasRelevantChildren = problem.subproblems.some(child => hasUnfinishedDescendants(child));
-
-    // If neither self nor children match, don't render (should have been filtered by parent, but safety check)
-    if (!isSelfUnfinished && !hasRelevantChildren) return null;
-
-    return (
-        <div style={{ marginLeft: depth > 0 ? '1.5rem' : '0' }}>
-            {/* Render Self if matches */}
-            <div
-                onClick={(e) => {
-                    e.stopPropagation();
-                    navigate(`/list/${listId}/problem/${problem.id}`);
-                }}
-                style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: '0.75rem',
-                    padding: '0.75rem',
-                    borderBottom: '1px solid #f0f0f0',
-                    cursor: 'pointer',
-                    transition: 'background-color 0.2s',
-                    borderRadius: '8px',
-                    backgroundColor: problem.status === 'blocked' ? '#fff1f1' : 'transparent',
-                }}
-                onMouseEnter={(e) => {
-                    if (problem.status !== 'blocked') e.currentTarget.style.backgroundColor = '#f9f9f9';
-                }}
-                onMouseLeave={(e) => {
-                    if (problem.status !== 'blocked') e.currentTarget.style.backgroundColor = 'transparent';
-                }}
-            >
-                {/* Collapse Toggle for children */}
-                {hasRelevantChildren ? (
-                    <div
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleExpand(problem.id);
-                        }}
-                        style={{ padding: '2px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                    >
-                        {isExpanded ? <ChevronDown size={16} color="#888" /> : <ChevronRightIcon size={16} color="#888" />}
-                    </div>
-                ) : (
-                    // Spacer
-                    <div style={{ width: 20 }} />
-                )}
-
-                <div style={{ position: 'relative', paddingTop: '2px' }}>
-                    {solvedMessages[problem.id] && (
-                        <div style={{
-                            position: 'absolute',
-                            bottom: '100%',
-                            left: '50%',
-                            transform: 'translateX(-50%)',
-                            backgroundColor: '#22c55e',
-                            color: 'white',
-                            padding: '4px 8px',
-                            borderRadius: '6px',
-                            fontSize: '0.75rem',
-                            fontWeight: '600',
-                            whiteSpace: 'nowrap',
-                            animation: 'fadeOutUp 2s ease-out forwards',
-                            pointerEvents: 'none',
-                            marginBottom: '8px',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                            zIndex: 10
-                        }}>
-                            Problem solved!
-                            <div style={{
-                                position: 'absolute',
-                                top: '100%',
-                                left: '50%',
-                                transform: 'translateX(-50%)',
-                                borderLeft: '4px solid transparent',
-                                borderRight: '4px solid transparent',
-                                borderTop: '4px solid #22c55e'
-                            }} />
-                        </div>
-                    )}
-                    <button
-                        title="solve problem"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            toggleComplete(problem, listId);
-                        }}
-                        style={{
-                            color: problem.completed ? '#22c55e' : '#e5e5e5',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            background: 'none',
-                            border: 'none',
-                            padding: 0
-                        }}
-                    >
-                        <CheckCircle2 size={24} fill={problem.completed ? "#22c55e" : "transparent"} color={problem.completed ? "#fff" : "#e5e5e5"} />
-                    </button>
-                </div>
-
-                <div style={{ flex: 1 }}>
-                    <div style={{
-                        fontSize: '1.1rem',
-                        color: isSelfUnfinished ? '#333' : '#999', // Dim if just a container for children
-                        fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
-                        lineHeight: '1.4'
-                    }}>
-                        {problem.name}
-                    </div>
-
-                    {/* Metadata line: Priority · Status */}
-                    <div style={{ fontSize: '0.85rem', color: '#888', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ textTransform: 'capitalize' }}>
-                            {problem.priority?.replace('_', ' ') || 'someday'}
-                        </span>
-                        <span>&middot;</span>
-                        <span style={{
-                            textTransform: 'capitalize',
-                            color: problem.status === 'blocked' ? '#ef4444' :
-                                problem.status === 'solving' ? '#3b82f6' : '#888'
-                        }}>
-                            {/* If 'to_solve' but shown because children, show that? Or just status? */}
-                            {problem.status || 'to solve'}
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            {/* Recursively render children if expanded */}
-            {isExpanded && hasRelevantChildren && (
-                <div>
-                    {problem.subproblems
-                        .filter(child => hasUnfinishedDescendants(child))
-                        .map(child => (
-                            <RecursiveTaskNode
-                                key={child.id}
-                                problem={child}
-                                listId={listId}
-                                depth={depth + 1}
-                                toggleComplete={toggleComplete}
-                                solvedMessages={solvedMessages}
-                                expandedIds={null} // Pass map below
-                                onToggleExpand={onToggleExpand}
-                            // Hack: RecursiveTaskNode needs to be connected or pass map
-                            // I will fix RecursiveTaskNode below to receive map
-                            />
-                        ))
-                    }
-                </div>
-            )}
-        </div>
-    );
-};
-
-// Recursive Wrapper to handle props
-const RecursiveTaskNode = ({
-    problem,
-    listId,
-    depth = 0,
-    toggleComplete,
-    solvedMessages,
-    expandedIds,
-    onToggleExpand
-}: {
-    problem: Problem,
-    listId: string,
-    depth?: number,
-    toggleComplete: (p: Problem, listId: string) => void,
-    solvedMessages: { [key: string]: boolean },
-    expandedIds: { [key: string]: boolean } | null, // null check handled inside? No, passed from parent
-    onToggleExpand: (id: string) => void
-}) => {
-    // If we call RecursiveTaskNode from TaskNode, we need to pass expandedIds.
-    // In TaskNode above I put `expandedIds={null}` which is wrong.
-    // I need to redefine TaskNode to accept the map too?
-    // Let's merge them into one `TaskNode` definition to avoid confusion and use the map.
-
-    // BUT, the initial TaskNode definition was cleaner. 
-    // Let's use `RecursiveTaskNode` as the MAIN component used by everything.
-    return (
-        <InternalTaskNode
-            problem={problem}
-            listId={listId}
-            depth={depth}
-            toggleComplete={toggleComplete}
-            solvedMessages={solvedMessages}
-            expandedIds={expandedIds || {}}
-            onToggleExpand={onToggleExpand}
-        />
-    );
-}
+import type { Problem } from '../types';
 
 const InternalTaskNode = ({
     problem,
@@ -257,6 +34,14 @@ const InternalTaskNode = ({
     if (!isSelfUnfinished && !hasRelevantChildren) return null;
 
     const isExpanded = expandedIds[problem.id] || false;
+
+    // Helper for status label
+    const getStatusLabel = (s?: string) => {
+        if (s === 'solving') return 'Working on it';
+        if (s === 'blocked') return 'Blocked';
+        if (s === 'solved') return 'Solved!';
+        return 'To Solve';
+    };
 
     return (
         <div style={{ marginLeft: depth > 0 ? '1.5rem' : '0' }}>
@@ -366,11 +151,11 @@ const InternalTaskNode = ({
                         </span>
                         <span>&middot;</span>
                         <span style={{
-                            textTransform: 'capitalize',
+                            // Removed textTransform: 'capitalize'
                             color: problem.status === 'blocked' ? '#ef4444' :
                                 problem.status === 'solving' ? '#3b82f6' : '#888'
                         }}>
-                            {problem.status || 'to solve'}
+                            {getStatusLabel(problem.status)}
                         </span>
                     </div>
                 </div>
