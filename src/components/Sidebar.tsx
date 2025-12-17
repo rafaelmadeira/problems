@@ -1,0 +1,280 @@
+import React, { useState } from 'react';
+import { useStore } from '../context/StoreContext';
+import { Link, useLocation } from 'react-router-dom';
+import {
+    Plus, ChevronRight, CheckCircle2,
+    Calendar, Target, CalendarRange, Settings
+} from 'lucide-react';
+import type { Problem } from '../types';
+
+export default function Sidebar() {
+    const { state, addList, reorderLists } = useStore();
+    const location = useLocation();
+    const [isCreating, setIsCreating] = useState(false);
+    const [newListName, setNewListName] = useState('');
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+    // --- Logic from App.tsx (Counts) ---
+    // Duplicate logic for now. Ideally should be in a hook or helper.
+    const countProblems = (problems: Problem[]): number => {
+        let count = 0;
+        for (const p of problems) {
+            if (!p.completed) count += 1;
+            count += countProblems(p.subproblems);
+        }
+        return count;
+    };
+    const countTodayProblems = (problems: Problem[]): number => {
+        let count = 0;
+        for (const p of problems) {
+            if (!p.completed && p.priority === 'today') count += 1;
+            count += countTodayProblems(p.subproblems);
+        }
+        return count;
+    };
+    const isDateInCurrentWeek = (dateStr: string | null): boolean => {
+        if (!dateStr) return false;
+        const now = new Date();
+        const currentDay = now.getDay();
+        const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() + diffToMonday);
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const checkDate = new Date(year, month - 1, day);
+        return checkDate >= monday && checkDate <= sunday;
+    };
+    const countWeekProblems = (problems: Problem[]): number => {
+        let count = 0;
+        for (const p of problems) {
+            if (!p.completed) {
+                const isPriorityMatch = p.priority === 'today' || p.priority === 'this_week';
+                const isDueMatch = isDateInCurrentWeek(p.dueDate);
+                if (isPriorityMatch || isDueMatch) count += 1;
+            }
+            count += countWeekProblems(p.subproblems);
+        }
+        return count;
+    };
+    const countUnfinishedProblems = (problems: Problem[]): number => {
+        let count = 0;
+        for (const p of problems) {
+            if (!p.completed && (p.status === 'solving' || p.status === 'blocked')) count += 1;
+            count += countUnfinishedProblems(p.subproblems);
+        }
+        return count;
+    };
+
+    const totalProblems = state.lists.reduce((acc, list) => acc + countProblems(list.problems), 0);
+    const todayProblemsCount = state.lists.reduce((acc, list) => acc + countTodayProblems(list.problems), 0);
+    const unfinishedProblemsCount = state.lists.reduce((acc, list) => acc + countUnfinishedProblems(list.problems), 0);
+    const weekProblemsCount = state.lists.reduce((acc, list) => acc + countWeekProblems(list.problems), 0);
+
+    const inboxList = state.lists.find(l => l.id === 'inbox');
+    const inboxCount = inboxList ? countProblems(inboxList.problems) : 0;
+
+    const isInboxActive = location.pathname.includes('/list/inbox');
+    const isTodayActive = location.pathname === '/today';
+    const isWeekActive = location.pathname === '/week';
+    const isUnfinishedActive = location.pathname === '/unfinished';
+    const isSettingsActive = location.pathname === '/settings';
+
+    // --- Logic from HomePage.tsx (Lists) ---
+    const visibleLists = state.lists.filter(l => l.id !== 'inbox');
+
+    const handleCreate = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (newListName.trim()) {
+            addList(newListName.trim());
+            setNewListName('');
+            setIsCreating(false);
+        }
+    };
+
+    const handleDragStart = (index: number) => {
+        setDraggedIndex(index);
+    };
+
+    const handleDragEnter = (targetIndex: number) => {
+        if (draggedIndex === null || draggedIndex === targetIndex) return;
+        const newVisibleLists = [...visibleLists];
+        const draggedItem = newVisibleLists[draggedIndex];
+        newVisibleLists.splice(draggedIndex, 1);
+        newVisibleLists.splice(targetIndex, 0, draggedItem);
+        const newFullLists = inboxList ? [inboxList, ...newVisibleLists] : newVisibleLists;
+        reorderLists(newFullLists);
+        setDraggedIndex(targetIndex);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedIndex(null);
+    };
+
+    const NavItem = ({ to, label, icon: Icon, count, isActive }: any) => (
+        <Link
+            to={to}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '0.6rem 0.5rem',
+                borderRadius: '6px',
+                color: isActive ? '#111' : '#666',
+                backgroundColor: isActive ? '#f0f0f0' : 'transparent',
+                fontWeight: isActive ? 600 : 500,
+                textDecoration: 'none',
+                marginBottom: '0.25rem'
+            }}
+            onMouseEnter={e => !isActive && (e.currentTarget.style.backgroundColor = '#f9f9f9')}
+            onMouseLeave={e => !isActive && (e.currentTarget.style.backgroundColor = 'transparent')}
+        >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                {Icon && <Icon size={16} />}
+                <span>{label}</span>
+            </div>
+            {count > 0 && <span style={{ fontSize: '0.8rem', color: '#999' }}>{count}</span>}
+        </Link>
+    );
+
+    return (
+        <div style={{
+            width: '280px',
+            height: '100vh',
+            position: 'sticky',
+            top: 0,
+            borderRight: '1px solid #f0f0f0',
+            backgroundColor: '#fff',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '2rem'
+        }}>
+            {/* Header: Total Count */}
+            <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', fontSize: '1.2rem' }}>
+                {/* Only showing count text as per screenshot "37 problems" */}
+                {totalProblems} problems
+            </div>
+
+            {/* Nav Links */}
+            <div style={{ marginBottom: '2rem' }}>
+                <Link
+                    to="/list/inbox"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between', // Space between for count
+                        marginBottom: '1rem',
+                        color: isInboxActive ? '#111' : '#666',
+                        textDecoration: 'none',
+                        fontSize: '0.95rem',
+                        fontWeight: isInboxActive ? 600 : 500
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        {/* Does Inbox have an icon in screenshot? Just text "Inbox" centered-ish */}
+                        Inbox
+                    </div>
+                    {inboxCount > 0 && <span>{inboxCount}</span>}
+                </Link>
+
+                <NavItem to="/today" label="Today" icon={Calendar} count={todayProblemsCount} isActive={isTodayActive} />
+                <NavItem to="/week" label="This Week" icon={CalendarRange} count={weekProblemsCount} isActive={isWeekActive} />
+                <NavItem to="/unfinished" label="Unfinished" icon={Target} count={unfinishedProblemsCount} isActive={isUnfinishedActive} />
+            </div>
+
+            {/* Lists Header */}
+            <div style={{ color: '#aaa', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+                Lists
+            </div>
+
+            {/* Lists */}
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+                {visibleLists.map((list, index) => {
+                    const count = countProblems(list.problems);
+                    const isActive = location.pathname.includes(`/list/${list.id}`);
+
+                    return (
+                        <div
+                            key={list.id}
+                            draggable
+                            onDragStart={() => handleDragStart(index)}
+                            onDragEnter={() => handleDragEnter(index)}
+                            onDragEnd={handleDragEnd}
+                            onDragOver={(e) => e.preventDefault()}
+                            style={{ opacity: draggedIndex === index ? 0.5 : 1 }}
+                        >
+                            <NavItem
+                                to={`/list/${list.id}`}
+                                label={list.name}
+                                icon={CheckCircle2} // Placeholder icon for lists, or custom emoji logic later
+                                count={count}
+                                isActive={isActive}
+                            />
+                        </div>
+                    );
+                })}
+
+                {/* New List Input */}
+                <div style={{ marginTop: '1rem' }}>
+                    {isCreating ? (
+                        <form onSubmit={handleCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <input
+                                autoFocus
+                                type="text"
+                                placeholder="New list..."
+                                value={newListName}
+                                onChange={e => setNewListName(e.target.value)}
+                                style={{
+                                    fontSize: '0.9rem',
+                                    padding: '0.4rem',
+                                    border: '1px solid #eee',
+                                    borderRadius: '4px',
+                                    width: '100%'
+                                }}
+                                onBlur={() => !newListName && setIsCreating(false)}
+                            />
+                        </form>
+                    ) : (
+                        <button
+                            onClick={() => setIsCreating(true)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                color: '#aaa',
+                                border: 'none',
+                                background: 'transparent',
+                                cursor: 'pointer',
+                                fontSize: '0.9rem',
+                                padding: '0.5rem 0'
+                            }}
+                        >
+                            <Plus size={16} />
+                            <span>New list</span>
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Footer Settings */}
+            <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '1rem', marginTop: '1rem' }}>
+                <Link
+                    to="/settings"
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        color: isSettingsActive ? '#111' : '#aaa',
+                        textDecoration: 'none',
+                        fontSize: '0.9rem'
+                    }}
+                >
+                    <Settings size={16} />
+                    Settings
+                </Link>
+            </div>
+        </div>
+    );
+}

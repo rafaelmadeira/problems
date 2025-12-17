@@ -29,6 +29,11 @@ export interface List {
   problems: Problem[];
 }
 
+export interface AppSettings {
+  layout: 'one-column' | 'two-columns';
+}
+
 export interface AppState {
   lists: List[];
+  settings: AppSettings;
 }

@@ -1,9 +1,11 @@
-import { useState } from 'react';
+// import { useState } from 'react'; // Removed unused
 import { Link } from 'react-router-dom';
 import { ChevronRight, Layout, Check } from 'lucide-react';
+import { useStore } from '../context/StoreContext';
 
 export default function SettingsPage() {
-    const [layout, setLayout] = useState<'one-column' | 'two-columns'>('one-column');
+    const { state, updateSettings } = useStore();
+    const layout = state.settings?.layout || 'one-column';
 
     return (
         <div style={{ paddingBottom: '4rem' }}>
@@ -33,7 +35,7 @@ export default function SettingsPage() {
                         border: '1px solid #f0f0f0'
                     }}>
                         <button
-                            onClick={() => setLayout('one-column')}
+                            onClick={() => updateSettings({ layout: 'one-column' })}
                             style={{
                                 flex: 1,
                                 padding: '1rem',
@@ -59,7 +61,7 @@ export default function SettingsPage() {
                         </button>
 
                         <button
-                            onClick={() => setLayout('two-columns')}
+                            onClick={() => updateSettings({ layout: 'two-columns' })}
                             style={{
                                 flex: 1,
                                 padding: '1rem',

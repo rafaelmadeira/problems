@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useLocation } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { useStore } from './context/StoreContext';
 import HomePage from './pages/HomePage';
 import ProblemPage from './pages/ProblemPage';
@@ -6,12 +6,14 @@ import TodayPage from './pages/TodayPage';
 import UnfinishedPage from './pages/UnfinishedPage';
 import ThisWeekPage from './pages/ThisWeekPage';
 import SettingsPage from './pages/SettingsPage';
+import Sidebar from './components/Sidebar';
 import { CheckCircle2, Calendar, Target, CalendarRange, Settings } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 
 function App() {
   const { state } = useStore();
   const location = useLocation();
+  const layout = state.settings?.layout || 'one-column';
 
   // Calculate total recursive problems (only incomplete)
   const countProblems = (problems: Problem[]): number => {
@@ -118,7 +120,28 @@ function App() {
   const isUnfinishedActive = location.pathname === '/unfinished';
   const isSettingsActive = location.pathname === '/settings';
 
+  // --- Two Column Layout ---
+  if (layout === 'two-columns') {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#fff' }}>
+        <Sidebar />
+        <main style={{ flex: 1, padding: '2rem 3rem', maxWidth: '1000px' }}>
+          <Routes>
+            {/* Redirect root to /today in 2-column mode to avoid empty/redundant page */}
+            <Route path="/" element={<Navigate to="/today" replace />} />
+            <Route path="/today" element={<TodayPage />} />
+            <Route path="/week" element={<ThisWeekPage />} />
+            <Route path="/unfinished" element={<UnfinishedPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/list/:listId" element={<ProblemPage />} />
+            <Route path="/list/:listId/problem/:problemId" element={<ProblemPage />} />
+          </Routes>
+        </main>
+      </div>
+    );
+  }
 
+  // --- One Column Layout (Original) ---
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
       <header style={{ marginBottom: '3rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>

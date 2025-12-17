@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import type { AppState, List, Problem } from '../types';
+import type { AppState, AppSettings, List, Problem } from '../types';
 
 interface StoreContextType {
     state: AppState;
@@ -13,7 +13,7 @@ interface StoreContextType {
     reorderProblems: (listId: string, parentProblemId: string | null, newProblems: Problem[]) => void;
     reorderTodayProblems: (items: { id: string, listId: string }[]) => void;
     moveProblemToList: (problemId: string, fromListId: string, toListId: string) => void;
-    // We might need more specific actions or a generic dispatch
+    updateSettings: (newSettings: Partial<AppSettings>) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -28,7 +28,10 @@ const defaultState: AppState = {
             description: 'Default list',
             problems: []
         }
-    ]
+    ],
+    settings: {
+        layout: 'one-column'
+    }
 };
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -44,6 +47,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             setState(prev => ({
                 ...prev,
                 lists: prev.lists.map(l => l.id === 'inbox' ? { ...l, name: 'Inbox' } : l)
+            }));
+        }
+
+        // Migration: Add settings if missing
+        if (!state.settings) {
+            setState(prev => ({
+                ...prev,
+                settings: { layout: 'one-column' }
             }));
         }
     }, [state.lists]); // Check when lists change, though essentially runs once on load if needed.
@@ -103,7 +114,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 }
                 return updatedList;
             });
-            return { lists: newLists };
+            return { ...prev, lists: newLists };
         });
     };
 
@@ -166,7 +177,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 findProblemAndUpdate(updatedList.problems, problemId, updates);
                 return updatedList;
             });
-            return { lists: newLists };
+            return { ...prev, lists: newLists };
         });
     };
 
@@ -205,7 +216,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 findProblemAndDelete(updatedList.problems, problemId);
                 return updatedList;
             });
-            return { lists: newLists };
+            return { ...prev, lists: newLists };
         });
     };
 
@@ -240,7 +251,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 }
                 return updatedList;
             });
-            return { lists: newLists };
+            return { ...prev, lists: newLists };
         });
     };
 
@@ -302,6 +313,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
     };
 
+    const updateSettings = (newSettings: Partial<AppSettings>) => {
+        setState(prev => ({
+            ...prev,
+            settings: { ...prev.settings, ...newSettings }
+        }));
+    };
+
     return (
         <StoreContext.Provider value={{
             state,
@@ -314,7 +332,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             reorderLists,
             reorderProblems,
             reorderTodayProblems,
-            moveProblemToList
+            moveProblemToList,
+            updateSettings
         }}>
             {children}
         </StoreContext.Provider>
