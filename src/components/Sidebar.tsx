@@ -163,8 +163,8 @@ export default function Sidebar() {
                 <button
                     onClick={() => setIsCreatingProblem(true)}
                     style={{
-                        width: '32px',
-                        height: '32px',
+                        width: '24px',
+                        height: '24px',
                         borderRadius: '50%',
                         backgroundColor: '#f0f0f0',
                         border: 'none',
@@ -184,7 +184,7 @@ export default function Sidebar() {
                         e.currentTarget.style.color = '#666';
                     }}
                 >
-                    <Plus size={18} />
+                    <Plus size={14} />
                 </button>
             </div>
 
