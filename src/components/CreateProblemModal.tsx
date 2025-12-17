@@ -8,9 +8,10 @@ interface CreateProblemModalProps {
     onClose: () => void;
     defaultListId: string;
     showListSelector?: boolean;
+    parentId?: string | null;
 }
 
-export default function CreateProblemModal({ isOpen, onClose, defaultListId, showListSelector = false }: CreateProblemModalProps) {
+export default function CreateProblemModal({ isOpen, onClose, defaultListId, showListSelector = false, parentId = null }: CreateProblemModalProps) {
     const { state, addProblem } = useStore();
     const [name, setName] = useState('');
     const [priority, setPriority] = useState<Problem['priority']>('someday');
@@ -46,8 +47,8 @@ export default function CreateProblemModal({ isOpen, onClose, defaultListId, sho
 
         const targetListId = showListSelector ? selectedListId : defaultListId;
 
-        // Add to root of the list
-        addProblem(null, targetListId, {
+        // Add to root of the list or as subtask
+        addProblem(parentId, targetListId, {
             name: name.trim(),
             priority,
             status,

@@ -1258,6 +1258,7 @@ export default function ProblemPage() {
                 onClose={() => setIsAdding(false)}
                 defaultListId={list.id}
                 showListSelector={false}
+                parentId={currentParentId}
             />
 
             <div style={{ marginTop: '2rem' }}>
