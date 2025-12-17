@@ -8,7 +8,7 @@ interface FocusSessionProps {
     onUpdateProblem: (id: string, updates: Partial<Problem>) => void;
 }
 
-type TimerMode = '5min' | 'pomodoro' | 'stopwatch';
+type TimerMode = '5min' | 'pomodoro' | 'stopwatch' | 'estimated';
 type TimerState = 'idle' | 'running' | 'paused';
 type PomoPhase = 'work' | 'break' | 'long_break';
 
@@ -128,7 +128,7 @@ export default function FocusSession({ problem, onExit, onUpdateProblem }: Focus
 
     // 2. Timer Logic (Countdown & Stopwatch)
     useEffect(() => {
-        let interval: NodeJS.Timeout;
+        let interval: ReturnType<typeof setInterval>;
 
         if (timerState === 'running') {
             const tickRate = 1000;
@@ -207,6 +207,15 @@ export default function FocusSession({ problem, onExit, onUpdateProblem }: Focus
         setIsTotalTimeRunning(true);
     };
 
+    const startEstimated = () => {
+        if (problem.estimatedDuration) {
+            setMode('estimated');
+            setTimeLeft(problem.estimatedDuration);
+            setTimerState('running');
+            setIsTotalTimeRunning(true);
+        }
+    };
+
     const startPomodoro = () => {
         setMode('pomodoro');
         setTimeLeft(25 * 60 * 1000);
@@ -236,6 +245,7 @@ export default function FocusSession({ problem, onExit, onUpdateProblem }: Focus
         setTimerState('idle');
         // Do not stop total time on reset, as per user request
         if (mode === '5min') setTimeLeft(5 * 60 * 1000);
+        if (mode === 'estimated' && problem.estimatedDuration) setTimeLeft(problem.estimatedDuration);
         if (mode === 'stopwatch') setStopwatchTime(0);
         if (mode === 'pomodoro') {
             if (pomoPhase === 'work') setTimeLeft(25 * 60 * 1000);
@@ -269,58 +279,180 @@ export default function FocusSession({ problem, onExit, onUpdateProblem }: Focus
                 right: 0,
                 bottom: 0,
                 backgroundColor: 'rgba(0, 0, 0, 0.85)',
-                backdropFilter: 'blur(10px)',
+                backdropFilter: 'blur(5px)',
                 zIndex: 9999,
                 display: 'flex',
-                flexDirection: 'column',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '2rem'
+                padding: '1rem'
             }}>
                 <div style={{
                     backgroundColor: 'white',
-                    padding: '2rem',
-                    borderRadius: '16px',
+                    padding: '2.5rem',
+                    borderRadius: '24px',
                     width: '100%',
-                    maxWidth: '400px',
+                    maxWidth: '420px',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: '1.5rem',
-                    boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                    position: 'relative',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
                 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <h2 style={{ margin: 0, fontSize: '1.5rem', fontWeight: 700 }}>Focus Mode</h2>
-                        <button onClick={onExit} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-                            <X size={24} color="#666" />
-                        </button>
-                    </div>
+                    <button
+                        onClick={onExit}
+                        style={{
+                            position: 'absolute',
+                            top: '1.5rem',
+                            right: '1.5rem',
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            color: '#9ca3af',
+                            transition: 'color 0.2s'
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.color = '#111'}
+                        onMouseLeave={e => e.currentTarget.style.color = '#9ca3af'}
+                    >
+                        <X size={24} />
+                    </button>
 
-                    <p style={{ margin: 0, color: '#666', lineHeight: 1.5 }}>
-                        Select a timer mode to focus on <strong>{problem.name}</strong>.
+                    <h2 style={{
+                        margin: '0 0 0.5rem 0',
+                        fontSize: '1.75rem',
+                        fontWeight: 700,
+                        textAlign: 'center',
+                        color: '#111'
+                    }}>
+                        Focus Mode
+                    </h2>
+
+                    <p style={{
+                        margin: '0 0 2rem 0',
+                        fontSize: '1rem',
+                        color: '#6b7280',
+                        textAlign: 'center'
+                    }}>
+                        Select a timer mode to focus.
                     </p>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                        {problem.estimatedDuration && problem.estimatedDuration > 0 && (
+                            <button
+                                onClick={startEstimated}
+                                style={{
+                                    padding: '1rem',
+                                    borderRadius: '12px',
+                                    border: '1px solid #e5e5e5',
+                                    backgroundColor: 'white',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    fontWeight: 600,
+                                    color: '#111',
+                                    transition: 'all 0.2s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                                onMouseEnter={e => {
+                                    e.currentTarget.style.borderColor = '#111';
+                                    e.currentTarget.style.backgroundColor = '#fafafa';
+                                }}
+                                onMouseLeave={e => {
+                                    e.currentTarget.style.borderColor = '#e5e5e5';
+                                    e.currentTarget.style.backgroundColor = 'white';
+                                }}
+                            >
+                                Estimated Duration ({(() => {
+                                    const minutes = Math.floor(problem.estimatedDuration / 60000);
+                                    const h = Math.floor(minutes / 60);
+                                    const m = minutes % 60;
+                                    if (h > 0 && m > 0) return `${h}h${m}m`;
+                                    if (h > 0) return `${h}h`;
+                                    return `${m}m`;
+                                })()})
+                            </button>
+                        )}
+
                         <button
                             onClick={start5Min}
-                            style={{ padding: '1rem', borderRadius: '12px', border: '1px solid #e5e5e5', backgroundColor: 'white', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            onMouseEnter={e => e.currentTarget.style.borderColor = '#111'}
-                            onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e5e5'}
+                            style={{
+                                padding: '1rem',
+                                borderRadius: '12px',
+                                border: '1px solid #e5e5e5',
+                                backgroundColor: 'white',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                fontWeight: 600,
+                                color: '#111',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = '#111';
+                                e.currentTarget.style.backgroundColor = '#fafafa';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = '#e5e5e5';
+                                e.currentTarget.style.backgroundColor = 'white';
+                            }}
                         >
                             5 Minutes
                         </button>
+
                         <button
                             onClick={startPomodoro}
-                            style={{ padding: '1rem', borderRadius: '12px', border: '1px solid #e5e5e5', backgroundColor: 'white', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            onMouseEnter={e => e.currentTarget.style.borderColor = '#fca5a5'} // light red hint
-                            onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e5e5'}
+                            style={{
+                                padding: '1rem',
+                                borderRadius: '12px',
+                                border: '1px solid #e5e5e5',
+                                backgroundColor: 'white',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                fontWeight: 600,
+                                color: '#111',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = '#111';
+                                e.currentTarget.style.backgroundColor = '#fafafa';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = '#e5e5e5';
+                                e.currentTarget.style.backgroundColor = 'white';
+                            }}
                         >
                             Pomodoro
                         </button>
+
                         <button
                             onClick={startStopwatch}
-                            style={{ padding: '1rem', borderRadius: '12px', border: '1px solid #e5e5e5', backgroundColor: 'white', cursor: 'pointer', fontSize: '1.1rem', fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
-                            onMouseEnter={e => e.currentTarget.style.borderColor = '#111'}
-                            onMouseLeave={e => e.currentTarget.style.borderColor = '#e5e5e5'}
+                            style={{
+                                padding: '1rem',
+                                borderRadius: '12px',
+                                border: '1px solid #e5e5e5',
+                                backgroundColor: 'white',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                fontWeight: 600,
+                                color: '#111',
+                                transition: 'all 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.borderColor = '#111';
+                                e.currentTarget.style.backgroundColor = '#fafafa';
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.borderColor = '#e5e5e5';
+                                e.currentTarget.style.backgroundColor = 'white';
+                            }}
                         >
                             Stopwatch
                         </button>
