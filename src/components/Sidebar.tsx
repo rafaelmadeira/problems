@@ -159,25 +159,13 @@ export default function Sidebar() {
 
             {/* Nav Links */}
             <div style={{ marginBottom: '2rem' }}>
-                <Link
+                <NavItem
                     to="/list/inbox"
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between', // Space between for count
-                        marginBottom: '1rem',
-                        color: isInboxActive ? '#111' : '#666',
-                        textDecoration: 'none',
-                        fontSize: '0.95rem',
-                        fontWeight: isInboxActive ? 600 : 400
-                    }}
-                >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <Inbox size={16} />
-                        <span>Inbox</span>
-                    </div>
-                    {inboxCount > 0 && <span style={{ fontWeight: isInboxActive ? 600 : 400 }}>{inboxCount}</span>}
-                </Link>
+                    label="Inbox"
+                    icon={Inbox}
+                    count={inboxCount}
+                    isActive={isInboxActive}
+                />
 
                 <NavItem to="/today" label="Today" icon={Calendar} count={todayProblemsCount} isActive={isTodayActive} />
                 <NavItem to="/week" label="This Week" icon={CalendarRange} count={weekProblemsCount} isActive={isWeekActive} />
