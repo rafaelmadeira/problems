@@ -7,18 +7,14 @@ import type { EmojiClickData } from 'emoji-picker-react';
 import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
 
 import FocusSession from '../components/FocusSession';
+import CreateProblemModal from '../components/CreateProblemModal';
 
 export default function ProblemPage() {
     const { listId, problemId } = useParams();
     const navigate = useNavigate();
-    const { state, addProblem, updateProblem, updateList, deleteList, deleteProblem, reorderProblems, moveProblemToList } = useStore();
+    const { state, updateProblem, updateList, deleteList, deleteProblem, reorderProblems, moveProblemToList } = useStore();
 
-    const [newSubtaskName, setNewSubtaskName] = useState('');
-    const [newPriority, setNewPriority] = useState<Problem['priority']>('someday');
-    const [newStatus, setNewStatus] = useState<Problem['status']>('to_solve');
-    const [newDueDate, setNewDueDate] = useState('');
-    const [newEstimatedDuration, setNewEstimatedDuration] = useState('');
-    const [newNotes, setNewNotes] = useState('');
+
     const [isAdding, setIsAdding] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -78,41 +74,7 @@ export default function ProblemPage() {
         setActiveMenuId(activeMenuId === id ? null : id);
     };
 
-    const handleAdd = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (newSubtaskName.trim()) {
-            let durationMs = undefined;
-            if (newEstimatedDuration.trim()) {
-                const val = newEstimatedDuration.trim().toLowerCase();
-                let totalMinutes = 0;
-                const hMatch = val.match(/(\d+)\s*h/);
-                if (hMatch) totalMinutes += parseInt(hMatch[1], 10) * 60;
-                const mMatch = val.match(/(\d+)\s*m/);
-                if (mMatch) totalMinutes += parseInt(mMatch[1], 10);
-                if (!hMatch && !mMatch) {
-                    const num = parseInt(val, 10);
-                    if (!isNaN(num)) totalMinutes = num;
-                }
-                if (totalMinutes > 0) durationMs = totalMinutes * 60000;
-            }
 
-            addProblem(currentParentId, list.id, {
-                name: newSubtaskName.trim(),
-                priority: newPriority,
-                status: newStatus,
-                dueDate: newDueDate || null,
-                estimatedDuration: durationMs,
-                notes: newNotes
-            });
-            setNewSubtaskName('');
-            setNewPriority('someday');
-            setNewStatus('to_solve');
-            setNewDueDate('');
-            setNewEstimatedDuration('');
-            setNewNotes('');
-            setIsAdding(false);
-        }
-    };
 
     const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         if (currentProblem) {
@@ -1291,164 +1253,12 @@ export default function ProblemPage() {
             </div>
 
             {/* New Task Modal */}
-            {
-                isAdding && (
-                    <div style={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        backgroundColor: 'rgba(0,0,0,0.5)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        zIndex: 100
-                    }} onClick={() => setIsAdding(false)}>
-                        <div style={{
-                            backgroundColor: '#fff',
-                            padding: '1.5rem',
-                            borderRadius: '12px',
-                            width: '400px',
-                            maxWidth: '90%',
-                        }} onClick={e => e.stopPropagation()}>
-                            <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                {/* Line 1: Task Name */}
-                                <input
-                                    autoFocus
-                                    type="text"
-                                    placeholder="Task name"
-                                    value={newSubtaskName}
-                                    onChange={e => setNewSubtaskName(e.target.value)}
-                                    style={{
-                                        fontSize: '1.25rem',
-                                        fontWeight: '600',
-                                        padding: '0.5rem',
-                                        border: '1px solid #ddd',
-                                        borderRadius: '6px',
-                                        width: '100%',
-                                        fontFamily: 'inherit'
-                                    }}
-                                />
-
-                                {/* Line 2: Priority + Status */}
-                                <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <select
-                                        value={newPriority}
-                                        onChange={e => setNewPriority(e.target.value as Problem['priority'])}
-                                        style={{
-                                            padding: '0.5rem',
-                                            borderRadius: '6px',
-                                            border: '1px solid #ddd',
-                                            flex: 1,
-                                            fontFamily: 'inherit'
-                                        }}
-                                    >
-                                        <option value="today">Today</option>
-                                        <option value="this_week">This Week</option>
-                                        <option value="later">Later</option>
-                                        <option value="recurring">Recurring</option>
-                                        <option value="someday">Someday</option>
-                                    </select>
-                                    <select
-                                        value={newStatus}
-                                        onChange={e => setNewStatus(e.target.value as Problem['status'])}
-                                        style={{
-                                            padding: '0.5rem',
-                                            borderRadius: '6px',
-                                            border: '1px solid #ddd',
-                                            flex: 1,
-                                            fontFamily: 'inherit'
-                                        }}
-                                    >
-                                        <option value="to_solve">To Solve</option>
-                                        <option value="solving">Working on it</option>
-                                        <option value="blocked">Blocked</option>
-                                        <option value="ongoing">Ongoing</option>
-                                        <option value="solved">Solved</option>
-                                    </select>
-                                </div>
-
-                                {/* Line 3: Due Date + Estimated Duration */}
-                                <div style={{ display: 'flex', gap: '1rem' }}>
-                                    <input
-                                        type="date"
-                                        value={newDueDate}
-                                        onChange={e => setNewDueDate(e.target.value)}
-                                        style={{
-                                            padding: '0.5rem',
-                                            borderRadius: '6px',
-                                            border: '1px solid #ddd',
-                                            flex: 1,
-                                            fontFamily: 'inherit'
-                                        }}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Est. Duration (e.g. 1h 30m)"
-                                        value={newEstimatedDuration}
-                                        onChange={e => setNewEstimatedDuration(e.target.value)}
-                                        style={{
-                                            padding: '0.5rem',
-                                            borderRadius: '6px',
-                                            border: '1px solid #ddd',
-                                            flex: 1,
-                                            fontFamily: 'inherit'
-                                        }}
-                                    />
-                                </div>
-
-                                {/* Line 4: Notes */}
-                                <textarea
-                                    placeholder="Notes"
-                                    value={newNotes}
-                                    onChange={e => setNewNotes(e.target.value)}
-                                    rows={3}
-                                    style={{
-                                        padding: '0.5rem',
-                                        borderRadius: '6px',
-                                        border: '1px solid #ddd',
-                                        fontFamily: 'inherit',
-                                        resize: 'none'
-                                    }}
-                                />
-
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem' }}>
-                                    <button
-                                        type="submit"
-                                        style={{
-                                            padding: '0.75rem 1.5rem',
-                                            backgroundColor: '#333',
-                                            color: '#fff',
-                                            borderRadius: '8px',
-                                            fontWeight: '600',
-                                            border: 'none',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Save
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsAdding(false)}
-                                        style={{
-                                            padding: '0.75rem 1.5rem',
-                                            backgroundColor: '#f0f0f0',
-                                            color: '#333',
-                                            borderRadius: '8px',
-                                            fontWeight: '600',
-                                            border: 'none',
-                                            cursor: 'pointer'
-                                        }}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )
-            }
+            <CreateProblemModal
+                isOpen={isAdding}
+                onClose={() => setIsAdding(false)}
+                defaultListId={list.id}
+                showListSelector={false}
+            />
 
             <div style={{ marginTop: '2rem' }}>
                 <button
@@ -1467,7 +1277,7 @@ export default function ProblemPage() {
                     }}
                 >
                     <Plus size={20} />
-                    <span>New task</span>
+                    <span>New Problem</span>
                 </button>
             </div>
 

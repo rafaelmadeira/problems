@@ -7,11 +7,13 @@ import {
 } from 'lucide-react';
 import type { Problem } from '../types';
 import CreateListModal from './CreateListModal';
+import CreateProblemModal from './CreateProblemModal';
 
 export default function Sidebar() {
     const { state, addList, reorderLists } = useStore();
     const location = useLocation();
-    const [isCreating, setIsCreating] = useState(false);
+    const [isCreatingList, setIsCreatingList] = useState(false);
+    const [isCreatingProblem, setIsCreatingProblem] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
     // --- Logic from App.tsx (Counts) ---
@@ -87,7 +89,7 @@ export default function Sidebar() {
 
     const handleCreate = (name: string, emoji?: string, description?: string) => {
         addList(name, emoji, description);
-        setIsCreating(false);
+        setIsCreatingList(false);
     };
 
     const handleDragStart = (index: number) => {
@@ -151,11 +153,40 @@ export default function Sidebar() {
             flexDirection: 'column',
             padding: '2rem'
         }}>
-            {/* Header: Total Count */}
-            <Link to="/" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', fontSize: '1.2rem', textDecoration: 'none', color: '#111' }}>
-                {/* Only showing count text as per screenshot "37 problems" */}
-                {totalProblems} problems
-            </Link>
+            {/* Header: Total Count + New Problem Button */}
+            <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', fontSize: '1.2rem', textDecoration: 'none', color: '#111' }}>
+                    {/* Only showing count text as per screenshot "37 problems" */}
+                    {totalProblems} problems
+                </Link>
+
+                <button
+                    onClick={() => setIsCreatingProblem(true)}
+                    style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        backgroundColor: '#f0f0f0',
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        color: '#666',
+                        transition: 'background-color 0.2s, color 0.2s'
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.backgroundColor = '#3b82f6';
+                        e.currentTarget.style.color = 'white';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.backgroundColor = '#f0f0f0';
+                        e.currentTarget.style.color = '#666';
+                    }}
+                >
+                    <Plus size={18} />
+                </button>
+            </div>
 
             {/* Nav Links */}
             <div style={{ marginBottom: '2rem' }}>
@@ -208,7 +239,7 @@ export default function Sidebar() {
                 {/* New List Button + Modal */}
                 <div style={{ marginTop: '1rem' }}>
                     <button
-                        onClick={() => setIsCreating(true)}
+                        onClick={() => setIsCreatingList(true)}
                         style={{
                             display: 'flex',
                             alignItems: 'center',
@@ -226,9 +257,16 @@ export default function Sidebar() {
                     </button>
 
                     <CreateListModal
-                        isOpen={isCreating}
-                        onClose={() => setIsCreating(false)}
+                        isOpen={isCreatingList}
+                        onClose={() => setIsCreatingList(false)}
                         onCreate={handleCreate}
+                    />
+
+                    <CreateProblemModal
+                        isOpen={isCreatingProblem}
+                        onClose={() => setIsCreatingProblem(false)}
+                        defaultListId="inbox"
+                        showListSelector={true}
                     />
                 </div>
             </div>
