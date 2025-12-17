@@ -34,6 +34,15 @@ const isDoToday = (p: Problem): boolean => {
     return p.priority === 'today';
 };
 
+const formatDuration = (ms: number): string => {
+    const totalMinutes = Math.floor(ms / 60000);
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    if (hours > 0 && minutes > 0) return `${hours}h ${minutes}m`;
+    if (hours > 0) return `${hours}h`;
+    return `${minutes}m`;
+};
+
 export default function TodayPage() {
     const { state, updateProblem, reorderTodayProblems } = useStore();
     const navigate = useNavigate();
@@ -350,7 +359,7 @@ function TaskItemInline({
                 padding: '1rem',
                 backgroundColor: '#fff',
                 borderBottom: '1px solid #f0f0f0',
-                cursor: isDraggable ? 'grab' : 'pointer',
+                cursor: 'pointer',
                 borderRadius: '8px',
                 opacity: problem.completed ? (isHovered ? 1 : 0.5) : (isDraggingThis ? 0.5 : 1),
                 transition: 'opacity 0.2s, background-color 0.2s'
@@ -429,10 +438,7 @@ function TaskItemInline({
                     {problem.name}
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={e => e.stopPropagation()}
-                >
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         {path.map((crumb, index) => {
                             const linkPath = crumb.type === 'list'
@@ -447,6 +453,8 @@ function TaskItemInline({
                                         style={{ color: '#888', textDecoration: 'none', borderBottom: '1px solid transparent' }}
                                         onMouseEnter={e => e.currentTarget.style.borderBottom = '1px solid #888'}
                                         onMouseLeave={e => e.currentTarget.style.borderBottom = '1px solid transparent'}
+                                        onClick={(e) => e.stopPropagation()}
+                                        onMouseDown={(e) => e.stopPropagation()}
                                     >
                                         {crumb.name}
                                     </Link>
@@ -455,15 +463,21 @@ function TaskItemInline({
                         })}
                     </div>
 
-                    {(problem.priority || problem.dueDate) && (
+                    {(problem.dueDate || problem.estimatedDuration) && (
                         <>
                             <span>&middot;</span>
                             {problem.dueDate && (
                                 <span style={{
                                     color: isOverdue(problem) ? '#ef4444' : 'inherit',
-                                    fontWeight: isOverdue(problem) || isDueToday(problem) ? 'bold' : 'normal'
+                                    fontWeight: isOverdue(problem) || isDueToday(problem) ? 'bold' : 'normal',
+                                    marginRight: problem.estimatedDuration ? '0.5rem' : 0
                                 }}>
                                     Due {problem.dueDate}
+                                </span>
+                            )}
+                            {problem.estimatedDuration && (
+                                <span style={{ color: '#888' }}>
+                                    {formatDuration(problem.estimatedDuration)}
                                 </span>
                             )}
                         </>

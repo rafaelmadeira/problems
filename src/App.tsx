@@ -5,7 +5,8 @@ import ProblemPage from './pages/ProblemPage';
 import TodayPage from './pages/TodayPage';
 import UnfinishedPage from './pages/UnfinishedPage';
 import ThisWeekPage from './pages/ThisWeekPage';
-import { CheckCircle2, Calendar, Target, CalendarRange } from 'lucide-react'; // Using Target icon for Unfinished/Focus
+import SettingsPage from './pages/SettingsPage';
+import { CheckCircle2, Calendar, Target, CalendarRange, Settings } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 
 function App() {
@@ -115,6 +116,7 @@ function App() {
   const isTodayActive = location.pathname === '/today';
   const isWeekActive = location.pathname === '/week';
   const isUnfinishedActive = location.pathname === '/unfinished';
+  const isSettingsActive = location.pathname === '/settings';
 
 
   return (
@@ -257,6 +259,25 @@ function App() {
             )}
           </Link>
         </div>
+
+        <Link
+          to="/settings"
+          style={{
+            marginLeft: 'auto', // Push to far right
+            padding: '0.5rem',
+            backgroundColor: isSettingsActive ? '#eee' : 'transparent',
+            borderRadius: '8px',
+            color: isSettingsActive ? '#111' : '#888',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'color 0.2s, background-color 0.2s'
+          }}
+          onMouseEnter={e => !isSettingsActive && (e.currentTarget.style.color = '#333')}
+          onMouseLeave={e => !isSettingsActive && (e.currentTarget.style.color = '#888')}
+        >
+          <Settings size={20} />
+        </Link>
       </header>
 
       <main>
@@ -265,6 +286,7 @@ function App() {
           <Route path="/today" element={<TodayPage />} />
           <Route path="/week" element={<ThisWeekPage />} />
           <Route path="/unfinished" element={<UnfinishedPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="/list/:listId" element={<ProblemPage />} />
           <Route path="/list/:listId/problem/:problemId" element={<ProblemPage />} />
         </Routes>
