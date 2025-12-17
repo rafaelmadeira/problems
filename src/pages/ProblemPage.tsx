@@ -1347,6 +1347,7 @@ export default function ProblemPage() {
                                         <option value="today">Today</option>
                                         <option value="this_week">This Week</option>
                                         <option value="later">Later</option>
+                                        <option value="recurring">Recurring</option>
                                         <option value="someday">Someday</option>
                                     </select>
                                     <select
