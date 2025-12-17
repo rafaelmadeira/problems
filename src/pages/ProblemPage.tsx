@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw } from 'lucide-react';
+import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw, ChevronLeft } from 'lucide-react';
 import type { Problem } from '../types';
 
 import FocusSession from '../components/FocusSession';
@@ -774,6 +774,30 @@ export default function ProblemPage() {
                                         }}
                                     />
                                 </div>
+                            </div>
+
+                            {/* Back Link */}
+                            <div style={{ marginTop: '1.5rem' }}>
+                                <button
+                                    onClick={() => navigate(-1)}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        padding: 0,
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem',
+                                        color: '#888',
+                                        fontSize: '0.9rem',
+                                        fontFamily: 'inherit'
+                                    }}
+                                    onMouseEnter={(e) => e.currentTarget.style.color = '#333'}
+                                    onMouseLeave={(e) => e.currentTarget.style.color = '#888'}
+                                >
+                                    <ChevronLeft size={14} />
+                                    Back
+                                </button>
                             </div>
                         </div>
                     )}
