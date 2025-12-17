@@ -333,6 +333,7 @@ function TaskItemInline({
 }) {
     const { problem, listId, path } = task;
     const isDraggingThis = isDraggable && index !== undefined && index === draggedIndex;
+    const [isHovered, setIsHovered] = React.useState(false);
 
     return (
         <div
@@ -351,10 +352,17 @@ function TaskItemInline({
                 borderBottom: '1px solid #f0f0f0',
                 cursor: isDraggable ? 'grab' : 'pointer',
                 borderRadius: '8px',
-                opacity: isDraggingThis ? 0.5 : 1 // Match ProblemPage opacity
+                opacity: problem.completed ? (isHovered ? 1 : 0.5) : (isDraggingThis ? 0.5 : 1),
+                transition: 'opacity 0.2s, background-color 0.2s'
             }}
-            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
-            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+            onMouseEnter={(e) => {
+                setIsHovered(true);
+                e.currentTarget.style.backgroundColor = '#f9f9f9';
+            }}
+            onMouseLeave={(e) => {
+                setIsHovered(false);
+                e.currentTarget.style.backgroundColor = '#fff';
+            }}
         >
             <div style={{ position: 'relative', paddingTop: '2px' }}>
                 {solvedMessages[problem.id] && (
@@ -414,6 +422,7 @@ function TaskItemInline({
                 <div style={{
                     fontSize: '1.1rem',
                     color: '#333',
+                    textDecoration: problem.completed ? 'line-through' : 'none',
                     fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
                     lineHeight: '1.4'
                 }}>

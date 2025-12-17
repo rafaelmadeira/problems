@@ -1281,79 +1281,15 @@ export default function ProblemPage() {
 
                         {showCompleted && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
-                                {completedSubElements.map((child) => {
-                                    const childCount = child.subproblems.filter(p => !p.completed).length;
-                                    return (
-                                        <div
-                                            key={child.id}
-                                            onClick={() => navigate(`/list/${list.id}/problem/${child.id}`)}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                padding: '1rem',
-                                                borderBottom: '1px solid #f0f0f0',
-                                                cursor: 'pointer',
-                                                transition: 'background-color 0.2s',
-                                                borderRadius: '8px',
-                                                opacity: 0.6
-                                            }}
-                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
-                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                <button
-                                                    title="unsolve problem"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        toggleComplete(child);
-                                                    }}
-                                                    style={{
-                                                        color: '#22c55e',
-                                                        cursor: 'pointer',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        background: 'none',
-                                                        border: 'none',
-                                                        padding: 0
-                                                    }}
-                                                >
-                                                    <CheckCircle2 size={24} fill="#22c55e" color="#fff" />
-                                                </button>
-                                                <Link
-                                                    to={`/list/${list.id}/problem/${child.id}`}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    style={{
-                                                        fontSize: '1.1rem',
-                                                        textDecoration: 'line-through',
-                                                        color: '#aaa',
-                                                        cursor: 'pointer',
-                                                        fontWeight: child.name.endsWith('!') ? 'bold' : 'normal',
-                                                    }}
-                                                >
-                                                    {child.name}
-                                                </Link>
-                                            </div>
-
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                                                {childCount > 0 && (
-                                                    <span style={{
-                                                        backgroundColor: '#f0f0f0',
-                                                        padding: '0.25rem 0.75rem',
-                                                        borderRadius: '999px',
-                                                        fontSize: '0.875rem',
-                                                        fontWeight: '600',
-                                                        color: '#999'
-                                                    }}>
-                                                        {childCount}
-                                                    </span>
-                                                )}
-                                                <div style={{ width: '28px' }}></div> {/* Spacer for menu alignment if menu is omitted */}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                {completedSubElements.map((child) => (
+                                    <CompletedTaskRow
+                                        key={child.id}
+                                        child={child}
+                                        listId={list.id}
+                                        navigate={navigate}
+                                        toggleComplete={toggleComplete}
+                                    />
+                                ))}
                             </div>
                         )}
                     </div>
@@ -1362,3 +1298,89 @@ export default function ProblemPage() {
         </div >
     );
 }
+
+function CompletedTaskRow({
+    child,
+    listId,
+    navigate,
+    toggleComplete
+}: {
+    child: Problem,
+    listId: string,
+    navigate: (path: string) => void,
+    toggleComplete: (p: Problem) => void
+}) {
+    const [isHovered, setIsHovered] = React.useState(false);
+    const childCount = child.subproblems.filter(p => !p.completed).length;
+
+    return (
+        <div
+            onClick={() => navigate(`/list/${listId}/problem/${child.id}`)}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '1rem',
+                borderBottom: '1px solid #f0f0f0',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s, opacity 0.2s',
+                borderRadius: '8px',
+                opacity: isHovered ? 1 : 0.5
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <button
+                    title="unsolve problem"
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleComplete(child);
+                    }}
+                    style={{
+                        color: '#22c55e',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'none',
+                        border: 'none',
+                        padding: 0
+                    }}
+                >
+                    <CheckCircle2 size={24} fill="#22c55e" color="#fff" />
+                </button>
+                <Link
+                    to={`/list/${listId}/problem/${child.id}`}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                        fontSize: '1.1rem',
+                        textDecoration: 'line-through',
+                        color: '#333',
+                        cursor: 'pointer',
+                        fontWeight: child.name.endsWith('!') ? 'bold' : 'normal',
+                    }}
+                >
+                    {child.name}
+                </Link>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                {childCount > 0 && (
+                    <span style={{
+                        backgroundColor: '#f0f0f0',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '999px',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#999'
+                    }}>
+                        {childCount}
+                    </span>
+                )}
+                <div style={{ width: '28px' }}></div> {/* Spacer for menu alignment if menu is omitted */}
+            </div>
+        </div>
+    );
+}
+
