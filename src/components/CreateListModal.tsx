@@ -52,26 +52,26 @@ export default function CreateListModal({ isOpen, onClose, onCreate }: CreateLis
             <div style={{
                 backgroundColor: 'white',
                 borderRadius: '12px',
-                padding: '2rem',
+                padding: '1.5rem',
                 width: '100%',
-                maxWidth: '500px', // Matches the wider look in screenshot
+                maxWidth: '400px', // Matches the wider look in screenshot
                 boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
                 position: 'relative'
             }} onClick={e => e.stopPropagation()}>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {/* Row 1: Emoji + Name */}
-                    <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', gap: '1rem' }}>
                         {/* Emoji Trigger */}
                         <div style={{ position: 'relative' }}>
                             <button
                                 type="button"
                                 onClick={() => setShowPicker(!showPicker)}
                                 style={{
-                                    width: '48px', // Approx square
-                                    height: '48px',
-                                    borderRadius: '8px', // Square-ish styling from screenshot
-                                    border: '1px solid #000', // Bold border
+                                    width: '42px', // Approx square
+                                    height: '42px',
+                                    borderRadius: '6px', // Square-ish styling from screenshot
+                                    border: '1px solid #ddd', // Bold border
                                     backgroundColor: 'white',
                                     display: 'flex',
                                     alignItems: 'center',
@@ -112,28 +112,28 @@ export default function CreateListModal({ isOpen, onClose, onCreate }: CreateLis
                             onChange={e => setName(e.target.value)}
                             style={{
                                 flex: 1,
-                                padding: '0.8rem',
+                                padding: '0.5rem',
                                 fontSize: '1rem',
-                                border: '2px solid #000', // Bold border match
-                                borderRadius: '8px',
+                                border: '1px solid #ddd', // Bold border match
+                                borderRadius: '6px',
                                 outline: 'none'
                             }}
                         />
                     </div>
 
                     {/* Row 2: Description */}
-                    <div style={{ marginBottom: '2rem' }}>
+                    <div>
                         <textarea
                             placeholder="Description"
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                             style={{
-                                width: '93%', // Full width minus padding
-                                padding: '1rem',
+                                width: '100%',
+                                padding: '0.5rem',
                                 fontSize: '1rem',
-                                border: '2px solid #000', // Bold border match
-                                borderRadius: '8px',
-                                minHeight: '120px',
+                                border: '1px solid #ddd', // Bold border match
+                                borderRadius: '6px',
+                                minHeight: '100px',
                                 resize: 'none',
                                 outline: 'none',
                                 fontFamily: 'inherit'
@@ -142,15 +142,15 @@ export default function CreateListModal({ isOpen, onClose, onCreate }: CreateLis
                     </div>
 
                     {/* Footer: Save/Cancel */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.5rem' }}>
                         <button
                             type="submit"
                             disabled={!name.trim()}
                             style={{
-                                padding: '0.8rem 2rem',
-                                backgroundColor: 'white',
-                                color: 'black',
-                                border: '2px solid #000',
+                                padding: '0.75rem 1.5rem',
+                                backgroundColor: '#333',
+                                color: 'white',
+                                border: 'none',
                                 borderRadius: '8px',
                                 fontSize: '1rem',
                                 fontWeight: '600',
@@ -165,10 +165,10 @@ export default function CreateListModal({ isOpen, onClose, onCreate }: CreateLis
                             type="button"
                             onClick={onClose}
                             style={{
-                                padding: '0.8rem 2rem',
-                                backgroundColor: 'white',
-                                color: 'black',
-                                border: '2px solid #000',
+                                padding: '0.75rem 1.5rem',
+                                backgroundColor: '#f0f0f0',
+                                color: '#333',
+                                border: 'none',
                                 borderRadius: '8px',
                                 fontSize: '1rem',
                                 fontWeight: '600',
