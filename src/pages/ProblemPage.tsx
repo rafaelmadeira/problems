@@ -431,7 +431,7 @@ export default function ProblemPage() {
                                         )}
                                         {/* Sort sessions by latest first */}
                                         {[...sessions].sort((a, b) => b.startTime - a.startTime).map((session, idx) => (
-                                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 2rem', padding: '0.75rem 0.5rem', borderBottom: '1px solid #f9f9f9', fontSize: '0.95rem', alignItems: 'center' }}>
+                                            <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 2fr 1fr 2rem', padding: '0.75rem 0.5rem', borderBottom: '1px solid #f9f9f9', fontSize: '0.75rem', alignItems: 'center' }}>
                                                 <div>{new Date(session.startTime).toLocaleString()}</div>
                                                 <div>{new Date(session.endTime).toLocaleTimeString()}</div>
                                                 <div style={{ textAlign: 'right', fontFamily: 'monospace' }}>
