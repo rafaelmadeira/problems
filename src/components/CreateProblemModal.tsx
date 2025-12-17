@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useStore } from '../context/StoreContext';
 import type { Problem } from '../types';
 
@@ -65,7 +66,7 @@ export default function CreateProblemModal({ isOpen, onClose, defaultListId, sho
         onClose();
     };
 
-    return (
+    return createPortal(
         <div style={{
             position: 'fixed',
             top: 0,
@@ -76,7 +77,7 @@ export default function CreateProblemModal({ isOpen, onClose, defaultListId, sho
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            zIndex: 100
+            zIndex: 9999
         }} onClick={onClose}>
             <div style={{
                 backgroundColor: '#fff',
@@ -84,6 +85,7 @@ export default function CreateProblemModal({ isOpen, onClose, defaultListId, sho
                 borderRadius: '12px',
                 width: '400px',
                 maxWidth: '90%',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' // Added shadow for better separation
             }} onClick={e => e.stopPropagation()}>
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {/* Line 1: Task Name */}
@@ -240,6 +242,7 @@ export default function CreateProblemModal({ isOpen, onClose, defaultListId, sho
                     </div>
                 </form>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
