@@ -9,8 +9,8 @@ export interface Problem {
   name: string;
   notes: string;
   dueDate: string | null;
-  priority: 'today' | 'this_week' | 'later' | 'someday';
-  status: 'to_solve' | 'solving' | 'blocked' | 'solved';
+  priority: 'today' | 'this_week' | 'later' | 'recurring' | 'someday';
+  status: 'to_solve' | 'solving' | 'blocked' | 'solved' | 'ongoing';
   subproblems: Problem[];
   completed: boolean;
   completedAt?: number | null;

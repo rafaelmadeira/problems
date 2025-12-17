@@ -594,13 +594,14 @@ export default function ProblemPage() {
                                         <option value="today">Today</option>
                                         <option value="this_week">This Week</option>
                                         <option value="later">Later</option>
+                                        <option value="recurring">Recurring</option>
                                         <option value="someday">Someday</option>
                                     </select>
                                 </div>
 
                                 {/* Status */}
                                 <div style={{ color: '#888', fontSize: '0.95rem' }}>Status</div>
-                                <div style={{ marginTop: '-1px' }}>
+                                <div style={{ marginTop: '-1px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                     <select
                                         value={currentProblem.status || 'to_solve'}
                                         onChange={(e) => {
@@ -627,8 +628,16 @@ export default function ProblemPage() {
                                         <option value="to_solve">To Solve</option>
                                         <option value="solving">Working on it</option>
                                         <option value="blocked">Blocked</option>
-                                        <option value="solved">Solved!</option>
+                                        <option value="ongoing">Ongoing</option>
+                                        <option value="solved">Solved</option>
                                     </select>
+                                    {currentProblem.completed && currentProblem.completedAt && (
+                                        <span style={{ color: '#999', fontSize: '0.85rem' }}>
+                                            {new Date(currentProblem.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                            {' '}
+                                            {new Date(currentProblem.completedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Due Date */}
