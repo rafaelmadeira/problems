@@ -4,7 +4,7 @@ import type { AppState, AppSettings, List, Problem } from '../types';
 interface StoreContextType {
     state: AppState;
     addList: (name: string, emoji?: string, description?: string) => void;
-    addProblem: (parentId: string | null, listId: string, data: { name: string, priority: Problem['priority'], dueDate: string | null, notes: string }) => void;
+    addProblem: (parentId: string | null, listId: string, data: { name: string, priority: Problem['priority'], status?: Problem['status'], dueDate: string | null, estimatedDuration?: number, notes: string }) => void;
     updateProblem: (listId: string, problemId: string, updates: Partial<Problem>) => void;
     updateList: (listId: string, updates: Partial<List>) => void;
     deleteList: (listId: string) => void;
@@ -88,17 +88,22 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         return false;
     };
 
-    const addProblem = (parentId: string | null, listId: string, data: { name: string, priority: Problem['priority'], dueDate: string | null, notes: string }) => {
+    const addProblem = (parentId: string | null, listId: string, data: { name: string, priority: Problem['priority'], status?: Problem['status'], dueDate: string | null, estimatedDuration?: number, notes: string }) => {
         const newProblem: Problem = {
             id: crypto.randomUUID(),
             name: data.name,
             notes: data.notes,
             dueDate: data.dueDate,
             priority: data.priority,
-            status: 'to_solve',
+            status: data.status || 'to_solve',
             subproblems: [],
-            completed: false
+            completed: data.status === 'solved',
+            estimatedDuration: data.estimatedDuration
         };
+
+        if (newProblem.completed) {
+            newProblem.completedAt = Date.now();
+        }
 
         setState(prev => {
             const newLists = prev.lists.map(list => {

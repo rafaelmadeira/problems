@@ -15,7 +15,9 @@ export default function ProblemPage() {
 
     const [newSubtaskName, setNewSubtaskName] = useState('');
     const [newPriority, setNewPriority] = useState<Problem['priority']>('someday');
+    const [newStatus, setNewStatus] = useState<Problem['status']>('to_solve');
     const [newDueDate, setNewDueDate] = useState('');
+    const [newEstimatedDuration, setNewEstimatedDuration] = useState('');
     const [newNotes, setNewNotes] = useState('');
     const [isAdding, setIsAdding] = useState(false);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -79,15 +81,34 @@ export default function ProblemPage() {
     const handleAdd = (e: React.FormEvent) => {
         e.preventDefault();
         if (newSubtaskName.trim()) {
+            let durationMs = undefined;
+            if (newEstimatedDuration.trim()) {
+                const val = newEstimatedDuration.trim().toLowerCase();
+                let totalMinutes = 0;
+                const hMatch = val.match(/(\d+)\s*h/);
+                if (hMatch) totalMinutes += parseInt(hMatch[1], 10) * 60;
+                const mMatch = val.match(/(\d+)\s*m/);
+                if (mMatch) totalMinutes += parseInt(mMatch[1], 10);
+                if (!hMatch && !mMatch) {
+                    const num = parseInt(val, 10);
+                    if (!isNaN(num)) totalMinutes = num;
+                }
+                if (totalMinutes > 0) durationMs = totalMinutes * 60000;
+            }
+
             addProblem(currentParentId, list.id, {
                 name: newSubtaskName.trim(),
                 priority: newPriority,
+                status: newStatus,
                 dueDate: newDueDate || null,
+                estimatedDuration: durationMs,
                 notes: newNotes
             });
             setNewSubtaskName('');
             setNewPriority('someday');
+            setNewStatus('to_solve');
             setNewDueDate('');
+            setNewEstimatedDuration('');
             setNewNotes('');
             setIsAdding(false);
         }
@@ -1292,6 +1313,7 @@ export default function ProblemPage() {
                             maxWidth: '90%',
                         }} onClick={e => e.stopPropagation()}>
                             <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {/* Line 1: Task Name */}
                                 <input
                                     autoFocus
                                     type="text"
@@ -1309,6 +1331,7 @@ export default function ProblemPage() {
                                     }}
                                 />
 
+                                {/* Line 2: Priority + Status */}
                                 <div style={{ display: 'flex', gap: '1rem' }}>
                                     <select
                                         value={newPriority}
@@ -1326,6 +1349,27 @@ export default function ProblemPage() {
                                         <option value="later">Later</option>
                                         <option value="someday">Someday</option>
                                     </select>
+                                    <select
+                                        value={newStatus}
+                                        onChange={e => setNewStatus(e.target.value as Problem['status'])}
+                                        style={{
+                                            padding: '0.5rem',
+                                            borderRadius: '6px',
+                                            border: '1px solid #ddd',
+                                            flex: 1,
+                                            fontFamily: 'inherit'
+                                        }}
+                                    >
+                                        <option value="to_solve">To Solve</option>
+                                        <option value="solving">Working on it</option>
+                                        <option value="blocked">Blocked</option>
+                                        <option value="ongoing">Ongoing</option>
+                                        <option value="solved">Solved</option>
+                                    </select>
+                                </div>
+
+                                {/* Line 3: Due Date + Estimated Duration */}
+                                <div style={{ display: 'flex', gap: '1rem' }}>
                                     <input
                                         type="date"
                                         value={newDueDate}
@@ -1338,8 +1382,22 @@ export default function ProblemPage() {
                                             fontFamily: 'inherit'
                                         }}
                                     />
+                                    <input
+                                        type="text"
+                                        placeholder="Est. Duration (e.g. 1h 30m)"
+                                        value={newEstimatedDuration}
+                                        onChange={e => setNewEstimatedDuration(e.target.value)}
+                                        style={{
+                                            padding: '0.5rem',
+                                            borderRadius: '6px',
+                                            border: '1px solid #ddd',
+                                            flex: 1,
+                                            fontFamily: 'inherit'
+                                        }}
+                                    />
                                 </div>
 
+                                {/* Line 4: Notes */}
                                 <textarea
                                     placeholder="Notes"
                                     value={newNotes}
