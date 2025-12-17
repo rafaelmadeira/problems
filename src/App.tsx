@@ -123,20 +123,22 @@ function App() {
   // --- Two Column Layout ---
   if (layout === 'two-columns') {
     return (
-      <div style={{ display: 'flex', minHeight: '100vh', backgroundColor: '#fff' }}>
-        <Sidebar />
-        <main style={{ flex: 1, padding: '2rem 3rem', maxWidth: '1000px' }}>
-          <Routes>
-            {/* Redirect root to /today in 2-column mode to avoid empty/redundant page */}
-            <Route path="/" element={<Navigate to="/today" replace />} />
-            <Route path="/today" element={<TodayPage />} />
-            <Route path="/week" element={<ThisWeekPage />} />
-            <Route path="/unfinished" element={<UnfinishedPage />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="/list/:listId" element={<ProblemPage />} />
-            <Route path="/list/:listId/problem/:problemId" element={<ProblemPage />} />
-          </Routes>
-        </main>
+      <div style={{ display: 'flex', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#fff' }}>
+        <div style={{ display: 'flex', width: '100%', maxWidth: '1200px' }}>
+          <Sidebar />
+          <main style={{ flex: 1, padding: '2rem 3rem' }}>
+            <Routes>
+              {/* Redirect root to /today in 2-column mode to avoid empty/redundant page */}
+              <Route path="/" element={<Navigate to="/today" replace />} />
+              <Route path="/today" element={<TodayPage />} />
+              <Route path="/week" element={<ThisWeekPage />} />
+              <Route path="/unfinished" element={<UnfinishedPage />} />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/list/:listId" element={<ProblemPage />} />
+              <Route path="/list/:listId/problem/:problemId" element={<ProblemPage />} />
+            </Routes>
+          </main>
+        </div>
       </div>
     );
   }

@@ -124,7 +124,7 @@ export default function Sidebar() {
                 borderRadius: '6px',
                 color: isActive ? '#111' : '#666',
                 backgroundColor: isActive ? '#f0f0f0' : 'transparent',
-                fontWeight: isActive ? 600 : 500,
+                fontWeight: isActive ? 600 : 400,
                 textDecoration: 'none',
                 marginBottom: '0.25rem'
             }}
@@ -135,7 +135,7 @@ export default function Sidebar() {
                 {Icon && <Icon size={16} />}
                 <span>{label}</span>
             </div>
-            {count > 0 && <span style={{ fontSize: '0.8rem', color: '#999' }}>{count}</span>}
+            {count > 0 && <span style={{ fontSize: '0.8rem', color: '#999', fontWeight: isActive ? 600 : 400 }}>{count}</span>}
         </Link>
     );
 
@@ -152,10 +152,10 @@ export default function Sidebar() {
             padding: '2rem'
         }}>
             {/* Header: Total Count */}
-            <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', fontSize: '1.2rem' }}>
+            <Link to="/" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', fontSize: '1.2rem', textDecoration: 'none', color: '#111' }}>
                 {/* Only showing count text as per screenshot "37 problems" */}
                 {totalProblems} problems
-            </div>
+            </Link>
 
             {/* Nav Links */}
             <div style={{ marginBottom: '2rem' }}>
@@ -169,14 +169,14 @@ export default function Sidebar() {
                         color: isInboxActive ? '#111' : '#666',
                         textDecoration: 'none',
                         fontSize: '0.95rem',
-                        fontWeight: isInboxActive ? 600 : 500
+                        fontWeight: isInboxActive ? 600 : 400
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         {/* Does Inbox have an icon in screenshot? Just text "Inbox" centered-ish */}
                         Inbox
                     </div>
-                    {inboxCount > 0 && <span>{inboxCount}</span>}
+                    {inboxCount > 0 && <span style={{ fontWeight: isInboxActive ? 600 : 400 }}>{inboxCount}</span>}
                 </Link>
 
                 <NavItem to="/today" label="Today" icon={Calendar} count={todayProblemsCount} isActive={isTodayActive} />
