@@ -208,7 +208,7 @@ export default function TodayPage() {
 
                 {overdueTasks.length > 0 && (
                     <section>
-                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #ef4444', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#ef4444' }}>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#333' }}>
                             Overdue
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -228,7 +228,7 @@ export default function TodayPage() {
 
                 {dueTodayTasks.length > 0 && (
                     <section>
-                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '2px solid #f59e0b', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#f59e0b' }}>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#333' }}>
                             Due Today
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
@@ -248,7 +248,7 @@ export default function TodayPage() {
 
                 {doTodayTasks.length > 0 && (
                     <section>
-                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#1368C4' }}>
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 'bold', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#333' }}>
                             Do Today
                         </h2>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
