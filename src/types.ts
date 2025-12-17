@@ -14,6 +14,7 @@ export interface Problem {
   subproblems: Problem[];
   completed: boolean;
   completedAt?: number | null;
+  estimatedDuration?: number; // in milliseconds
   totalTime?: number;
   sessions?: FocusSessionRecord[];
   todayOrder?: number;

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw } from 'lucide-react';
@@ -599,6 +599,9 @@ export default function ProblemPage() {
                                     </select>
                                 </div>
 
+
+
+
                                 {/* Status */}
                                 <div style={{ color: '#888', fontSize: '0.95rem' }}>Status</div>
                                 <div style={{ marginTop: '-1px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -749,6 +752,78 @@ export default function ProblemPage() {
                                     )}
                                 </div>
 
+                                {/* Estimated Duration */}
+                                <div style={{ color: '#888', fontSize: '0.95rem' }}>Estimated</div>
+                                <div style={{ marginTop: '-1px' }}>
+                                    <input
+                                        type="text"
+                                        className="placeholder-light"
+                                        placeholder="Add duration"
+                                        defaultValue={(() => {
+                                            if (!currentProblem.estimatedDuration) return '';
+                                            const minutes = Math.floor(currentProblem.estimatedDuration / 60000);
+                                            const h = Math.floor(minutes / 60);
+                                            const m = minutes % 60;
+                                            if (h > 0 && m > 0) return `${h}h ${m}m`;
+                                            if (h > 0) return `${h}h`;
+                                            return `${m}m`;
+                                        })()}
+                                        onBlur={(e) => {
+                                            const val = e.target.value.trim().toLowerCase();
+                                            if (!val) {
+                                                updateProblem(list.id, currentProblem!.id, { estimatedDuration: undefined });
+                                                return;
+                                            }
+
+                                            let totalMinutes = 0;
+                                            // Extract hours
+                                            const hMatch = val.match(/(\d+)\s*h/);
+                                            if (hMatch) totalMinutes += parseInt(hMatch[1], 10) * 60;
+
+                                            // Extract minutes
+                                            const mMatch = val.match(/(\d+)\s*m/);
+                                            if (mMatch) totalMinutes += parseInt(mMatch[1], 10);
+
+                                            // Fallback: if just a number, assume minutes
+                                            if (!hMatch && !mMatch) {
+                                                const num = parseInt(val, 10);
+                                                if (!isNaN(num)) totalMinutes = num;
+                                            }
+
+                                            if (totalMinutes > 0) {
+                                                updateProblem(list.id, currentProblem!.id, { estimatedDuration: totalMinutes * 60000 });
+                                                // Update input value to formatted version
+                                                const h = Math.floor(totalMinutes / 60);
+                                                const m = totalMinutes % 60;
+                                                let formatted = '';
+                                                if (h > 0 && m > 0) formatted = `${h}h ${m}m`;
+                                                else if (h > 0) formatted = `${h}h`;
+                                                else formatted = `${m}m`;
+                                                e.target.value = formatted;
+                                            } else {
+                                                // Reset or clear if invalid
+                                                if (val === '') updateProblem(list.id, currentProblem!.id, { estimatedDuration: undefined });
+                                                else e.target.value = '';
+                                            }
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                e.currentTarget.blur();
+                                            }
+                                        }}
+                                        style={{
+                                            border: 'none',
+                                            backgroundColor: 'transparent',
+                                            fontSize: '0.95rem',
+                                            color: '#111',
+                                            fontFamily: 'inherit',
+                                            padding: 0,
+                                            width: '100%',
+                                            outline: 'none'
+                                        }}
+                                    />
+                                </div>
+
                                 {/* Notes */}
                                 <div style={{ color: '#888', fontSize: '0.95rem', alignSelf: 'flex-start' }}>Notes</div>
                                 <div>
@@ -809,7 +884,8 @@ export default function ProblemPage() {
                                 </button>
                             </div>
                         </div>
-                    )}
+                    )
+                    }
 
                     <div
                         style={{ position: 'relative' }}
@@ -944,8 +1020,8 @@ export default function ProblemPage() {
                             </div>
                         )}
                     </div>
-                </div>
-            </header>
+                </div >
+            </header >
 
             <style>{`
                 @keyframes fadeOutUp {

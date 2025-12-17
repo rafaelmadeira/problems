@@ -21,6 +21,11 @@ body {
   line-height: 1.5;
 }
 
+.placeholder-light::placeholder {
+  color: #999 !important;
+  opacity: 1 !important;
+}
+
 a {
   text-decoration: none;
   color: inherit;
@@ -33,7 +38,8 @@ button {
   font-family: inherit;
 }
 
-input, textarea {
+input,
+textarea {
   font-family: inherit;
   border: none;
   outline: none;
