@@ -1484,7 +1484,7 @@ export default function ProblemPage() {
                                 border: 'none',
                                 color: '#888',
                                 fontSize: '0.95rem',
-                                fontWeight: '600',
+                                fontWeight: 'normal',
                                 cursor: 'pointer',
                                 padding: '0.5rem 0'
                             }}
