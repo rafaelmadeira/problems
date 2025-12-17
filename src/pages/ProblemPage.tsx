@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw, ChevronLeft } from 'lucide-react';
+import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw } from 'lucide-react';
 import type { Problem } from '../types';
 
 import FocusSession from '../components/FocusSession';
@@ -795,7 +795,7 @@ export default function ProblemPage() {
                                     onMouseEnter={(e) => e.currentTarget.style.color = '#333'}
                                     onMouseLeave={(e) => e.currentTarget.style.color = '#888'}
                                 >
-                                    <ChevronLeft size={14} />
+                                    <span>&larr;</span>
                                     Back
                                 </button>
                             </div>
