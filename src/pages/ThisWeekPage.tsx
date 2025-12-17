@@ -4,6 +4,12 @@ import { useStore } from '../context/StoreContext';
 import { CheckCircle2, ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
 import type { Problem } from '../types';
 
+interface FlatTask {
+    problem: Problem;
+    listId: string;
+    path: { id: string, name: string, type: 'list' | 'problem' }[];
+}
+
 /* 
   Recursive component for rendering a task and its children 
 */
@@ -214,6 +220,7 @@ export default function ThisWeekPage() {
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
     const [expandedIds, setExpandedIds] = useState<{ [id: string]: boolean }>({});
     const [menuOpen, setMenuOpen] = useState(false);
+    const [showSolved, setShowSolved] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
     // Close menu on click outside
@@ -264,6 +271,36 @@ export default function ThisWeekPage() {
     const visibleLists = state.lists.filter(list =>
         list.problems.some(p => hasMatchingDescendants(p))
     );
+
+    const getSolvedThisWeekTasks = (): FlatTask[] => {
+        const tasks: FlatTask[] = [];
+        const now = new Date();
+        const currentDay = now.getDay();
+        const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() + diffToMonday);
+        monday.setHours(0, 0, 0, 0);
+
+        const traverse = (problems: Problem[], listId: string, currentPath: { id: string, name: string, type: 'list' | 'problem' }[]) => {
+            for (const p of problems) {
+                if (p.completed && p.completedAt && p.completedAt >= monday.getTime()) {
+                    tasks.push({
+                        problem: p,
+                        listId: listId,
+                        path: currentPath
+                    });
+                }
+                const newPath = [...currentPath, { id: p.id, name: p.name, type: 'problem' as const }];
+                traverse(p.subproblems, listId, newPath);
+            }
+        };
+
+        for (const list of state.lists) {
+            traverse(list.problems, list.id, [{ id: list.id, name: list.name, type: 'list' }]);
+        }
+        return tasks;
+    };
+    const solvedThisWeekTasks = getSolvedThisWeekTasks();
 
     const toggleComplete = (p: Problem, listId: string) => {
         const newCompleted = !p.completed;
@@ -498,6 +535,172 @@ export default function ThisWeekPage() {
                         </div>
                     );
                 })}
+            </div>
+
+            {solvedThisWeekTasks.length > 0 && (
+                <div style={{ marginTop: '3rem' }}>
+                    <button
+                        onClick={() => setShowSolved(!showSolved)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: 'none',
+                            border: 'none',
+                            color: '#888',
+                            fontSize: '0.95rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            padding: '0.5rem 0'
+                        }}
+                    >
+                        <span style={{ transform: showSolved ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
+                            <ChevronRightIcon size={16} />
+                        </span>
+                        {solvedThisWeekTasks.length} problems solved this week
+                    </button>
+
+                    {showSolved && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                            {solvedThisWeekTasks.map(t => (
+                                <SimpleTaskItem
+                                    key={t.problem.id}
+                                    task={t}
+                                    navigate={navigate}
+                                    toggleComplete={toggleComplete}
+                                    solvedMessages={solvedMessages}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+        </div>
+    );
+}
+
+function SimpleTaskItem({
+    task,
+    navigate,
+    toggleComplete,
+    solvedMessages
+}: {
+    task: FlatTask,
+    navigate: (path: string) => void,
+    toggleComplete: (p: Problem, listId: string) => void,
+    solvedMessages: { [key: string]: boolean }
+}) {
+    const { problem, listId, path } = task;
+
+    return (
+        <div
+            onClick={() => navigate(`/list/${listId}/problem/${problem.id}`)}
+            style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '0.75rem',
+                padding: '1rem',
+                backgroundColor: '#fff',
+                borderBottom: '1px solid #f0f0f0',
+                cursor: 'pointer',
+                borderRadius: '8px',
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f9f9f9'}
+            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fff'}
+        >
+            <div style={{ position: 'relative', paddingTop: '2px' }}>
+                {solvedMessages[problem.id] && (
+                    <div style={{
+                        position: 'absolute',
+                        bottom: '100%',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        backgroundColor: '#22c55e',
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '6px',
+                        fontSize: '0.75rem',
+                        fontWeight: '600',
+                        whiteSpace: 'nowrap',
+                        animation: 'fadeOutUp 2s ease-out forwards',
+                        pointerEvents: 'none',
+                        marginBottom: '8px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        zIndex: 10
+                    }}>
+                        Problem solved!
+                        <div style={{
+                            position: 'absolute',
+                            top: '100%',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            borderLeft: '4px solid transparent',
+                            borderRight: '4px solid transparent',
+                            borderTop: '4px solid #22c55e'
+                        }} />
+                    </div>
+                )}
+                <button
+                    title="solve problem"
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        toggleComplete(problem, listId);
+                    }}
+                    style={{
+                        color: problem.completed ? '#22c55e' : '#e5e5e5',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: 'none',
+                        border: 'none',
+                        padding: 0
+                    }}
+                >
+                    <CheckCircle2 size={24} fill={problem.completed ? "#22c55e" : "transparent"} color={problem.completed ? "#fff" : "#e5e5e5"} />
+                </button>
+            </div>
+
+            <div style={{ flex: 1 }}>
+                <div style={{
+                    fontSize: '1.1rem',
+                    color: '#333',
+                    fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
+                    lineHeight: '1.4',
+                    textDecoration: problem.completed ? 'line-through' : 'none',
+                    opacity: problem.completed ? 0.7 : 1
+                }}>
+                    {problem.name}
+                </div>
+
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                    onClick={e => e.stopPropagation()}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        {path.map((crumb, index) => {
+                            const linkPath = crumb.type === 'list'
+                                ? `/list/${crumb.id}`
+                                : `/list/${listId}/problem/${crumb.id}`;
+
+                            return (
+                                <React.Fragment key={index}>
+                                    {index > 0 && <ChevronRightIcon size={12} />}
+                                    <Link
+                                        to={linkPath}
+                                        style={{ color: '#888', textDecoration: 'none', borderBottom: '1px solid transparent' }}
+                                        onMouseEnter={e => e.currentTarget.style.borderBottom = '1px solid #888'}
+                                        onMouseLeave={e => e.currentTarget.style.borderBottom = '1px solid transparent'}
+                                    >
+                                        {crumb.name}
+                                    </Link>
+                                </React.Fragment>
+                            );
+                        })}
+                    </div>
+                </div>
             </div>
         </div>
     );

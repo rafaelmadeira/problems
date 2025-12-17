@@ -108,12 +108,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
 
     // Helper to recursively mark children
-    const setCompletionRecursively = (problems: Problem[], completed: boolean) => {
+    const setCompletionRecursively = (problems: Problem[], completed: boolean, completedAt: number | null) => {
         for (const p of problems) {
             p.completed = completed;
+            p.completedAt = completedAt;
             p.status = completed ? 'solved' : 'to_solve';
             if (p.subproblems.length > 0) {
-                setCompletionRecursively(p.subproblems, completed);
+                setCompletionRecursively(p.subproblems, completed, completedAt);
             }
         }
     };
@@ -126,8 +127,17 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                 const updatedProblem = { ...problems[i], ...updates };
 
                 // Recursive Logic: If 'completed' field is present, apply to all children
-                if (updates.completed !== undefined && updatedProblem.subproblems.length > 0) {
-                    setCompletionRecursively(updatedProblem.subproblems, updates.completed);
+                if (updates.completed !== undefined) {
+                    // Logic: If completing, set timestamp if not present. If uncompleting, clear it.
+                    if (updates.completed && !updatedProblem.completedAt) {
+                        updatedProblem.completedAt = Date.now();
+                    } else if (!updates.completed) {
+                        updatedProblem.completedAt = null;
+                    }
+
+                    if (updatedProblem.subproblems.length > 0) {
+                        setCompletionRecursively(updatedProblem.subproblems, updates.completed, updatedProblem.completedAt || null);
+                    }
                 }
 
                 problems[i] = updatedProblem;

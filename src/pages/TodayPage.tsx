@@ -38,6 +38,7 @@ export default function TodayPage() {
     const { state, updateProblem, reorderTodayProblems } = useStore();
     const navigate = useNavigate();
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
+    const [showSolved, setShowSolved] = useState(false);
 
     // START: DnD Local State
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -72,7 +73,33 @@ export default function TodayPage() {
         return tasks;
     };
 
+    const getSolvedTodayTasks = (): FlatTask[] => {
+        const tasks: FlatTask[] = [];
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+
+        const traverse = (problems: Problem[], listId: string, currentPath: { id: string, name: string, type: 'list' | 'problem' }[]) => {
+            for (const p of problems) {
+                if (p.completed && p.completedAt && p.completedAt >= todayStart.getTime()) {
+                    tasks.push({
+                        problem: p,
+                        listId: listId,
+                        path: currentPath
+                    });
+                }
+                const newPath = [...currentPath, { id: p.id, name: p.name, type: 'problem' as const }];
+                traverse(p.subproblems, listId, newPath);
+            }
+        };
+
+        for (const list of state.lists) {
+            traverse(list.problems, list.id, [{ id: list.id, name: list.name, type: 'list' }]);
+        }
+        return tasks;
+    };
+
     const allTasks = getAllTasks();
+    const solvedTodayTasks = getSolvedTodayTasks();
     const overdueTasks = allTasks.filter(t => isOverdue(t.problem));
     const dueTodayTasks = allTasks.filter(t => isDueToday(t.problem));
 
@@ -236,6 +263,47 @@ export default function TodayPage() {
                 )}
 
             </div>
+
+            {solvedTodayTasks.length > 0 && (
+                <div style={{ marginTop: '3rem' }}>
+                    <button
+                        onClick={() => setShowSolved(!showSolved)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            background: 'none',
+                            border: 'none',
+                            color: '#888',
+                            fontSize: '0.95rem',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            padding: '0.5rem 0'
+                        }}
+                    >
+                        <span style={{ transform: showSolved ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
+                            <ChevronRight size={16} />
+                        </span>
+                        {solvedTodayTasks.length} problems solved today
+                    </button>
+
+                    {showSolved && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                            {solvedTodayTasks.map(t => (
+                                <TaskItemInline
+                                    key={t.problem.id}
+                                    task={t}
+                                    navigate={navigate}
+                                    toggleComplete={toggleComplete}
+                                    solvedMessages={solvedMessages}
+                                    draggedIndex={draggedIndex}
+                                />
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
         </div>
     );
 }

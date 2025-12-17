@@ -13,6 +13,7 @@ export interface Problem {
   status: 'to_solve' | 'solving' | 'blocked' | 'solved';
   subproblems: Problem[];
   completed: boolean;
+  completedAt?: number | null;
   totalTime?: number;
   sessions?: FocusSessionRecord[];
   todayOrder?: number;
