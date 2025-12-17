@@ -23,6 +23,7 @@ export interface Problem {
 export interface List {
   id: string;
   name: string;
+  emoji?: string;
   description?: string;
   dueDate?: string; // Is this used? List usually doesn't have due date but keeping it safe
   totalTime?: number; // Total time spent in milliseconds

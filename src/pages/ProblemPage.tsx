@@ -1,8 +1,10 @@
 ﻿import React, { useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw } from 'lucide-react';
+import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw, Smile } from 'lucide-react';
 import type { Problem } from '../types';
+import type { EmojiClickData } from 'emoji-picker-react';
+import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
 
 import FocusSession from '../components/FocusSession';
 
@@ -26,6 +28,7 @@ export default function ProblemPage() {
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
     const [showCompleted, setShowCompleted] = useState(false);
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
+    const [showListEmojiPicker, setShowListEmojiPicker] = useState(false);
     const dateInputRef = React.useRef<HTMLInputElement>(null);
 
     // 1. Find the List
@@ -504,21 +507,66 @@ export default function ProblemPage() {
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '1rem' }}>
                     {!currentProblem ? (
                         <div style={{ flex: 1 }}>
-                            <input
-                                type="text"
-                                value={list.name}
-                                onChange={(e) => updateList(list.id, { name: e.target.value })}
-                                style={{
-                                    fontSize: '2rem',
-                                    fontWeight: '700',
-                                    marginBottom: '1rem',
-                                    width: '100%',
-                                    border: 'none',
-                                    outline: 'none',
-                                    backgroundColor: 'transparent',
-                                    fontFamily: 'inherit'
-                                }}
-                            />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', position: 'relative' }}>
+                                <button
+                                    onClick={() => setShowListEmojiPicker(!showListEmojiPicker)}
+                                    style={{
+                                        background: 'none',
+                                        border: 'none',
+                                        cursor: 'pointer',
+                                        padding: 0,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    {list.emoji ? (
+                                        <span style={{ fontSize: '2rem', lineHeight: 1 }}>{list.emoji}</span>
+                                    ) : (
+                                        <Smile size={32} color="#ddd" />
+                                    )}
+                                </button>
+
+                                {showListEmojiPicker && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '100%',
+                                        left: 0,
+                                        zIndex: 1001,
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                                    }}>
+                                        <EmojiPicker
+                                            emojiStyle={EmojiStyle.NATIVE}
+                                            onEmojiClick={(emojiData: EmojiClickData) => {
+                                                updateList(list.id, { emoji: emojiData.emoji });
+                                                setShowListEmojiPicker(false);
+                                            }}
+                                            width={350}
+                                            height={400}
+                                        />
+                                        {/* Backdrop to close */}
+                                        <div
+                                            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: -1 }}
+                                            onClick={(e) => { e.stopPropagation(); setShowListEmojiPicker(false); }}
+                                        />
+                                    </div>
+                                )}
+
+                                <input
+                                    type="text"
+                                    value={list.name}
+                                    onChange={(e) => updateList(list.id, { name: e.target.value })}
+                                    style={{
+                                        fontSize: '2rem',
+                                        fontWeight: '700',
+                                        width: '100%',
+                                        border: 'none',
+                                        outline: 'none',
+                                        backgroundColor: 'transparent',
+                                        fontFamily: 'inherit'
+                                    }}
+                                />
+                            </div>
                             <textarea
                                 value={list.description || ''}
                                 onChange={(e) => {

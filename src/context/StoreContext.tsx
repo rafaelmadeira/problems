@@ -3,7 +3,7 @@ import type { AppState, AppSettings, List, Problem } from '../types';
 
 interface StoreContextType {
     state: AppState;
-    addList: (name: string) => void;
+    addList: (name: string, emoji?: string, description?: string) => void;
     addProblem: (parentId: string | null, listId: string, data: { name: string, priority: Problem['priority'], dueDate: string | null, notes: string }) => void;
     updateProblem: (listId: string, problemId: string, updates: Partial<Problem>) => void;
     updateList: (listId: string, updates: Partial<List>) => void;
@@ -63,11 +63,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }, [state]);
 
-    const addList = (name: string) => {
+    const addList = (name: string, emoji?: string, description?: string) => {
         const newList: List = {
             id: crypto.randomUUID(),
             name,
-            description: '',
+            emoji,
+            description,
             problems: []
         };
         setState(prev => ({

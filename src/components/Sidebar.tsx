@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Link, useLocation } from 'react-router-dom';
 import {
@@ -6,12 +6,12 @@ import {
     Calendar, Target, CalendarRange, Settings, Inbox
 } from 'lucide-react';
 import type { Problem } from '../types';
+import CreateListModal from './CreateListModal';
 
 export default function Sidebar() {
     const { state, addList, reorderLists } = useStore();
     const location = useLocation();
     const [isCreating, setIsCreating] = useState(false);
-    const [newListName, setNewListName] = useState('');
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
     // --- Logic from App.tsx (Counts) ---
@@ -85,13 +85,9 @@ export default function Sidebar() {
     // --- Logic from HomePage.tsx (Lists) ---
     const visibleLists = state.lists.filter(l => l.id !== 'inbox');
 
-    const handleCreate = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (newListName.trim()) {
-            addList(newListName.trim());
-            setNewListName('');
-            setIsCreating(false);
-        }
+    const handleCreate = (name: string, emoji?: string, description?: string) => {
+        addList(name, emoji, description);
+        setIsCreating(false);
     };
 
     const handleDragStart = (index: number) => {
@@ -113,7 +109,7 @@ export default function Sidebar() {
         setDraggedIndex(null);
     };
 
-    const NavItem = ({ to, label, icon: Icon, count, isActive }: any) => (
+    const NavItem = ({ to, label, icon: Icon, emoji, count, isActive }: any) => (
         <Link
             to={to}
             style={{
@@ -132,7 +128,11 @@ export default function Sidebar() {
             onMouseLeave={e => !isActive && (e.currentTarget.style.backgroundColor = 'transparent')}
         >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                {Icon && <Icon size={16} />}
+                {emoji ? (
+                    <span style={{ fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '16px', height: '16px' }}>{emoji}</span>
+                ) : (
+                    Icon && <Icon size={16} />
+                )}
                 <span>{label}</span>
             </div>
             {count > 0 && <span style={{ fontSize: '0.8rem', color: '#999', fontWeight: isActive ? 600 : 400 }}>{count}</span>}
@@ -196,7 +196,8 @@ export default function Sidebar() {
                             <NavItem
                                 to={`/list/${list.id}`}
                                 label={list.name}
-                                icon={CheckCircle2} // Placeholder icon for lists, or custom emoji logic later
+                                icon={CheckCircle2}
+                                emoji={list.emoji}
                                 count={count}
                                 isActive={isActive}
                             />
@@ -204,45 +205,31 @@ export default function Sidebar() {
                     );
                 })}
 
-                {/* New List Input */}
+                {/* New List Button + Modal */}
                 <div style={{ marginTop: '1rem' }}>
-                    {isCreating ? (
-                        <form onSubmit={handleCreate} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <input
-                                autoFocus
-                                type="text"
-                                placeholder="New list..."
-                                value={newListName}
-                                onChange={e => setNewListName(e.target.value)}
-                                style={{
-                                    fontSize: '0.9rem',
-                                    padding: '0.4rem',
-                                    border: '1px solid #eee',
-                                    borderRadius: '4px',
-                                    width: '100%'
-                                }}
-                                onBlur={() => !newListName && setIsCreating(false)}
-                            />
-                        </form>
-                    ) : (
-                        <button
-                            onClick={() => setIsCreating(true)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                color: '#aaa',
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                fontSize: '0.9rem',
-                                padding: '0.5rem 0'
-                            }}
-                        >
-                            <Plus size={16} />
-                            <span>New list</span>
-                        </button>
-                    )}
+                    <button
+                        onClick={() => setIsCreating(true)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.5rem',
+                            color: '#aaa',
+                            border: 'none',
+                            background: 'transparent',
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            padding: '0.5rem 0'
+                        }}
+                    >
+                        <Plus size={16} />
+                        <span>New List</span>
+                    </button>
+
+                    <CreateListModal
+                        isOpen={isCreating}
+                        onClose={() => setIsCreating(false)}
+                        onCreate={handleCreate}
+                    />
                 </div>
             </div>
 
