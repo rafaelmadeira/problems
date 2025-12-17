@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Link, useLocation } from 'react-router-dom';
 import {
-    Plus, ChevronRight, CheckCircle2,
-    Calendar, Target, CalendarRange, Settings
+    Plus, CheckCircle2,
+    Calendar, Target, CalendarRange, Settings, Inbox
 } from 'lucide-react';
 import type { Problem } from '../types';
 
@@ -173,8 +173,8 @@ export default function Sidebar() {
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        {/* Does Inbox have an icon in screenshot? Just text "Inbox" centered-ish */}
-                        Inbox
+                        <Inbox size={16} />
+                        <span>Inbox</span>
                     </div>
                     {inboxCount > 0 && <span style={{ fontWeight: isInboxActive ? 600 : 400 }}>{inboxCount}</span>}
                 </Link>
