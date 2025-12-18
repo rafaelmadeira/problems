@@ -164,7 +164,7 @@ export default function Sidebar() {
                 {emoji ? (
                     <span style={{ fontSize: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '14px', height: '14px' }}>{emoji}</span>
                 ) : (
-                    Icon && <Icon size={16} />
+                    Icon && <Icon size={14} />
                 )}
                 <span style={{ fontSize: '0.875rem' }}>{label}</span>
             </div>
