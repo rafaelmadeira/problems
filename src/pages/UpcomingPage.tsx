@@ -40,15 +40,15 @@ function SimpleTaskItem({
             onClick={() => navigate(`/list/${listId}/problem/${problem.id}`)}
             style={{
                 display: 'flex',
-                alignItems: 'center', // Changed to center vertical alignment
-                gap: '0.75rem',
-                padding: '0.75rem 1rem', // Adjusted padding
-                backgroundColor: isHovered ? '#f9f9f9' : '#fff', // Hover effect
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '1rem',
                 borderBottom: '1px solid #f0f0f0',
                 cursor: 'pointer',
                 borderRadius: '8px',
+                backgroundColor: isHovered ? '#f9f9f9' : 'transparent',
                 opacity: problem.completed ? (isHovered ? 1 : 0.5) : 1,
-                transition: 'opacity 0.2s, background-color 0.2s',
+                transition: 'background-color 0.2s',
                 position: 'relative'
             }}
             onMouseEnter={() => {
@@ -58,109 +58,110 @@ function SimpleTaskItem({
                 setIsHovered(false);
             }}
         >
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                {solvedMessages[problem.id] && (
-                    <div style={{
-                        position: 'absolute',
-                        bottom: '100%',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        backgroundColor: '#22c55e',
-                        color: 'white',
-                        padding: '4px 8px',
-                        borderRadius: '6px',
-                        fontSize: '0.75rem',
-                        fontWeight: '600',
-                        whiteSpace: 'nowrap',
-                        animation: 'fadeOutUp 2s ease-out forwards',
-                        pointerEvents: 'none',
-                        marginBottom: '8px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        zIndex: 10
-                    }}>
-                        Problem solved!
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, overflow: 'hidden' }}>
+                <div style={{ position: 'relative' }}>
+                    {solvedMessages[problem.id] && (
                         <div style={{
                             position: 'absolute',
-                            top: '100%',
+                            bottom: '100%',
                             left: '50%',
                             transform: 'translateX(-50%)',
-                            borderLeft: '4px solid transparent',
-                            borderRight: '4px solid transparent',
-                            borderTop: '4px solid #22c55e'
-                        }} />
-                    </div>
-                )}
-                <button
-                    title="solve problem"
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        toggleComplete(problem, listId);
-                    }}
-                    style={{
-                        color: problem.completed ? '#22c55e' : '#e5e5e5',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'none',
-                        border: 'none',
-                        padding: 0
-                    }}
-                >
-                    <CheckCircle2 size={24} fill={problem.completed ? "#22c55e" : "transparent"} color={problem.completed ? "#fff" : "#e5e5e5"} />
-                </button>
-            </div>
-
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                <div style={{
-                    fontSize: '1rem', // Adjusted font size slightly
-                    color: '#333',
-                    fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
-                    lineHeight: '1.4',
-                    textDecoration: problem.completed ? 'line-through' : 'none',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                }}>
-                    {problem.name}
+                            backgroundColor: '#22c55e',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '6px',
+                            fontSize: '0.75rem',
+                            fontWeight: '600',
+                            whiteSpace: 'nowrap',
+                            animation: 'fadeOutUp 2s ease-out forwards',
+                            pointerEvents: 'none',
+                            marginBottom: '8px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                        }}>
+                            Problem solved!
+                            <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: '50%',
+                                transform: 'translateX(-50%)',
+                                borderLeft: '4px solid transparent',
+                                borderRight: '4px solid transparent',
+                                borderTop: '4px solid #22c55e'
+                            }} />
+                        </div>
+                    )}
+                    <button
+                        title="solve problem"
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleComplete(problem, listId);
+                        }}
+                        style={{
+                            color: problem.completed ? '#22c55e' : '#e5e5e5',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: 'none',
+                            border: 'none',
+                            padding: 0
+                        }}
+                    >
+                        <CheckCircle2 size={24} fill={problem.completed ? "#22c55e" : "transparent"} color={problem.completed ? "#fff" : "#e5e5e5"} />
+                    </button>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#888', marginTop: '2px' }}>
-                    {path.map((crumb, index) => {
-                        const linkPath = crumb.type === 'list'
-                            ? `/list/${crumb.id}`
-                            : `/list/${listId}/problem/${crumb.id}`;
+                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                    <div style={{
+                        fontSize: '1rem',
+                        color: '#333',
+                        fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
+                        lineHeight: '1.4',
+                        textDecoration: problem.completed ? 'line-through' : 'none',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                    }}>
+                        {problem.name}
+                    </div>
 
-                        return (
-                            <React.Fragment key={index}>
-                                {index > 0 && <ChevronRightIcon size={10} />}
-                                <Link
-                                    to={linkPath}
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ color: '#888', textDecoration: 'none', borderBottom: '1px solid transparent' }}
-                                    onMouseEnter={e => e.currentTarget.style.borderBottom = '1px solid #888'}
-                                    onMouseLeave={e => e.currentTarget.style.borderBottom = '1px solid transparent'}
-                                >
-                                    {crumb.name}
-                                </Link>
-                            </React.Fragment>
-                        );
-                    })}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#888', marginTop: '2px' }}>
+                        {path.map((crumb, index) => {
+                            const linkPath = crumb.type === 'list'
+                                ? `/list/${crumb.id}`
+                                : `/list/${listId}/problem/${crumb.id}`;
+
+                            return (
+                                <React.Fragment key={index}>
+                                    {index > 0 && <ChevronRightIcon size={10} />}
+                                    <Link
+                                        to={linkPath}
+                                        onClick={(e) => e.stopPropagation()}
+                                        style={{ color: '#888', textDecoration: 'none', borderBottom: '1px solid transparent' }}
+                                        onMouseEnter={e => e.currentTarget.style.borderBottom = '1px solid #888'}
+                                        onMouseLeave={e => e.currentTarget.style.borderBottom = '1px solid transparent'}
+                                    >
+                                        {crumb.name}
+                                    </Link>
+                                </React.Fragment>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
             {/* Right side: Badge + Menu */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                 {subtaskCount > 0 && (
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        width: '24px', // Slightly larger circle
+                        width: '24px',
                         height: '24px',
                         borderRadius: '50%',
-                        backgroundColor: '#e5e5e5', // Grey background
+                        backgroundColor: '#f0f0f0',
                         color: '#666',
                         fontSize: '0.75rem',
                         fontWeight: 600
@@ -168,7 +169,7 @@ function SimpleTaskItem({
                         {subtaskCount}
                     </div>
                 )}
-                <div style={{ color: '#aaa' }}>
+                <div style={{ color: '#aaa', display: 'flex', alignItems: 'center' }}>
                     <MoreHorizontal size={20} />
                 </div>
             </div>
@@ -309,21 +310,18 @@ export default function UpcomingPage() {
                 {sortedDates.map(date => (
                     <div key={date}>
                         <h2 style={{
-                            fontSize: '1rem',
+                            fontSize: '0.85rem',
                             fontWeight: '600',
                             color: '#555',
                             borderBottom: '1px solid #eee',
                             paddingBottom: '0.5rem',
                             marginBottom: '1rem',
-                            display: 'flex',
-                            justifyContent: 'space-between',
                             textTransform: 'uppercase',
                             letterSpacing: '0.05em'
                         }}>
-                            <span>{formatDateHeading(date)}</span>
-                            <span style={{ fontWeight: 'normal', color: '#999', fontSize: '0.8rem' }}>{date}</span>
+                            {formatDateHeading(date)}
                         </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             {groupedTasks[date].map(t => (
                                 <SimpleTaskItem
                                     key={t.problem.id}
