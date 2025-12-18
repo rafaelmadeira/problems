@@ -126,7 +126,7 @@ function SimpleTaskItem({
                         {problem.name}
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#888', marginTop: '2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: '#888', marginTop: '2px' }}>
                         {path.map((crumb, index) => {
                             const linkPath = crumb.type === 'list'
                                 ? `/list/${crumb.id}`
