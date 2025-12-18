@@ -17,7 +17,7 @@ import CreateProblemModal from './components/CreateProblemModal';
 import { useState, useEffect } from 'react';
 
 function App() {
-  const { state, updateSettings } = useStore();
+  const { state } = useStore();
   const location = useLocation();
   const layout = state.settings?.layout || 'two-columns';
   const [isCreatingProblem, setIsCreatingProblem] = useState(false);
@@ -26,30 +26,19 @@ function App() {
   // actually, since we persist it, if user is on mobile we probably want to FORCE single column or just default it?
   // The user said "one column version to be the default version for mobile".
   // This implies if I'm on mobile, it should behave as single column.
+  // Track window resize to reactively switch layouts
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
+
   useEffect(() => {
-    // Only check if no explicit setting interaction has happened? 
-    // Or just check once on mount if we want to be smart.
-    // However, if we change the *state* it persists.
-    // Let's just default properly in the variable if possible, OR update the store once.
-    const isMobile = window.innerWidth < 768;
-    // If mobile and currently in two-columns (which is now global default), switch to single.
-    if (isMobile && layout === 'two-columns') {
-      // We can update the store, or just use a local override. 
-      // Updating store is risky if user switches back and forth on desktop/mobile.
-      // User asked "default to be ...", so implies initial state.
-      // Since we updated defaultState in store to 'two-columns', we can just leave it.
-      // But if we want mobile users to see single column, we should check it.
-      // The cleanest way is to respect the store, but initially set likely default.
-      // But store is already initialized.
-      // Let's just update the store if it's the very first visit? 
-      // Hard to know if first visit.
-      // Let's just update it if mobile.
-      // ACTUALLY: User said "default to be the two columns". "one column... default for mobile".
-      // This implies unresponsive behavior if I save it to store.
-      // Let's stick to updating the store on mount if mobile is detected and it is the default.
-      updateSettings({ layout: 'single-column' });
-    }
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  const isMobile = windowWidth < 768;
+
+  // Force single-column on mobile, otherwise respect user setting
+  const effectiveLayout = isMobile ? 'single-column' : layout;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -204,7 +193,7 @@ function App() {
   const isSettingsActive = location.pathname === '/settings';
 
   // --- Two Column Layout ---
-  if (layout === 'two-columns') {
+  if (effectiveLayout === 'two-columns') {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#fff' }}>
         <div style={{ display: 'flex', width: '100%', maxWidth: '1200px' }}>
@@ -324,8 +313,8 @@ function App() {
             alignItems: 'center',
             gap: '0.5rem'
           }}>
-            {/* Show count or just 'Antigravity'? User screenshot showed '0 problems' */}
-            {totalProblems === 0 ? '0 problems' : `${totalProblems} problems`}
+            {/* Show count or just 'Antigravity'? User screenshot showed '0 problems' -> 'Problems' */}
+            {totalProblems === 0 ? 'Problems' : `${totalProblems} problems`}
           </Link>
 
           <Link
