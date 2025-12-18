@@ -1153,7 +1153,7 @@ export default function ProblemPage() {
                                     to={`/list/${list.id}/problem/${child.id}`}
                                     onClick={(e) => e.stopPropagation()}
                                     style={{
-                                        fontSize: '1.1rem',
+                                        fontSize: '1rem',
                                         textDecoration: child.completed ? 'line-through' : 'none',
                                         color: child.completed ? '#aaa' : '#333',
                                         cursor: 'pointer',

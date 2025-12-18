@@ -163,7 +163,7 @@ const InternalTaskNode = ({
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     {/* Line 1: Name */}
                     <div style={{
-                        fontSize: '1.1rem',
+                        fontSize: '1rem',
                         color: '#333',
                         fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
                         lineHeight: '1.4'
@@ -173,7 +173,7 @@ const InternalTaskNode = ({
 
                     {/* Line 2: Priority - Due Date */}
                     {(problem.priority || problem.dueDate) && (
-                        <div style={{ fontSize: '0.85rem', color: '#666', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#666', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             {problem.priority && (
                                 <span style={{ textTransform: 'capitalize' }}>
                                     {problem.priority.replace('_', ' ')}
@@ -397,7 +397,7 @@ export default function NextActionsPage() {
                                     padding: '10px 12px',
                                     border: 'none',
                                     background: 'none',
-                                    fontSize: '0.95rem',
+                                    fontSize: '0.875rem',
                                     color: !canCollapseAll ? '#ccc' : '#333',
                                     cursor: !canCollapseAll ? 'default' : 'pointer',
                                     borderRadius: '8px',

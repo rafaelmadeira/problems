@@ -168,7 +168,7 @@ const InternalTaskNode = ({
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                     {/* Line 1: Name */}
                     <div style={{
-                        fontSize: '1.1rem',
+                        fontSize: '1rem',
                         color: isSelfMatch ? '#333' : '#999',
                         fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
                         lineHeight: '1.4'
@@ -178,7 +178,7 @@ const InternalTaskNode = ({
 
                     {/* Line 2: Priority - Due Date */}
                     {isSelfMatch && (problem.priority || problem.dueDate) && (
-                        <div style={{ fontSize: '0.85rem', color: '#666', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ fontSize: '0.75rem', color: '#666', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             {problem.priority && (
                                 <span style={{ textTransform: 'capitalize' }}>
                                     {problem.priority.replace('_', ' ')}
@@ -400,7 +400,7 @@ export default function ThisWeekPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative' }}>
                 <div>
                     <h1 style={{ fontSize: '2rem', fontWeight: '700', margin: 0, marginBottom: '0.5rem' }}>This Week</h1>
-                    <p style={{ color: '#666', margin: 0, fontSize: '0.95rem' }}>
+                    <p style={{ color: '#666', margin: 0, fontSize: '0.875rem' }}>
                         Problems due this week or with Priority: This Week
                     </p>
                 </div>
@@ -688,7 +688,7 @@ function SimpleTaskItem({
                     {problem.name}
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }}
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.75rem', color: '#888' }}
                     onMouseDown={(e) => e.stopPropagation()}
                     onClick={e => e.stopPropagation()}
                 >

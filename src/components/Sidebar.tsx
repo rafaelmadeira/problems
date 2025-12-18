@@ -166,7 +166,7 @@ export default function Sidebar() {
                 ) : (
                     Icon && <Icon size={16} />
                 )}
-                <span>{label}</span>
+                <span style={{ fontSize: '0.875rem' }}>{label}</span>
             </div>
             {count > 0 && <span style={{ fontSize: '0.8rem', color: '#999', fontWeight: isActive ? 600 : 400 }}>{count}</span>}
         </Link>
@@ -240,7 +240,7 @@ export default function Sidebar() {
 
             {/* Lists Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                <div style={{ color: '#aaa', fontSize: '0.85rem' }}>
+                <div style={{ color: '#aaa', fontSize: '0.75rem' }}>
                     Lists
                 </div>
                 <button
@@ -326,7 +326,7 @@ export default function Sidebar() {
                         gap: '0.5rem',
                         color: isSettingsActive ? '#111' : '#aaa',
                         textDecoration: 'none',
-                        fontSize: '0.9rem'
+                        fontSize: '0.875rem'
                     }}
                 >
                     <Settings size={16} />

@@ -203,7 +203,7 @@ export default function TodayPage() {
             </nav>
 
             <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>Today</h1>
-            <p style={{ color: '#666', marginBottom: '2rem', fontSize: '0.95rem' }}>
+            <p style={{ color: '#666', marginBottom: '2rem', fontSize: '0.875rem' }}>
                 Problems due today or with Priority: Today
             </p>
 
@@ -432,7 +432,7 @@ function TaskItemInline({
 
             <div style={{ flex: 1 }}>
                 <div style={{
-                    fontSize: '1.1rem',
+                    fontSize: '1rem',
                     color: '#333',
                     textDecoration: problem.completed ? 'line-through' : 'none',
                     fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
@@ -441,7 +441,7 @@ function TaskItemInline({
                     {problem.name}
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.75rem', color: '#888' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         {path.map((crumb, index) => {
                             const linkPath = crumb.type === 'list'

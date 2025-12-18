@@ -114,7 +114,7 @@ function SimpleTaskItem({
 
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <div style={{
-                        fontSize: '1.1rem',
+                        fontSize: '1rem',
                         color: '#333',
                         fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
                         lineHeight: '1.4',
@@ -126,7 +126,7 @@ function SimpleTaskItem({
                         {problem.name}
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.85rem', color: '#888', marginTop: '2px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#888', marginTop: '2px' }}>
                         {path.map((crumb, index) => {
                             const linkPath = crumb.type === 'list'
                                 ? `/list/${crumb.id}`
@@ -312,7 +312,7 @@ export default function UpcomingPage() {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
                 <div>
                     <h1 style={{ fontSize: '2rem', fontWeight: '700', margin: 0, marginBottom: '0.5rem' }}>Upcoming</h1>
-                    <p style={{ color: '#666', margin: 0, fontSize: '0.95rem' }}>
+                    <p style={{ color: '#666', margin: 0, fontSize: '0.875rem' }}>
                         Problems due tomorrow and beyond
                     </p>
                 </div>
