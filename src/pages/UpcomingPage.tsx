@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { CheckCircle2, ChevronRight, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
@@ -259,6 +259,10 @@ export default function UpcomingPage() {
     const groupedTasks = getUpcomingTasks();
     const sortedDates = Object.keys(groupedTasks).sort();
     const totalCount = Object.values(groupedTasks).reduce((acc, tasks) => acc + tasks.length, 0);
+
+    useEffect(() => {
+        document.title = `Upcoming problems (${totalCount})`;
+    }, [totalCount]);
 
 
     const toggleComplete = (p: Problem, listId: string) => {

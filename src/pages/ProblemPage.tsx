@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw, Smile } from 'lucide-react';
@@ -65,6 +65,14 @@ export default function ProblemPage() {
     const activeSubElements = subElements.filter(p => !p.completed);
     const completedSubElements = subElements.filter(p => p.completed);
     const currentParentId = currentProblem ? currentProblem.id : null;
+
+    useEffect(() => {
+        if (currentProblem) {
+            document.title = `Problem: ${currentProblem.name}`;
+        } else if (list) {
+            document.title = `${list.name} problems (${activeSubElements.length})`;
+        }
+    }, [currentProblem, list, activeSubElements.length]);
 
     // Check if it's a top-level task (root task)
     // A top-level task has breadcrumbs length of 1 (just itself)

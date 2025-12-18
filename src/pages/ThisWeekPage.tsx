@@ -371,6 +371,22 @@ export default function ThisWeekPage() {
     const canCollapseAll = anyExpanded;
     const canExpandAll = anyCollapsed;
 
+    const totalMatching = visibleLists.reduce((acc, l) => {
+        const countMatching = (problems: Problem[]): number => {
+            let c = 0;
+            for (const p of problems) {
+                if (isMatch(p)) c++;
+                c += countMatching(p.subproblems);
+            }
+            return c;
+        };
+        return acc + countMatching(l.problems);
+    }, 0);
+
+    useEffect(() => {
+        document.title = `This week's problems (${totalMatching})`;
+    }, [totalMatching]);
+
 
     if (visibleLists.length === 0) {
         return (

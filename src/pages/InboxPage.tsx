@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { Plus, CheckCircle2, ChevronRight, MoreHorizontal } from 'lucide-react';
@@ -25,6 +25,10 @@ export default function InboxPage() {
     const subElements = inboxList.problems;
     const activeSubElements = subElements.filter(p => !p.completed);
     const completedSubElements = subElements.filter(p => p.completed);
+
+    useEffect(() => {
+        document.title = `Problems Inbox (${activeSubElements.length})`;
+    }, [activeSubElements.length]);
 
     const toggleComplete = (p: Problem) => {
         const newCompleted = !p.completed;

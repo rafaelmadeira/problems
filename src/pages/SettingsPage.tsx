@@ -1,4 +1,4 @@
-// import { useState } from 'react'; // Removed unused
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ChevronRight, Layout, Check } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
@@ -6,6 +6,10 @@ import { useStore } from '../context/StoreContext';
 export default function SettingsPage() {
     const { state, updateSettings } = useStore();
     const layout = state.settings?.layout || 'one-column';
+
+    useEffect(() => {
+        document.title = 'Problems Settings';
+    }, []);
 
     return (
         <div style={{ paddingBottom: '4rem' }}>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { CheckCircle2, ChevronRight } from 'lucide-react';
@@ -111,6 +111,10 @@ export default function TodayPage() {
     const solvedTodayTasks = getSolvedTodayTasks();
     const overdueTasks = allTasks.filter(t => isOverdue(t.problem));
     const dueTodayTasks = allTasks.filter(t => isDueToday(t.problem));
+
+    useEffect(() => {
+        document.title = `Today's problems (${allTasks.length})`;
+    }, [allTasks.length]);
 
     // Base Do Today (from Store)
     const doTodayTasks = allTasks
