@@ -112,9 +112,9 @@ function SimpleTaskItem({
                     </button>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <div style={{
-                        fontSize: '1rem',
+                        fontSize: '1.1rem',
                         color: '#333',
                         fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
                         lineHeight: '1.4',
@@ -152,25 +152,37 @@ function SimpleTaskItem({
             </div>
 
             {/* Right side: Badge + Menu */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
                 {subtaskCount > 0 && (
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '50%',
-                        backgroundColor: '#f0f0f0',
-                        color: '#666',
-                        fontSize: '0.75rem',
-                        fontWeight: 600
+                    <span style={{
+                        backgroundColor: '#e5e5e5',
+                        padding: '0.25rem 0.75rem',
+                        borderRadius: '999px',
+                        fontSize: '0.875rem',
+                        fontWeight: '600',
+                        color: '#555'
                     }}>
                         {subtaskCount}
-                    </div>
+                    </span>
                 )}
-                <div style={{ color: '#aaa', display: 'flex', alignItems: 'center' }}>
-                    <MoreHorizontal size={20} />
+                <div style={{ position: 'relative' }}>
+                    <button
+                        title="Menu"
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: '4px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: '#ccc',
+                            transition: 'color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.color = '#888'}
+                        onMouseLeave={(e) => e.currentTarget.style.color = '#ccc'}
+                    >
+                        <MoreHorizontal size={20} />
+                    </button>
                 </div>
             </div>
         </div>
