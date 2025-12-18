@@ -391,8 +391,8 @@ export default function ThisWeekPage() {
     if (visibleLists.length === 0) {
         return (
             <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
-                <h2>No tasks for this week!</h2>
-                <p>Looks like you're ahead of schedule.</p>
+                <h2>No problems here.</h2>
+                <p>And Alexander wept, for there were no more problems to solve.</p>
             </div>
         );
     }

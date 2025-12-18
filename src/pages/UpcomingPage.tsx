@@ -287,8 +287,8 @@ export default function UpcomingPage() {
     if (totalCount === 0) {
         return (
             <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
-                <h2>No upcoming tasks!</h2>
-                <p>Enjoy your free time.</p>
+                <h2>No problems here.</h2>
+                <p>And Alexander wept, for there were no more problems to solve.</p>
             </div>
         );
     }

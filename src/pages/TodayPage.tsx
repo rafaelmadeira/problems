@@ -182,8 +182,8 @@ export default function TodayPage() {
     if (!hasAnyContent) {
         return (
             <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
-                <h2>No tasks for today!</h2>
-                <p>You're all caught up.</p>
+                <h2>No problems here.</h2>
+                <p>And Alexander wept, for there were no more problems to solve.</p>
             </div>
         );
     }
