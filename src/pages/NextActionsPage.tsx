@@ -207,7 +207,6 @@ const InternalTaskNode = ({
 
 export default function NextActionsPage() {
     const { state, updateProblem } = useStore();
-    const navigate = useNavigate();
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
     const [expandedIds, setExpandedIds] = useState<{ [id: string]: boolean }>({});
     const [menuOpen, setMenuOpen] = useState(false);

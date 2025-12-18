@@ -10,7 +10,7 @@ import Sidebar from './components/Sidebar';
 import NextActionsPage from './pages/NextActionsPage';
 import UpcomingPage from './pages/UpcomingPage';
 import InboxPage from './pages/InboxPage';
-import { CheckCircle2, Calendar, Target, CalendarRange, Settings, Zap, CalendarClock } from 'lucide-react'; // Using Target icon for Unfinished/Focus
+import { CheckCircle2, Calendar, Target, CalendarRange, Settings } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 import CreateProblemModal from './components/CreateProblemModal';
 import { useState, useEffect } from 'react';
@@ -181,9 +181,8 @@ function App() {
   const isInboxActive = location.pathname === '/inbox';
   const isTodayActive = location.pathname === '/today';
   const isWeekActive = location.pathname === '/week';
-  const isUpcomingActive = location.pathname === '/upcoming';
   const isUnfinishedActive = location.pathname === '/unfinished';
-  const isNextActionsActive = location.pathname === '/next-actions';
+
   const isSettingsActive = location.pathname === '/settings';
 
   // --- Two Column Layout ---
