@@ -553,7 +553,7 @@ export default function ThisWeekPage() {
                             background: 'none',
                             border: 'none',
                             color: '#888',
-                            fontSize: '0.95rem',
+                            fontSize: '0.875rem',
                             fontWeight: 'normal',
                             cursor: 'pointer',
                             padding: '0.5rem 0'
