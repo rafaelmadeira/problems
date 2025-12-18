@@ -567,7 +567,7 @@ export default function ProblemPage() {
                                 style={{
                                     width: '100%',
                                     // minHeight: '100px', // Removed fixed height
-                                    fontSize: '1rem',
+                                    fontSize: '0.875rem',
                                     color: '#555',
                                     resize: 'none',
                                     lineHeight: '1.6',
