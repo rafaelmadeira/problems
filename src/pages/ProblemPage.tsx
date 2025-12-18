@@ -125,31 +125,39 @@ export default function ProblemPage() {
 
     const handleDeleteProblem = (targetId?: string) => {
         const idToDelete = targetId || currentProblem?.id;
-        if (idToDelete && list) {
-            deleteProblem(list.id, idToDelete);
 
-            // Only navigate if we deleted the current problem context
+        if (idToDelete && list) {
+            const listId = list.id; // Capture for closure
+
+            // If deleting the CURRENT context (the page we are on)
             if (!targetId || targetId === currentProblem?.id) {
-                // Use setTimeout to ensure the state update (deletion) is processed and saved to localStorage
-                // before we navigate. This prevents race conditions and potential crashes.
-                setTimeout(() => {
-                    // Try to go back in history first (contextual navigation)
-                    if (location.key !== 'default') {
-                        navigate(-1);
+                // Navigate AWAY first to prevent "Problem not found" render or crashes
+                if (location.key !== 'default') {
+                    navigate(-1);
+                } else {
+                    // Fallback to hierarchical navigation
+                    if (breadcrumbs.length > 1) {
+                        const parent = breadcrumbs[breadcrumbs.length - 2];
+                        navigate(`/list/${list.id}/problem/${parent.id}`);
                     } else {
-                        // Fallback to hierarchical navigation
-                        if (breadcrumbs.length > 1) {
-                            const parent = breadcrumbs[breadcrumbs.length - 2];
-                            navigate(`/list/${list.id}/problem/${parent.id}`);
+                        if (list.id === 'inbox') {
+                            navigate('/inbox');
                         } else {
-                            if (list.id === 'inbox') {
-                                navigate('/inbox');
-                            } else {
-                                navigate(`/list/${list.id}`);
-                            }
+                            navigate(`/list/${list.id}`);
                         }
                     }
-                }, 0);
+                }
+
+                // Delete the problem AFTER we have left the page
+                // This ensures smooth transition and prevents race conditions
+                setTimeout(() => {
+                    deleteProblem(listId, idToDelete);
+                }, 50);
+
+            } else {
+                // Deleting a subtask/child (not the current page context)
+                // We can delete immediately as it won't unmount the current view
+                deleteProblem(listId, idToDelete);
             }
         }
     };
