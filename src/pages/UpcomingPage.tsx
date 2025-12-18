@@ -322,14 +322,12 @@ export default function UpcomingPage() {
                 {sortedDates.map(date => (
                     <div key={date}>
                         <h2 style={{
-                            fontSize: '0.85rem',
+                            fontSize: '1rem',
                             fontWeight: '600',
-                            color: '#555',
+                            color: '#333',
                             borderBottom: '1px solid #eee',
                             paddingBottom: '0.5rem',
-                            marginBottom: '1rem',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.05em'
+                            marginBottom: '1rem'
                         }}>
                             {formatDateHeading(date)}
                         </h2>
