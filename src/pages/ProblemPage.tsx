@@ -8,6 +8,7 @@ import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
 
 import FocusSession from '../components/FocusSession';
 import CreateProblemModal from '../components/CreateProblemModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 
 export default function ProblemPage() {
     const { listId, problemId } = useParams();
@@ -28,6 +29,12 @@ export default function ProblemPage() {
     const [showCompleted, setShowCompleted] = useState(false);
     const [activeMenuId, setActiveMenuId] = useState<string | null>(null);
     const [showListEmojiPicker, setShowListEmojiPicker] = useState(false);
+
+    // Deletion Modal State
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+    const [deleteType, setDeleteType] = useState<'list' | 'problem' | null>(null);
+
     const dateInputRef = React.useRef<HTMLInputElement>(null);
 
     // 1. Find the List
@@ -127,20 +134,16 @@ export default function ProblemPage() {
         }
     };
 
-    const handleDeleteList = () => {
-        // window.confirm might be blocked or causing issues
-        deleteList(list.id);
-        navigate('/');
-    };
-
-    const handleDeleteProblem = (targetId?: string) => {
-        const idToDelete = targetId || currentProblem?.id;
-
-        if (idToDelete && list) {
-            const listId = list.id; // Capture for closure
+    const confirmDelete = () => {
+        if (deleteType === 'list') {
+            deleteList(list.id);
+            navigate('/');
+        } else if (deleteType === 'problem' && pendingDeleteId) {
+            const idToDelete = pendingDeleteId;
+            const listId = list.id;
 
             // If deleting the CURRENT context (the page we are on)
-            if (!targetId || targetId === currentProblem?.id) {
+            if (idToDelete === currentProblem?.id) {
                 // Navigate AWAY first to prevent "Problem not found" render or crashes
                 if (location.key !== 'default') {
                     navigate(-1);
@@ -159,16 +162,33 @@ export default function ProblemPage() {
                 }
 
                 // Delete the problem AFTER we have left the page
-                // This ensures smooth transition and prevents race conditions
                 setTimeout(() => {
                     deleteProblem(listId, idToDelete);
                 }, 50);
 
             } else {
                 // Deleting a subtask/child (not the current page context)
-                // We can delete immediately as it won't unmount the current view
                 deleteProblem(listId, idToDelete);
             }
+        }
+
+        // Reset state
+        setIsDeleteModalOpen(false);
+        setPendingDeleteId(null);
+        setDeleteType(null);
+    };
+
+    const handleDeleteList = () => {
+        setDeleteType('list');
+        setIsDeleteModalOpen(true);
+    };
+
+    const handleDeleteProblem = (targetId?: string) => {
+        const idToDelete = targetId || currentProblem?.id;
+        if (idToDelete) {
+            setPendingDeleteId(idToDelete);
+            setDeleteType('problem');
+            setIsDeleteModalOpen(true);
         }
     };
 
@@ -1463,6 +1483,23 @@ function CompletedTaskRow({
                 )}
                 <div style={{ width: '28px' }}></div> {/* Spacer for menu alignment if menu is omitted */}
             </div>
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                title={deleteType === 'list' ? "Delete List?" : "Delete Problem?"}
+                message={deleteType === 'list'
+                    ? `Are you sure you want to delete "${list.name}"? This action cannot be undone.`
+                    : "Are you sure you want to delete this problem? This cannot be undone."
+                }
+                onConfirm={confirmDelete}
+                onCancel={() => {
+                    setIsDeleteModalOpen(false);
+                    setPendingDeleteId(null);
+                    setDeleteType(null);
+                }}
+                confirmText="Delete"
+                cancelText="Cancel"
+            />
         </div>
     );
 }
