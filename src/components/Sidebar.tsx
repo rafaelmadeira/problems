@@ -223,7 +223,7 @@ export default function Sidebar() {
             {/* Nav Links */}
             <div style={{ marginBottom: '2rem' }}>
                 <NavItem
-                    to="/list/inbox"
+                    to="/inbox"
                     label="Inbox"
                     icon={Inbox}
                     count={inboxCount}

@@ -9,6 +9,7 @@ import SettingsPage from './pages/SettingsPage';
 import Sidebar from './components/Sidebar';
 import NextActionsPage from './pages/NextActionsPage';
 import UpcomingPage from './pages/UpcomingPage';
+import InboxPage from './pages/InboxPage';
 import { CheckCircle2, Calendar, Target, CalendarRange, Settings, Zap, CalendarClock } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 
@@ -158,7 +159,7 @@ function App() {
   // Calculate Inbox count
   const inboxList = state.lists.find(l => l.id === 'inbox');
   const inboxCount = inboxList ? countProblems(inboxList.problems) : 0;
-  const isInboxActive = location.pathname.includes('/list/inbox');
+  const isInboxActive = location.pathname === '/inbox';
   const isTodayActive = location.pathname === '/today';
   const isWeekActive = location.pathname === '/week';
   const isUpcomingActive = location.pathname === '/upcoming';
@@ -177,6 +178,7 @@ function App() {
               {/* Redirect root to /today in 2-column mode to avoid empty/redundant page */}
               <Route path="/" element={<Navigate to="/today" replace />} />
               <Route path="/today" element={<TodayPage />} />
+              <Route path="/inbox" element={<InboxPage />} />
               <Route path="/week" element={<ThisWeekPage />} />
               <Route path="/upcoming" element={<UpcomingPage />} />
               <Route path="/unfinished" element={<UnfinishedPage />} />
@@ -202,7 +204,7 @@ function App() {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Link
-            to="/list/inbox"
+            to="/inbox"
             style={{
               padding: '0.4rem 0.8rem',
               backgroundColor: isInboxActive ? '#eee' : 'transparent',
@@ -356,6 +358,7 @@ function App() {
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
+          <Route path="/inbox" element={<InboxPage />} />
           <Route path="/today" element={<TodayPage />} />
           <Route path="/week" element={<ThisWeekPage />} />
           <Route path="/unfinished" element={<UnfinishedPage />} />
