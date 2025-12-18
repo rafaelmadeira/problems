@@ -14,7 +14,11 @@ type PomoPhase = 'work' | 'break' | 'long_break';
 
 export default function FocusSession({ problem, onExit, onUpdateProblem }: FocusSessionProps) {
     const [mode, setMode] = useState<TimerMode | null>(null);
+
+
+
     const [timerState, setTimerState] = useState<TimerState>('idle');
+
     const [timeLeft, setTimeLeft] = useState(0); // For countdowns (ms)
     const [stopwatchTime, setStopwatchTime] = useState(0); // For stopwatch (ms)
 
@@ -186,6 +190,16 @@ export default function FocusSession({ problem, onExit, onUpdateProblem }: Focus
         }
         onExit();
     };
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                handleExit();
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [handleExit]);
 
     // Format Time: HH:MM:SS or MM:SS
     const formatTime = (ms: number, includeHours = false) => {

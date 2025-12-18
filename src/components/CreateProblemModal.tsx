@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useStore } from '../context/StoreContext';
 import type { Problem } from '../types';
@@ -20,6 +20,21 @@ export default function CreateProblemModal({ isOpen, onClose, defaultListId, sho
     const [estimatedDuration, setEstimatedDuration] = useState('');
     const [notes, setNotes] = useState('');
     const [selectedListId, setSelectedListId] = useState(defaultListId);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            window.addEventListener('keydown', handleKeyDown);
+        }
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, onClose]);
+
+    // Filter out inbox if needed, or show all. Usually list selector shows all.
 
     // Filter out inbox if needed, or show all. Usually list selector shows all.
     const allLists = state.lists;

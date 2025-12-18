@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import type { EmojiClickData } from 'emoji-picker-react';
 import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
 import { Smile } from 'lucide-react';
@@ -16,6 +16,19 @@ export default function CreateListModal({ isOpen, onClose, onCreate }: CreateLis
     const [description, setDescription] = useState('');
     const [emoji, setEmoji] = useState<string | null>(null);
     const [showPicker, setShowPicker] = useState(false);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                onClose();
+            }
+        };
+
+        if (isOpen) {
+            window.addEventListener('keydown', handleKeyDown);
+        }
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 
