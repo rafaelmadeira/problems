@@ -642,6 +642,22 @@ export default function ProblemPage() {
                                     }}
                                 />
                             </div>
+                            <input
+                                value={list.description || ''}
+                                onChange={(e) => updateList(list.id, { description: e.target.value })}
+                                placeholder="Add a description..."
+                                style={{
+                                    fontSize: '0.875rem',
+                                    color: '#666',
+                                    width: '100%',
+                                    border: 'none',
+                                    outline: 'none',
+                                    background: 'transparent',
+                                    marginTop: '-0.5rem',
+                                    marginBottom: '1rem',
+                                    display: 'block'
+                                }}
+                            />
                         </div>
                     ) : (
                         <div style={{ flex: 1 }}>
