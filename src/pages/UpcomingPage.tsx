@@ -58,7 +58,7 @@ function SimpleTaskItem({
                 setIsHovered(false);
             }}
         >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', flex: 1, overflow: 'hidden' }}>
                 <div style={{ position: 'relative' }}>
                     {solvedMessages[problem.id] && (
                         <div style={{
