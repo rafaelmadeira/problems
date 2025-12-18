@@ -5,7 +5,7 @@ import { useStore } from '../context/StoreContext';
 
 export default function SettingsPage() {
     const { state, updateSettings } = useStore();
-    const layout = state.settings?.layout || 'one-column';
+    const layout = state.settings?.layout || 'single-column';
 
     useEffect(() => {
         document.title = 'Problems Settings';
@@ -39,13 +39,13 @@ export default function SettingsPage() {
                         border: '1px solid #f0f0f0'
                     }}>
                         <button
-                            onClick={() => updateSettings({ layout: 'one-column' })}
+                            onClick={() => updateSettings({ layout: 'single-column' })}
                             style={{
                                 flex: 1,
                                 padding: '1rem',
                                 borderRadius: '8px',
-                                border: `2px solid ${layout === 'one-column' ? '#333' : '#e5e5e5'}`,
-                                backgroundColor: layout === 'one-column' ? '#f9fafb' : 'white',
+                                border: `2px solid ${layout === 'single-column' ? '#333' : '#e5e5e5'}`,
+                                backgroundColor: layout === 'single-column' ? '#f9fafb' : 'white',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 flexDirection: 'column',
@@ -59,8 +59,8 @@ export default function SettingsPage() {
                                 <div style={{ position: 'absolute', top: '30%', left: '10%', right: '10%', bottom: '10%', backgroundColor: '#fff', borderRadius: '2px', border: '1px solid #ddd' }} />
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, color: '#333' }}>
-                                {layout === 'one-column' && <Check size={16} />}
-                                One column
+                                {layout === 'single-column' && <Check size={16} />}
+                                Single column
                             </div>
                         </button>
 

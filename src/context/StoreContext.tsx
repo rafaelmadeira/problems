@@ -30,7 +30,7 @@ const defaultState: AppState = {
         }
     ],
     settings: {
-        layout: 'one-column'
+        layout: 'two-columns'
     }
 };
 
@@ -54,7 +54,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (!state.settings) {
             setState(prev => ({
                 ...prev,
-                settings: { layout: 'one-column' }
+                settings: { layout: 'two-columns' }
             }));
         }
     }, [state.lists]); // Check when lists change, though essentially runs once on load if needed.

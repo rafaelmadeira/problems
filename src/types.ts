@@ -31,7 +31,7 @@ export interface List {
 }
 
 export interface AppSettings {
-  layout: 'one-column' | 'two-columns';
+  layout: 'single-column' | 'two-columns';
 }
 
 export interface AppState {

@@ -1,6 +1,6 @@
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { useStore } from './context/StoreContext';
-import HomePage from './pages/HomePage';
+
 import ProblemPage from './pages/ProblemPage';
 import TodayPage from './pages/TodayPage';
 import UnfinishedPage from './pages/UnfinishedPage';
@@ -10,16 +10,45 @@ import Sidebar from './components/Sidebar';
 import NextActionsPage from './pages/NextActionsPage';
 import UpcomingPage from './pages/UpcomingPage';
 import InboxPage from './pages/InboxPage';
-import { CheckCircle2, Calendar, Target, CalendarRange, Settings } from 'lucide-react'; // Using Target icon for Unfinished/Focus
+import { CheckCircle2, Calendar, CalendarRange, Settings } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 import CreateProblemModal from './components/CreateProblemModal';
 import { useState, useEffect } from 'react';
 
 function App() {
-  const { state } = useStore();
+  const { state, updateSettings } = useStore();
   const location = useLocation();
-  const layout = state.settings?.layout || 'one-column';
+  const layout = state.settings?.layout || 'two-columns';
   const [isCreatingProblem, setIsCreatingProblem] = useState(false);
+
+  // Auto-detect mobile and switch to single-column logic (but we respect user setting if explicitly set... 
+  // actually, since we persist it, if user is on mobile we probably want to FORCE single column or just default it?
+  // The user said "one column version to be the default version for mobile".
+  // This implies if I'm on mobile, it should behave as single column.
+  useEffect(() => {
+    // Only check if no explicit setting interaction has happened? 
+    // Or just check once on mount if we want to be smart.
+    // However, if we change the *state* it persists.
+    // Let's just default properly in the variable if possible, OR update the store once.
+    const isMobile = window.innerWidth < 768;
+    // If mobile and currently in two-columns (which is now global default), switch to single.
+    if (isMobile && layout === 'two-columns') {
+      // We can update the store, or just use a local override. 
+      // Updating store is risky if user switches back and forth on desktop/mobile.
+      // User asked "default to be ...", so implies initial state.
+      // Since we updated defaultState in store to 'two-columns', we can just leave it.
+      // But if we want mobile users to see single column, we should check it.
+      // The cleanest way is to respect the store, but initially set likely default.
+      // But store is already initialized.
+      // Let's just update the store if it's the very first visit? 
+      // Hard to know if first visit.
+      // Let's just update it if mobile.
+      // ACTUALLY: User said "default to be the two columns". "one column... default for mobile".
+      // This implies unresponsive behavior if I save it to store.
+      // Let's stick to updating the store on mount if mobile is detected and it is the default.
+      updateSettings({ layout: 'single-column' });
+    }
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -126,17 +155,7 @@ function App() {
   };
 
 
-  // Calculate Unfinished problems (solving or blocked)
-  const countUnfinishedProblems = (problems: Problem[]): number => {
-    let count = 0;
-    for (const p of problems) {
-      if (!p.completed && (p.status === 'solving' || p.status === 'blocked')) {
-        count += 1;
-      }
-      count += countUnfinishedProblems(p.subproblems);
-    }
-    return count;
-  };
+
 
   // Calculate Next Actions (recursive, incomplete, no incomplete children)
   const countNextActionsProblems = (problems: Problem[]): number => {
@@ -162,9 +181,7 @@ function App() {
     return acc + countTodayProblems(list.problems);
   }, 0);
 
-  const unfinishedProblemsCount = state.lists.reduce((acc, list) => {
-    return acc + countUnfinishedProblems(list.problems);
-  }, 0);
+
 
   const weekProblemsCount = state.lists.reduce((acc, list) => {
     return acc + countWeekProblems(list.problems);
@@ -181,7 +198,7 @@ function App() {
   const isInboxActive = location.pathname === '/inbox';
   const isTodayActive = location.pathname === '/today';
   const isWeekActive = location.pathname === '/week';
-  const isUnfinishedActive = location.pathname === '/unfinished';
+
 
   const isSettingsActive = location.pathname === '/settings';
 
@@ -326,38 +343,7 @@ function App() {
             )}
           </Link>
 
-          <Link
-            to="/unfinished"
-            style={{
-              padding: '0.4rem 0.8rem',
-              backgroundColor: isUnfinishedActive ? '#eee' : 'transparent',
-              borderRadius: '8px',
-              color: isUnfinishedActive ? '#111' : '#666',
-              textDecoration: 'none',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'background-color 0.2s'
-            }}
-          >
-            <Target size={16} />
-            Unfinished
-            {unfinishedProblemsCount > 0 && (
-              <span style={{
-                backgroundColor: isUnfinishedActive ? '#333' : '#e5e5e5',
-                color: isUnfinishedActive ? '#fff' : '#333',
-                fontSize: '0.75rem',
-                padding: '0.1rem 0.5rem',
-                borderRadius: '999px',
-                minWidth: '20px',
-                textAlign: 'center'
-              }}>
-                {unfinishedProblemsCount}
-              </span>
-            )}
-          </Link>
+
         </div>
 
         <Link
@@ -382,11 +368,12 @@ function App() {
 
       <main>
         <Routes>
-          <Route path="/" element={<HomePage />} />
+          <Route path="/" element={<Navigate to="/today" replace />} />
           <Route path="/inbox" element={<InboxPage />} />
           <Route path="/today" element={<TodayPage />} />
           <Route path="/week" element={<ThisWeekPage />} />
-          <Route path="/unfinished" element={<UnfinishedPage />} />
+          {/* Unfinished Page removed from single column nav/view as requested */}
+          {/* <Route path="/unfinished" element={<UnfinishedPage />} /> */}
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/list/:listId" element={<ProblemPage />} />
           <Route path="/list/:listId/problem/:problemId" element={<ProblemPage />} />
