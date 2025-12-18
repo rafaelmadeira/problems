@@ -24,6 +24,17 @@ function SimpleTaskItem({
     const { problem, listId, path } = task;
     const [isHovered, setIsHovered] = React.useState(false);
 
+    const countIncompleteSubproblems = (p: Problem): number => {
+        let count = 0;
+        for (const sub of p.subproblems) {
+            if (!sub.completed) count++;
+            count += countIncompleteSubproblems(sub);
+        }
+        return count;
+    };
+
+    const subtaskCount = countIncompleteSubproblems(problem);
+
     return (
         <div
             onClick={() => navigate(`/list/${listId}/problem/${problem.id}`)}
@@ -103,20 +114,35 @@ function SimpleTaskItem({
             </div>
 
             <div style={{ flex: 1 }}>
-                <div style={{
-                    fontSize: '1.1rem',
-                    color: '#333',
-                    fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
-                    lineHeight: '1.4',
-                    textDecoration: problem.completed ? 'line-through' : 'none',
-                }}>
-                    {problem.name}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <div style={{
+                        fontSize: '1.1rem',
+                        color: '#333',
+                        fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
+                        lineHeight: '1.4',
+                        textDecoration: problem.completed ? 'line-through' : 'none',
+                    }}>
+                        {problem.name}
+                    </div>
+                    {subtaskCount > 0 && (
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            width: '20px',
+                            height: '20px',
+                            borderRadius: '50%',
+                            backgroundColor: '#f0f0f0',
+                            color: '#666',
+                            fontSize: '0.75rem',
+                            fontWeight: 600
+                        }}>
+                            {subtaskCount}
+                        </div>
+                    )}
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                    onClick={e => e.stopPropagation()}
-                >
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                         {path.map((crumb, index) => {
                             const linkPath = crumb.type === 'list'
@@ -128,6 +154,7 @@ function SimpleTaskItem({
                                     {index > 0 && <ChevronRightIcon size={12} />}
                                     <Link
                                         to={linkPath}
+                                        onClick={(e) => e.stopPropagation()}
                                         style={{ color: '#888', textDecoration: 'none', borderBottom: '1px solid transparent' }}
                                         onMouseEnter={e => e.currentTarget.style.borderBottom = '1px solid #888'}
                                         onMouseLeave={e => e.currentTarget.style.borderBottom = '1px solid transparent'}
