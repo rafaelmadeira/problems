@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw, Smile } from 'lucide-react';
 import type { Problem } from '../types';
@@ -12,6 +12,7 @@ import CreateProblemModal from '../components/CreateProblemModal';
 export default function ProblemPage() {
     const { listId, problemId } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const { state, updateProblem, updateList, deleteList, deleteProblem, reorderProblems, moveProblemToList } = useStore();
 
 
@@ -129,15 +130,20 @@ export default function ProblemPage() {
 
             // Only navigate if we deleted the current problem context
             if (!targetId || targetId === currentProblem?.id) {
-                // Navigate up one level
-                if (breadcrumbs.length > 1) {
-                    const parent = breadcrumbs[breadcrumbs.length - 2];
-                    navigate(`/list/${list.id}/problem/${parent.id}`);
+                // Try to go back in history first (contextual navigation)
+                if (location.key !== 'default') {
+                    navigate(-1);
                 } else {
-                    if (list.id === 'inbox') {
-                        navigate('/inbox');
+                    // Fallback to hierarchical navigation
+                    if (breadcrumbs.length > 1) {
+                        const parent = breadcrumbs[breadcrumbs.length - 2];
+                        navigate(`/list/${list.id}/problem/${parent.id}`);
                     } else {
-                        navigate(`/list/${list.id}`);
+                        if (list.id === 'inbox') {
+                            navigate('/inbox');
+                        } else {
+                            navigate(`/list/${list.id}`);
+                        }
                     }
                 }
             }
