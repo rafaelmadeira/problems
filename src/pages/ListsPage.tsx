@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useStore } from '../context/StoreContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { CheckCircle2, ChevronRight, Plus } from 'lucide-react';
 import type { Problem } from '../types';
 import CreateListModal from '../components/CreateListModal';
