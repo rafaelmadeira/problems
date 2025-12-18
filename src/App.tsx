@@ -1,5 +1,6 @@
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import { useStore } from './context/StoreContext';
+import { Analytics } from "@vercel/analytics/react";
 
 import ProblemPage from './pages/ProblemPage';
 import TodayPage from './pages/TodayPage';
@@ -449,6 +450,7 @@ function App() {
           parentId={null}
         />
       </div>
+      <Analytics />
     </div>
   );
 }
