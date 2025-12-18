@@ -204,8 +204,37 @@ export default function Sidebar() {
             </div>
 
             {/* Lists Header */}
-            <div style={{ color: '#aaa', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
-                Lists
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <div style={{ color: '#aaa', fontSize: '0.85rem' }}>
+                    Lists
+                </div>
+                <button
+                    onClick={() => setIsCreatingList(true)}
+                    style={{
+                        width: '24px',
+                        height: '24px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        color: '#aaa',
+                        border: 'none',
+                        background: 'transparent',
+                        borderRadius: '50%',
+                        transition: 'background-color 0.2s, color 0.2s',
+                        padding: 0
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.backgroundColor = '#f0f0f0';
+                        e.currentTarget.style.color = '#666';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                        e.currentTarget.style.color = '#aaa';
+                    }}
+                >
+                    <Plus size={16} />
+                </button>
             </div>
 
             {/* Lists */}
@@ -236,39 +265,20 @@ export default function Sidebar() {
                     );
                 })}
 
-                {/* New List Button + Modal */}
-                <div style={{ marginTop: '1rem' }}>
-                    <button
-                        onClick={() => setIsCreatingList(true)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            color: '#aaa',
-                            border: 'none',
-                            background: 'transparent',
-                            cursor: 'pointer',
-                            fontSize: '0.9rem',
-                            padding: '0.5rem 0'
-                        }}
-                    >
-                        <Plus size={16} />
-                        <span>New List</span>
-                    </button>
+                {/* Modals */}
+                <CreateListModal
+                    isOpen={isCreatingList}
+                    onClose={() => setIsCreatingList(false)}
+                    onCreate={handleCreate}
+                />
 
-                    <CreateListModal
-                        isOpen={isCreatingList}
-                        onClose={() => setIsCreatingList(false)}
-                        onCreate={handleCreate}
-                    />
-
-                    <CreateProblemModal
-                        isOpen={isCreatingProblem}
-                        onClose={() => setIsCreatingProblem(false)}
-                        defaultListId="inbox"
-                        showListSelector={true}
-                    />
-                </div>
+                <CreateProblemModal
+                    isOpen={isCreatingProblem}
+                    onClose={() => setIsCreatingProblem(false)}
+                    defaultListId="inbox"
+                    showListSelector={true}
+                    parentId={null}
+                />
             </div>
 
             {/* Footer Settings */}
