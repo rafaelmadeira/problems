@@ -11,7 +11,7 @@ import NextActionsPage from './pages/NextActionsPage';
 import UpcomingPage from './pages/UpcomingPage';
 import InboxPage from './pages/InboxPage';
 import ListsPage from './pages/ListsPage';
-import { CheckCircle2, Calendar, CalendarRange, Settings, Inbox, CalendarClock, List as ListIcon, Plus } from 'lucide-react'; // Using Target icon for Unfinished/Focus
+import { Calendar, CalendarRange, Settings, Inbox, CalendarClock, List as ListIcon, Plus } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 import CreateProblemModal from './components/CreateProblemModal';
 import { useState, useEffect } from 'react';
@@ -191,7 +191,7 @@ function App() {
 
 
 
-  const title = totalProblems === 0 ? '0 problems' : `${totalProblems} problems`;
+
 
   // Calculate Inbox count
   const inboxList = state.lists.find(l => l.id === 'inbox');
