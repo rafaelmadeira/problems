@@ -162,7 +162,7 @@ export default function Sidebar() {
         >
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 {emoji ? (
-                    <span style={{ fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '16px', height: '16px' }}>{emoji}</span>
+                    <span style={{ fontSize: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '14px', height: '14px' }}>{emoji}</span>
                 ) : (
                     Icon && <Icon size={16} />
                 )}
