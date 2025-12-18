@@ -64,6 +64,7 @@ export default function InboxPage() {
     const InboxTaskItem = ({ task }: { task: Problem }) => {
         const isCompleted = task.completed;
         const isSolvedMessage = solvedMessages[task.id];
+        const [isHovered, setIsHovered] = React.useState(false);
 
         // Derived logic for display (flattening recursive structure for summary if needed, but here likely just top level)
         // Note: ProblemPage supports recursion, but Inbox usually captures "quick capture". 
@@ -75,17 +76,25 @@ export default function InboxPage() {
                 style={{
                     padding: '1rem',
                     backgroundColor: '#fff',
-                    border: '1px solid #f0f0f0',
+                    // border: '1px solid #f0f0f0', // Removed full border
+                    borderBottom: '1px solid #f0f0f0', // Matched TaskItemInline
                     borderRadius: '8px',
                     marginBottom: '0.5rem',
                     cursor: 'pointer',
-                    transition: 'box-shadow 0.2s',
+                    transition: 'box-shadow 0.2s, background-color 0.2s, opacity 0.2s',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    opacity: isCompleted ? (isHovered ? 1 : 0.5) : 1 // Added opacity logic
                 }}
-                onMouseEnter={e => e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.05)'}
-                onMouseLeave={e => e.currentTarget.style.boxShadow = 'none'}
+                onMouseEnter={e => {
+                    setIsHovered(true);
+                    e.currentTarget.style.backgroundColor = '#f9f9f9'; // Matched hover bg
+                }}
+                onMouseLeave={e => {
+                    setIsHovered(false);
+                    e.currentTarget.style.backgroundColor = '#fff';
+                }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
                     <button
@@ -100,18 +109,22 @@ export default function InboxPage() {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: isCompleted ? '#22c55e' : '#ddd',
+                            color: isCompleted ? '#22c55e' : '#e5e5e5', // Updated color default
                             padding: 0
                         }}
                     >
-                        {isCompleted ? <CheckCircle2 size={24} /> : <div style={{ width: '24px', height: '24px', borderRadius: '50%', border: '2px solid #ddd' }} />}
+                        <CheckCircle2
+                            size={24}
+                            fill={isCompleted ? "#22c55e" : "transparent"}
+                            color={isCompleted ? "#fff" : "#e5e5e5"}
+                        />
                     </button>
 
                     <div style={{ flex: 1 }}>
                         <div style={{
                             fontSize: '1rem',
                             textDecoration: isCompleted ? 'line-through' : 'none',
-                            color: isCompleted ? '#999' : '#111',
+                            color: isCompleted ? '#333' : '#111', // Updated color
                             fontWeight: 500
                         }}>
                             {task.name}
