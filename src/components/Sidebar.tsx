@@ -208,11 +208,15 @@ export default function Sidebar() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
-                        color: isAddProblemHovered ? 'white' : '#666',
+                        color: isAddProblemHovered ? '#ffffff' : '#666666',
                         transition: 'background-color 0.2s, color 0.2s'
                     }}
                 >
-                    <Plus size={14} />
+                    <Plus
+                        size={14}
+                        color={isAddProblemHovered ? '#ffffff' : 'currentColor'}
+                        strokeWidth={isAddProblemHovered ? 3 : 2}
+                    />
                 </button>
             </div>
 
