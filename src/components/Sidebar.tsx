@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Link, useLocation } from 'react-router-dom';
-import { Inbox, Calendar, Target, CalendarRange, Settings, CheckCircle2, RotateCcw, Plus, Zap } from 'lucide-react'; // Using Target for Unfinished/Focus
+import { Inbox, Calendar, Target, CalendarRange, Settings, CheckCircle2, RotateCcw, Plus, Zap, CalendarClock } from 'lucide-react'; // Using Target for Unfinished/Focus
 import type { Problem } from '../types';
 import CreateListModal from './CreateListModal';
 import CreateProblemModal from './CreateProblemModal';
@@ -58,6 +58,23 @@ export default function Sidebar() {
         }
         return count;
     };
+    const countUpcomingProblems = (problems: Problem[]): number => {
+        let count = 0;
+        const now = new Date();
+        now.setHours(0, 0, 0, 0);
+        const todayStr = now.toLocaleDateString('en-CA');
+
+        for (const p of problems) {
+            if (!p.completed && p.dueDate) {
+                if (p.dueDate > todayStr) {
+                    count += 1;
+                }
+            }
+            count += countUpcomingProblems(p.subproblems);
+        }
+        return count;
+    };
+
     const countUnfinishedProblems = (problems: Problem[]): number => {
         let count = 0;
         for (const p of problems) {
@@ -85,6 +102,7 @@ export default function Sidebar() {
     const unfinishedProblemsCount = state.lists.reduce((acc, list) => acc + countUnfinishedProblems(list.problems), 0);
     const weekProblemsCount = state.lists.reduce((acc, list) => acc + countWeekProblems(list.problems), 0);
     const nextActionsCount = state.lists.reduce((acc, list) => acc + countNextActionsProblems(list.problems), 0);
+    const upcomingProblemsCount = state.lists.reduce((acc, list) => acc + countUpcomingProblems(list.problems), 0);
 
     const inboxList = state.lists.find(l => l.id === 'inbox');
     const inboxCount = inboxList ? countProblems(inboxList.problems) : 0;
@@ -92,6 +110,7 @@ export default function Sidebar() {
     const isInboxActive = location.pathname.includes('/list/inbox');
     const isTodayActive = location.pathname === '/today';
     const isWeekActive = location.pathname === '/week';
+    const isUpcomingActive = location.pathname === '/upcoming';
     const isUnfinishedActive = location.pathname === '/unfinished';
     const isNextActionsActive = location.pathname === '/next-actions';
     const isSettingsActive = location.pathname === '/settings';
@@ -212,6 +231,7 @@ export default function Sidebar() {
 
                 <NavItem to="/today" label="Today" icon={Calendar} count={todayProblemsCount} isActive={isTodayActive} />
                 <NavItem to="/week" label="This Week" icon={CalendarRange} count={weekProblemsCount} isActive={isWeekActive} />
+                <NavItem to="/upcoming" label="Upcoming" icon={CalendarClock} count={upcomingProblemsCount} isActive={isUpcomingActive} />
                 <div style={{ display: 'none' }}>
                     <NavItem to="/unfinished" label="Unfinished" icon={Target} count={unfinishedProblemsCount} isActive={isUnfinishedActive} />
                     <NavItem to="/next-actions" label="Next Actions" icon={Zap} count={nextActionsCount} isActive={isNextActionsActive} />

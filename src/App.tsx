@@ -8,7 +8,8 @@ import ThisWeekPage from './pages/ThisWeekPage';
 import SettingsPage from './pages/SettingsPage';
 import Sidebar from './components/Sidebar';
 import NextActionsPage from './pages/NextActionsPage';
-import { CheckCircle2, Calendar, Target, CalendarRange, Settings, Zap } from 'lucide-react'; // Using Target icon for Unfinished/Focus
+import UpcomingPage from './pages/UpcomingPage';
+import { CheckCircle2, Calendar, Target, CalendarRange, Settings, Zap, CalendarClock } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 
 function App() {
@@ -80,6 +81,25 @@ function App() {
     return count;
   };
 
+  // Calculate Upcoming problems (unsolved && due date > today)
+  const countUpcomingProblems = (problems: Problem[]): number => {
+    let count = 0;
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const todayStr = now.toLocaleDateString('en-CA');
+
+    for (const p of problems) {
+      if (!p.completed && p.dueDate) {
+        if (p.dueDate > todayStr) {
+          count += 1;
+        }
+      }
+      count += countUpcomingProblems(p.subproblems);
+    }
+    return count;
+  };
+
+
   // Calculate Unfinished problems (solving or blocked)
   const countUnfinishedProblems = (problems: Problem[]): number => {
     let count = 0;
@@ -124,6 +144,10 @@ function App() {
     return acc + countWeekProblems(list.problems);
   }, 0);
 
+  const upcomingProblemsCount = state.lists.reduce((acc, list) => {
+    return acc + countUpcomingProblems(list.problems);
+  }, 0);
+
   const nextActionsCount = state.lists.reduce((acc, list) => {
     return acc + countNextActionsProblems(list.problems);
   }, 0);
@@ -137,6 +161,7 @@ function App() {
   const isInboxActive = location.pathname.includes('/list/inbox');
   const isTodayActive = location.pathname === '/today';
   const isWeekActive = location.pathname === '/week';
+  const isUpcomingActive = location.pathname === '/upcoming';
   const isUnfinishedActive = location.pathname === '/unfinished';
   const isNextActionsActive = location.pathname === '/next-actions';
   const isSettingsActive = location.pathname === '/settings';
@@ -153,6 +178,7 @@ function App() {
               <Route path="/" element={<Navigate to="/today" replace />} />
               <Route path="/today" element={<TodayPage />} />
               <Route path="/week" element={<ThisWeekPage />} />
+              <Route path="/upcoming" element={<UpcomingPage />} />
               <Route path="/unfinished" element={<UnfinishedPage />} />
               <Route path="/next-actions" element={<NextActionsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
