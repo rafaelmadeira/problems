@@ -130,22 +130,26 @@ export default function ProblemPage() {
 
             // Only navigate if we deleted the current problem context
             if (!targetId || targetId === currentProblem?.id) {
-                // Try to go back in history first (contextual navigation)
-                if (location.key !== 'default') {
-                    navigate(-1);
-                } else {
-                    // Fallback to hierarchical navigation
-                    if (breadcrumbs.length > 1) {
-                        const parent = breadcrumbs[breadcrumbs.length - 2];
-                        navigate(`/list/${list.id}/problem/${parent.id}`);
+                // Use setTimeout to ensure the state update (deletion) is processed and saved to localStorage
+                // before we navigate. This prevents race conditions and potential crashes.
+                setTimeout(() => {
+                    // Try to go back in history first (contextual navigation)
+                    if (location.key !== 'default') {
+                        navigate(-1);
                     } else {
-                        if (list.id === 'inbox') {
-                            navigate('/inbox');
+                        // Fallback to hierarchical navigation
+                        if (breadcrumbs.length > 1) {
+                            const parent = breadcrumbs[breadcrumbs.length - 2];
+                            navigate(`/list/${list.id}/problem/${parent.id}`);
                         } else {
-                            navigate(`/list/${list.id}`);
+                            if (list.id === 'inbox') {
+                                navigate('/inbox');
+                            } else {
+                                navigate(`/list/${list.id}`);
+                            }
                         }
                     }
-                }
+                }, 0);
             }
         }
     };
