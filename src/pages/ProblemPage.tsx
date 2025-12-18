@@ -1398,6 +1398,24 @@ export default function ProblemPage() {
                     </div>
                 )
             }
+
+            {/* Confirmation Modal */}
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                title={deleteType === 'list' ? "Delete List?" : "Delete Problem?"}
+                message={deleteType === 'list'
+                    ? `Are you sure you want to delete "${list.name}"? This action cannot be undone.`
+                    : "Are you sure you want to delete this problem? This cannot be undone."
+                }
+                onConfirm={confirmDelete}
+                onCancel={() => {
+                    setIsDeleteModalOpen(false);
+                    setPendingDeleteId(null);
+                    setDeleteType(null);
+                }}
+                confirmText="Delete"
+                cancelText="Cancel"
+            />
         </div >
     );
 }
@@ -1483,23 +1501,6 @@ function CompletedTaskRow({
                 )}
                 <div style={{ width: '28px' }}></div> {/* Spacer for menu alignment if menu is omitted */}
             </div>
-            {/* Confirmation Modal */}
-            <ConfirmationModal
-                isOpen={isDeleteModalOpen}
-                title={deleteType === 'list' ? "Delete List?" : "Delete Problem?"}
-                message={deleteType === 'list'
-                    ? `Are you sure you want to delete "${list.name}"? This action cannot be undone.`
-                    : "Are you sure you want to delete this problem? This cannot be undone."
-                }
-                onConfirm={confirmDelete}
-                onCancel={() => {
-                    setIsDeleteModalOpen(false);
-                    setPendingDeleteId(null);
-                    setDeleteType(null);
-                }}
-                confirmText="Delete"
-                cancelText="Cancel"
-            />
         </div>
     );
 }
