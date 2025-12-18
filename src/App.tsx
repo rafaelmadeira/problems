@@ -10,7 +10,8 @@ import Sidebar from './components/Sidebar';
 import NextActionsPage from './pages/NextActionsPage';
 import UpcomingPage from './pages/UpcomingPage';
 import InboxPage from './pages/InboxPage';
-import { CheckCircle2, Calendar, CalendarRange, Settings } from 'lucide-react'; // Using Target icon for Unfinished/Focus
+import ListsPage from './pages/ListsPage';
+import { CheckCircle2, Calendar, CalendarRange, Settings, Inbox, CalendarClock, List as ListIcon, Plus } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 import CreateProblemModal from './components/CreateProblemModal';
 import { useState, useEffect } from 'react';
@@ -235,157 +236,230 @@ function App() {
     );
   }
 
-  // --- One Column Layout (Original) ---
-  return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1rem' }}>
-      <header style={{ marginBottom: '3rem', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-        <Link to="/" style={{ fontSize: '1.5rem', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#111', textDecoration: 'none' }}>
-          {totalProblems === 0 && <CheckCircle2 size={24} color="#22c55e" />}
-          <span>{title}</span>
-        </Link>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Link
-            to="/inbox"
-            style={{
-              padding: '0.4rem 0.8rem',
-              backgroundColor: isInboxActive ? '#eee' : 'transparent',
-              borderRadius: '8px',
-              color: isInboxActive ? '#111' : '#666',
-              textDecoration: 'none',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'background-color 0.2s'
-            }}
-          >
-            Inbox
-            {inboxCount > 0 && (
-              <span style={{
-                backgroundColor: isInboxActive ? '#333' : '#e5e5e5',
-                color: isInboxActive ? '#fff' : '#333',
-                fontSize: '0.75rem',
-                padding: '0.1rem 0.5rem',
-                borderRadius: '999px',
-                minWidth: '20px',
-                textAlign: 'center'
-              }}>
-                {inboxCount}
-              </span>
-            )}
-          </Link>
-
-          <Link
-            to="/today"
-            style={{
-              padding: '0.4rem 0.8rem',
-              backgroundColor: isTodayActive ? '#eee' : 'transparent',
-              borderRadius: '8px',
-              color: isTodayActive ? '#111' : '#666',
-              textDecoration: 'none',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'background-color 0.2s'
-            }}
-          >
-            <Calendar size={16} />
-            Today
-            {todayProblemsCount > 0 && (
-              <span style={{
-                backgroundColor: isTodayActive ? '#333' : '#e5e5e5',
-                color: isTodayActive ? '#fff' : '#333',
-                fontSize: '0.75rem',
-                padding: '0.1rem 0.5rem',
-                borderRadius: '999px',
-                minWidth: '20px',
-                textAlign: 'center'
-              }}>
-                {todayProblemsCount}
-              </span>
-            )}
-          </Link>
-
-          <Link
-            to="/week"
-            style={{
-              padding: '0.4rem 0.8rem',
-              backgroundColor: isWeekActive ? '#eee' : 'transparent',
-              borderRadius: '8px',
-              color: isWeekActive ? '#111' : '#666',
-              textDecoration: 'none',
-              fontSize: '0.9rem',
-              fontWeight: '600',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.5rem',
-              transition: 'background-color 0.2s'
-            }}
-          >
-            <CalendarRange size={16} />
-            This Week
-            {weekProblemsCount > 0 && (
-              <span style={{
-                backgroundColor: isWeekActive ? '#333' : '#e5e5e5',
-                color: isWeekActive ? '#fff' : '#333',
-                fontSize: '0.75rem',
-                padding: '0.1rem 0.5rem',
-                borderRadius: '999px',
-                minWidth: '20px',
-                textAlign: 'center'
-              }}>
-                {weekProblemsCount}
-              </span>
-            )}
-          </Link>
-
-
-        </div>
-
-        <Link
-          to="/settings"
-          style={{
-            marginLeft: 'auto', // Push to far right
-            padding: '0.5rem',
-            backgroundColor: isSettingsActive ? '#eee' : 'transparent',
-            borderRadius: '8px',
-            color: isSettingsActive ? '#111' : '#888',
+  // --- One Column Layout (Mobile App Style) ---
+  const MobileNavItem = ({ to, icon: Icon, label, isActive, count }: any) => (
+    <Link
+      to={to}
+      style={{
+        display: 'flex',
+        flexDirection: 'column', // Stack icon and label
+        alignItems: 'center',
+        justifyContent: 'center', // Center vertically
+        gap: '2px', // Reduce gap
+        textDecoration: 'none',
+        flex: 1, // Distribute space evenly
+        color: isActive ? '#111' : '#999',
+        height: '100%', // Full height of bar
+        position: 'relative',
+        padding: '4px 0',
+      }}
+    >
+      <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+        {count > 0 && (
+          <span style={{
+            position: 'absolute',
+            top: -4,
+            right: -8,
+            backgroundColor: '#333',
+            color: '#fff',
+            fontSize: '0.65rem',
+            fontWeight: 'bold',
+            minWidth: '16px',
+            height: '16px',
+            borderRadius: '999px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            transition: 'color 0.2s, background-color 0.2s'
-          }}
-          onMouseEnter={e => !isSettingsActive && (e.currentTarget.style.color = '#333')}
-          onMouseLeave={e => !isSettingsActive && (e.currentTarget.style.color = '#888')}
-        >
-          <Settings size={20} />
-        </Link>
-      </header>
+            padding: '0 2px',
+            border: '2px solid #fff'
+          }}>
+            {count}
+          </span>
+        )}
+      </div>
+      <span style={{ fontSize: '0.65rem', fontWeight: isActive ? 600 : 400 }}>{label}</span>
+      {/* Active Indicator Dot (Optional, maybe specific to design? User didn't ask, but standard) */}
+      {/* {isActive && <div style={{ width: 4, height: 4, borderRadius: '50%', backgroundColor: '#111', marginTop: 2 }} />} */}
+    </Link>
+  );
 
-      <main>
-        <Routes>
-          <Route path="/" element={<Navigate to="/today" replace />} />
-          <Route path="/inbox" element={<InboxPage />} />
-          <Route path="/today" element={<TodayPage />} />
-          <Route path="/week" element={<ThisWeekPage />} />
-          {/* Unfinished Page removed from single column nav/view as requested */}
-          {/* <Route path="/unfinished" element={<UnfinishedPage />} /> */}
-          <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/list/:listId" element={<ProblemPage />} />
-          <Route path="/list/:listId/problem/:problemId" element={<ProblemPage />} />
-        </Routes>
-      </main>
-      <CreateProblemModal
-        isOpen={isCreatingProblem}
-        onClose={() => setIsCreatingProblem(false)}
-        defaultListId="inbox"
-        showListSelector={true}
-        parentId={null}
-      />
+  return (
+    <div style={{
+      backgroundColor: '#fff',
+      minHeight: '100vh',
+      display: 'flex',
+      justifyContent: 'center'
+    }}>
+      <div style={{
+        width: '100%',
+        maxWidth: '640px', // Mobile max width on desktop
+        position: 'relative',
+        backgroundColor: '#fff',
+        boxShadow: '0 0 20px rgba(0,0,0,0.05)', // Subtle shadow on desktop
+        minHeight: '100vh',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+
+        {/* Fixed Top Bar */}
+        <header style={{
+          height: '60px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 1rem',
+          position: 'sticky',
+          top: 0,
+          backgroundColor: '#fff',
+          zIndex: 100,
+          // borderBottom: '1px solid #f0f0f0' // Cleaner without? User didn't specify.
+        }}>
+          <Link to="/" style={{
+            fontSize: '1.25rem',
+            fontWeight: '800',
+            color: '#111',
+            textDecoration: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem'
+          }}>
+            {/* Show count or just 'Antigravity'? User screenshot showed '0 problems' */}
+            {totalProblems === 0 ? '0 problems' : `${totalProblems} problems`}
+          </Link>
+
+          <Link
+            to="/settings"
+            style={{
+              color: isSettingsActive ? '#111' : '#888',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '8px',
+              borderRadius: '50%',
+              backgroundColor: isSettingsActive ? '#f0f0f0' : 'transparent'
+            }}
+          >
+            <Settings size={22} />
+          </Link>
+        </header>
+
+        {/* Content Area */}
+        <main style={{ flex: 1, paddingBottom: '90px' }}> {/* Padding for bottom bar */}
+          <Routes>
+            <Route path="/" element={<Navigate to="/today" replace />} />
+            <Route path="/inbox" element={<InboxPage />} />
+            <Route path="/today" element={<TodayPage />} />
+            <Route path="/week" element={<ThisWeekPage />} />
+            <Route path="/upcoming" element={<UpcomingPage />} />
+            <Route path="/lists" element={<ListsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+            <Route path="/list/:listId" element={<ProblemPage />} />
+            <Route path="/list/:listId/problem/:problemId" element={<ProblemPage />} />
+          </Routes>
+        </main>
+
+        {/* Fixed Bottom Bar */}
+        <nav style={{
+          position: 'fixed', // Fixed to viewport bottom, but we want it constrained to container? 
+          // If container is centered, 'fixed' bottom 0 spans full width if width 100%. 
+          // To constrain to the 640px container, we can use sticky? 
+          // No, bottom bars are usually viewport fixed.
+          // IF we want it to look like a mobile app ON DESKTOP, it should be within the 640px container.
+          // sticky bottom: 0 works if container is full height.
+          // BUT sticky relies on scroll container.
+          // Let's use fixed but with logic to match width.
+          // EASIER: Put it sticky at bottom of flex container.
+          // If content is short, it floats up? No, we want it at bottom.
+          // 'sticky' works if we have 'min-height: 100vh' on container (we do).
+          // Actually, 'position: sticky; bottom: 0;' works well.
+          bottom: 0,
+          left: '50%', // Center hack if fixed
+          transform: 'translateX(-50%)', // Center hack
+          width: '100%',
+          maxWidth: '640px',
+          height: '80px', // Taller for better touch
+          backgroundColor: '#fff',
+          borderTop: '1px solid #eee',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 1rem', // Side padding
+          zIndex: 1000,
+          // If on mobile (screen < 640), left/transform/maxWidth handle it.
+        }}>
+          {/* Inbox */}
+          <MobileNavItem
+            to="/inbox"
+            icon={Inbox}
+            label="Inbox"
+            count={inboxCount}
+            isActive={isInboxActive}
+          />
+          {/* Today */}
+          <MobileNavItem
+            to="/today"
+            icon={Calendar}
+            label="Today"
+            count={todayProblemsCount}
+            isActive={isTodayActive}
+          />
+          {/* Week */}
+          <MobileNavItem
+            to="/week"
+            icon={CalendarRange}
+            label="Week"
+            count={weekProblemsCount}
+            isActive={isWeekActive}
+          />
+          {/* Upcoming */}
+          <MobileNavItem
+            to="/upcoming"
+            icon={CalendarClock}
+            label="Upcoming"
+            count={0} // Upcoming count not usually badged but we can 
+            isActive={location.pathname === '/upcoming'}
+          />
+          {/* Lists */}
+          <MobileNavItem
+            to="/lists"
+            icon={ListIcon}
+            label="Lists"
+            count={0}
+            isActive={location.pathname === '/lists' || (location.pathname.includes('/list/') && !location.pathname.includes('inbox'))}
+          />
+
+          {/* New Problem Button (Inline) based on image 2 assumption (rightmost) */}
+          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            <button
+              onClick={() => setIsCreatingProblem(true)}
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: '#111',
+                color: '#fff',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.2)'
+              }}
+            >
+              <Plus size={24} strokeWidth={2.5} />
+            </button>
+          </div>
+        </nav>
+
+        <CreateProblemModal
+          isOpen={isCreatingProblem}
+          onClose={() => setIsCreatingProblem(false)}
+          defaultListId="inbox"
+          showListSelector={true}
+          parentId={null}
+        />
+      </div>
     </div>
   );
 }
