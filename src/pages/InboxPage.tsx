@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { Plus, CheckCircle2, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { Plus, ChevronRight, MoreHorizontal } from 'lucide-react';
 import type { Problem } from '../types';
 import CreateProblemModal from '../components/CreateProblemModal';
+import CheckButton from '../components/CheckButton';
 
 export default function InboxPage() {
     const { state, updateProblem, moveProblemToList } = useStore();
@@ -101,28 +102,14 @@ export default function InboxPage() {
                 }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flex: 1 }}>
-                    <button
+                    <CheckButton
+                        completed={isCompleted}
                         onClick={(e) => {
                             e.stopPropagation();
                             toggleComplete(task);
                         }}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: isCompleted ? '#22c55e' : '#e5e5e5', // Updated color default
-                            padding: 0
-                        }}
-                    >
-                        <CheckCircle2
-                            size={24}
-                            fill={isCompleted ? "#22c55e" : "transparent"}
-                            color={isCompleted ? "#fff" : "#e5e5e5"}
-                        />
-                    </button>
+                        size={24}
+                    />
 
                     <div style={{ flex: 1 }}>
                         <div style={{

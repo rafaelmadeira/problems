@@ -9,6 +9,7 @@ import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
 import FocusSession from '../components/FocusSession';
 import CreateProblemModal from '../components/CreateProblemModal';
 import ConfirmationModal from '../components/ConfirmationModal';
+import CheckButton from '../components/CheckButton';
 
 export default function ProblemPage() {
     const { listId, problemId } = useParams();
@@ -660,143 +661,212 @@ export default function ProblemPage() {
                             />
                         </div>
                     ) : (
-                        <div style={{ flex: 1 }}>
-                            {/* Task Name - REPLACED WITH TEXTAREA */}
-                            <textarea
-                                value={currentProblem.name}
-                                onChange={(e) => {
-                                    updateProblem(list.id, currentProblem!.id, { name: e.target.value });
-                                    e.target.style.height = 'auto';
-                                    e.target.style.height = e.target.scrollHeight + 'px';
-                                }}
-                                rows={1}
-                                style={{
-                                    fontSize: '1.5rem',
-                                    fontWeight: '700',
-                                    marginBottom: '1.5rem',
-                                    width: '100%',
-                                    border: 'none',
-                                    outline: 'none',
-                                    backgroundColor: 'transparent',
-                                    fontFamily: 'inherit',
-                                    color: '#111',
-                                    resize: 'none',
-                                    overflow: 'hidden',
-                                    height: 'auto'
-                                }}
-                                ref={el => {
-                                    if (el) {
-                                        el.style.height = 'auto';
-                                        el.style.height = el.scrollHeight + 'px';
-                                    }
-                                }}
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
+                            <CheckButton
+                                completed={currentProblem!.completed}
+                                onClick={() => toggleComplete(currentProblem!)}
+                                size={32}
+                                style={{ padding: '4px 0 0 0' }}
                             />
+                            <div style={{ flex: 1 }}>
+                                {/* Task Name - REPLACED WITH TEXTAREA */}
+                                <textarea
+                                    value={currentProblem.name}
+                                    onChange={(e) => {
+                                        updateProblem(list.id, currentProblem!.id, { name: e.target.value });
+                                        e.target.style.height = 'auto';
+                                        e.target.style.height = e.target.scrollHeight + 'px';
+                                    }}
+                                    rows={1}
+                                    style={{
+                                        fontSize: '1.5rem',
+                                        fontWeight: '700',
+                                        marginBottom: '1.5rem',
+                                        width: '100%',
+                                        border: 'none',
+                                        outline: 'none',
+                                        backgroundColor: 'transparent',
+                                        fontFamily: 'inherit',
+                                        color: '#111',
+                                        resize: 'none',
+                                        overflow: 'hidden',
+                                        height: 'auto'
+                                    }}
+                                    ref={el => {
+                                        if (el) {
+                                            el.style.height = 'auto';
+                                            el.style.height = el.scrollHeight + 'px';
+                                        }
+                                    }}
+                                />
 
-                            {/* Task Details Grid */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '0.5rem 1rem', alignItems: 'center' }}>
-                                {/* Priority */}
-                                <div style={{ color: '#888', fontSize: '14px' }}>Priority</div>
-                                <div style={{ marginTop: '-1px' }}>
-                                    <select
-                                        value={currentProblem.priority || 'today'}
-                                        onChange={(e) => updateProblem(list.id, currentProblem!.id, { priority: e.target.value as Problem['priority'] })}
-                                        style={{
-                                            appearance: 'none',
-                                            backgroundColor: 'transparent',
-                                            border: 'none',
-                                            fontSize: '14px',
-                                            color: '#111',
-                                            cursor: 'pointer',
-                                            padding: 0,
-                                            fontFamily: 'inherit',
-                                            textDecoration: 'underline',
-                                            textUnderlineOffset: '3px',
-                                            textDecorationColor: '#ddd'
-                                        }}
-                                    >
-                                        <option value="today">Today</option>
-                                        <option value="this_week">This Week</option>
-                                        <option value="later">Later</option>
-                                        <option value="recurring">Recurring</option>
-                                        <option value="someday">Someday</option>
-                                    </select>
-                                </div>
-
-
-
-
-                                {/* Status */}
-                                <div style={{ color: '#888', fontSize: '14px' }}>Status</div>
-                                <div style={{ marginTop: '-1px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                    <select
-                                        value={currentProblem.status || 'to_solve'}
-                                        onChange={(e) => {
-                                            const newStatus = e.target.value as Problem['status'];
-                                            updateProblem(list.id, currentProblem!.id, {
-                                                status: newStatus,
-                                                completed: newStatus === 'solved'
-                                            });
-                                        }}
-                                        style={{
-                                            appearance: 'none',
-                                            backgroundColor: 'transparent',
-                                            border: 'none',
-                                            fontSize: '14px',
-                                            color: '#111',
-                                            cursor: 'pointer',
-                                            padding: 0,
-                                            fontFamily: 'inherit',
-                                            textDecoration: 'underline',
-                                            textUnderlineOffset: '3px',
-                                            textDecorationColor: '#ddd'
-                                        }}
-                                    >
-                                        <option value="to_solve">To Solve</option>
-                                        <option value="solving">Working on it</option>
-                                        <option value="blocked">Blocked</option>
-                                        <option value="ongoing">Ongoing</option>
-                                        <option value="solved">Solved</option>
-                                    </select>
-                                    {currentProblem.completed && currentProblem.completedAt && (
-                                        <span style={{ color: '#999', fontSize: '0.85rem' }}>
-                                            {new Date(currentProblem.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                            {' '}
-                                            {new Date(currentProblem.completedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
-                                        </span>
-                                    )}
-                                </div>
-
-                                {/* Due Date */}
-                                <div style={{ color: '#888', fontSize: '14px' }}>Due Date</div>
-                                <div style={{ marginTop: '-1px' }}>
-                                    {currentProblem.dueDate ? (
-                                        <input
-                                            type="date"
-                                            value={currentProblem.dueDate}
-                                            onChange={(e) => updateProblem(list.id, currentProblem!.id, { dueDate: e.target.value || null })}
+                                {/* Task Details Grid */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '0.5rem 1rem', alignItems: 'center' }}>
+                                    {/* Priority */}
+                                    <div style={{ color: '#888', fontSize: '14px' }}>Priority</div>
+                                    <div style={{ marginTop: '-1px' }}>
+                                        <select
+                                            value={currentProblem.priority || 'today'}
+                                            onChange={(e) => updateProblem(list.id, currentProblem!.id, { priority: e.target.value as Problem['priority'] })}
                                             style={{
-                                                border: 'none',
+                                                appearance: 'none',
                                                 backgroundColor: 'transparent',
+                                                border: 'none',
                                                 fontSize: '14px',
                                                 color: '#111',
-                                                fontFamily: 'inherit',
                                                 cursor: 'pointer',
-                                                padding: 0
+                                                padding: 0,
+                                                fontFamily: 'inherit',
+                                                textDecoration: 'underline',
+                                                textUnderlineOffset: '3px',
+                                                textDecorationColor: '#ddd'
                                             }}
-                                        />
-                                    ) : (
-                                        <>
-                                            <button
-                                                onClick={() => {
-                                                    if (dateInputRef.current) {
-                                                        try {
-                                                            dateInputRef.current.showPicker();
-                                                        } catch (err) {
-                                                            // Fallback or ignore
-                                                            dateInputRef.current.click();
-                                                        }
-                                                    }
+                                        >
+                                            <option value="today">Today</option>
+                                            <option value="this_week">This Week</option>
+                                            <option value="later">Later</option>
+                                            <option value="recurring">Recurring</option>
+                                            <option value="someday">Someday</option>
+                                        </select>
+                                    </div>
+
+
+
+
+                                    {/* Status */}
+                                    <div style={{ color: '#888', fontSize: '14px' }}>Status</div>
+                                    <div style={{ marginTop: '-1px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                        <select
+                                            value={currentProblem.status || 'to_solve'}
+                                            onChange={(e) => {
+                                                const newStatus = e.target.value as Problem['status'];
+                                                updateProblem(list.id, currentProblem!.id, {
+                                                    status: newStatus,
+                                                    completed: newStatus === 'solved'
+                                                });
+                                            }}
+                                            style={{
+                                                appearance: 'none',
+                                                backgroundColor: 'transparent',
+                                                border: 'none',
+                                                fontSize: '14px',
+                                                color: '#111',
+                                                cursor: 'pointer',
+                                                padding: 0,
+                                                fontFamily: 'inherit',
+                                                textDecoration: 'underline',
+                                                textUnderlineOffset: '3px',
+                                                textDecorationColor: '#ddd'
+                                            }}
+                                        >
+                                            <option value="to_solve">To Solve</option>
+                                            <option value="solving">Working on it</option>
+                                            <option value="blocked">Blocked</option>
+                                            <option value="ongoing">Ongoing</option>
+                                            <option value="solved">Solved</option>
+                                        </select>
+                                        {currentProblem.completed && currentProblem.completedAt && (
+                                            <span style={{ color: '#999', fontSize: '0.85rem' }}>
+                                                {new Date(currentProblem.completedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                                {' '}
+                                                {new Date(currentProblem.completedAt).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                                            </span>
+                                        )}
+                                    </div>
+
+                                    {/* Due Date */}
+                                    <div style={{ color: '#888', fontSize: '14px' }}>Due Date</div>
+                                    <div style={{ marginTop: '-1px' }}>
+                                        {currentProblem.dueDate ? (
+                                            <input
+                                                type="date"
+                                                value={currentProblem.dueDate}
+                                                onChange={(e) => updateProblem(list.id, currentProblem!.id, { dueDate: e.target.value || null })}
+                                                style={{
+                                                    border: 'none',
+                                                    backgroundColor: 'transparent',
+                                                    fontSize: '14px',
+                                                    color: '#111',
+                                                    fontFamily: 'inherit',
+                                                    cursor: 'pointer',
+                                                    padding: 0
                                                 }}
+                                            />
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={() => {
+                                                        if (dateInputRef.current) {
+                                                            try {
+                                                                dateInputRef.current.showPicker();
+                                                            } catch (err) {
+                                                                // Fallback or ignore
+                                                                dateInputRef.current.click();
+                                                            }
+                                                        }
+                                                    }}
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        padding: 0,
+                                                        color: '#999',
+                                                        textDecoration: 'none',
+                                                        cursor: 'pointer',
+                                                        fontSize: '14px',
+                                                        fontFamily: 'sans-serif'
+                                                    }}
+                                                >
+                                                    Add date
+                                                </button>
+                                                <input
+                                                    ref={dateInputRef}
+                                                    type="date"
+                                                    onChange={(e) => updateProblem(list.id, currentProblem!.id, { dueDate: e.target.value || null })}
+                                                    style={{
+                                                        opacity: 0,
+                                                        position: 'absolute',
+                                                        zIndex: -1,
+                                                        width: '1px',
+                                                        height: '1px',
+                                                        overflow: 'hidden',
+                                                        top: 0,
+                                                        left: 0
+                                                    }}
+                                                />
+                                            </>
+                                        )}
+                                    </div>
+
+                                    {/* Time Spent (Focus Mode Metadata) */}
+                                    <div style={{ color: '#888', fontSize: '14px' }}>Time Spent</div>
+                                    <div style={{ fontSize: '14px', color: '#111', fontFamily: 'monospace', marginTop: '1px' }}>
+                                        {currentProblem.totalTime ? (
+                                            <button
+                                                onClick={() => setIsHistoryOpen(true)}
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    padding: 0,
+                                                    cursor: 'pointer',
+                                                    fontSize: '14px',
+                                                    fontFamily: 'monospace',
+                                                    color: '#111',
+                                                    textDecoration: 'underline',
+                                                    textDecorationColor: '#ddd'
+                                                }}
+                                            >
+                                                {(() => {
+                                                    const totalSeconds = Math.floor(currentProblem.totalTime / 1000);
+                                                    const hours = Math.floor(totalSeconds / 3600);
+                                                    const minutes = Math.floor((totalSeconds % 3600) / 60);
+                                                    const seconds = totalSeconds % 60;
+
+                                                    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                                                })()}
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => setIsFocusOpen(true)}
                                                 style={{
                                                     background: 'none',
                                                     border: 'none',
@@ -808,203 +878,142 @@ export default function ProblemPage() {
                                                     fontFamily: 'sans-serif'
                                                 }}
                                             >
-                                                Add date
+                                                Start focus
                                             </button>
-                                            <input
-                                                ref={dateInputRef}
-                                                type="date"
-                                                onChange={(e) => updateProblem(list.id, currentProblem!.id, { dueDate: e.target.value || null })}
-                                                style={{
-                                                    opacity: 0,
-                                                    position: 'absolute',
-                                                    zIndex: -1,
-                                                    width: '1px',
-                                                    height: '1px',
-                                                    overflow: 'hidden',
-                                                    top: 0,
-                                                    left: 0
-                                                }}
-                                            />
-                                        </>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
 
-                                {/* Time Spent (Focus Mode Metadata) */}
-                                <div style={{ color: '#888', fontSize: '14px' }}>Time Spent</div>
-                                <div style={{ fontSize: '14px', color: '#111', fontFamily: 'monospace', marginTop: '1px' }}>
-                                    {currentProblem.totalTime ? (
-                                        <button
-                                            onClick={() => setIsHistoryOpen(true)}
-                                            style={{
-                                                background: 'none',
-                                                border: 'none',
-                                                padding: 0,
-                                                cursor: 'pointer',
-                                                fontSize: '14px',
-                                                fontFamily: 'monospace',
-                                                color: '#111',
-                                                textDecoration: 'underline',
-                                                textDecorationColor: '#ddd'
-                                            }}
-                                        >
-                                            {(() => {
-                                                const totalSeconds = Math.floor(currentProblem.totalTime / 1000);
-                                                const hours = Math.floor(totalSeconds / 3600);
-                                                const minutes = Math.floor((totalSeconds % 3600) / 60);
-                                                const seconds = totalSeconds % 60;
-
-                                                return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                                    {/* Estimated Duration */}
+                                    <div style={{ color: '#888', fontSize: '14px' }}>Estimated</div>
+                                    <div style={{ marginTop: '-1px' }}>
+                                        <input
+                                            type="text"
+                                            className="placeholder-light"
+                                            placeholder="Add duration"
+                                            defaultValue={(() => {
+                                                if (!currentProblem.estimatedDuration) return '';
+                                                const minutes = Math.floor(currentProblem.estimatedDuration / 60000);
+                                                const h = Math.floor(minutes / 60);
+                                                const m = minutes % 60;
+                                                if (h > 0 && m > 0) return `${h}h ${m}m`;
+                                                if (h > 0) return `${h}h`;
+                                                return `${m}m`;
                                             })()}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            onClick={() => setIsFocusOpen(true)}
-                                            style={{
-                                                background: 'none',
-                                                border: 'none',
-                                                padding: 0,
-                                                color: '#999',
-                                                textDecoration: 'none',
-                                                cursor: 'pointer',
-                                                fontSize: '14px',
-                                                fontFamily: 'sans-serif'
+                                            onBlur={(e) => {
+                                                const val = e.target.value.trim().toLowerCase();
+                                                if (!val) {
+                                                    updateProblem(list.id, currentProblem!.id, { estimatedDuration: undefined });
+                                                    return;
+                                                }
+
+                                                let totalMinutes = 0;
+                                                // Extract hours
+                                                const hMatch = val.match(/(\d+)\s*h/);
+                                                if (hMatch) totalMinutes += parseInt(hMatch[1], 10) * 60;
+
+                                                // Extract minutes
+                                                const mMatch = val.match(/(\d+)\s*m/);
+                                                if (mMatch) totalMinutes += parseInt(mMatch[1], 10);
+
+                                                // Fallback: if just a number, assume minutes
+                                                if (!hMatch && !mMatch) {
+                                                    const num = parseInt(val, 10);
+                                                    if (!isNaN(num)) totalMinutes = num;
+                                                }
+
+                                                if (totalMinutes > 0) {
+                                                    updateProblem(list.id, currentProblem!.id, { estimatedDuration: totalMinutes * 60000 });
+                                                    // Update input value to formatted version
+                                                    const h = Math.floor(totalMinutes / 60);
+                                                    const m = totalMinutes % 60;
+                                                    let formatted = '';
+                                                    if (h > 0 && m > 0) formatted = `${h}h ${m}m`;
+                                                    else if (h > 0) formatted = `${h}h`;
+                                                    else formatted = `${m}m`;
+                                                    e.target.value = formatted;
+                                                } else {
+                                                    // Reset or clear if invalid
+                                                    if (val === '') updateProblem(list.id, currentProblem!.id, { estimatedDuration: undefined });
+                                                    else e.target.value = '';
+                                                }
                                             }}
-                                        >
-                                            Start focus
-                                        </button>
-                                    )}
+                                            onKeyDown={(e) => {
+                                                if (e.key === 'Enter') {
+                                                    e.currentTarget.blur();
+                                                }
+                                            }}
+                                            style={{
+                                                border: 'none',
+                                                backgroundColor: 'transparent',
+                                                fontSize: '14px',
+                                                color: '#111',
+                                                fontFamily: 'inherit',
+                                                padding: 0,
+                                                width: '100%',
+                                                outline: 'none'
+                                            }}
+                                        />
+                                    </div>
+
+                                    {/* Notes */}
+                                    <div style={{ color: '#888', fontSize: '14px', alignSelf: 'flex-start' }}>Notes</div>
+                                    <div>
+                                        <textarea
+                                            className="notes-textarea"
+                                            value={currentProblem.notes || ''}
+                                            onChange={(e) => {
+                                                handleNotesChange(e);
+                                                // Auto-resize
+                                                e.target.style.height = 'auto';
+                                                e.target.style.height = e.target.scrollHeight + 'px';
+                                            }}
+                                            onFocus={(e) => {
+                                                e.target.style.height = 'auto';
+                                                e.target.style.height = e.target.scrollHeight + 'px';
+                                            }}
+                                            placeholder="Add notes"
+                                            rows={1}
+                                            style={{
+                                                width: '100%',
+                                                fontSize: '14px',
+                                                color: '#111',
+                                                resize: 'none',
+                                                lineHeight: '1.5',
+                                                border: 'none',
+                                                outline: 'none',
+                                                backgroundColor: 'transparent',
+                                                fontFamily: 'inherit',
+                                                padding: 0,
+                                                overflow: 'hidden',
+                                                minHeight: '24px'
+                                            }}
+                                        />
+                                    </div>
                                 </div>
 
-                                {/* Estimated Duration */}
-                                <div style={{ color: '#888', fontSize: '14px' }}>Estimated</div>
-                                <div style={{ marginTop: '-1px' }}>
-                                    <input
-                                        type="text"
-                                        className="placeholder-light"
-                                        placeholder="Add duration"
-                                        defaultValue={(() => {
-                                            if (!currentProblem.estimatedDuration) return '';
-                                            const minutes = Math.floor(currentProblem.estimatedDuration / 60000);
-                                            const h = Math.floor(minutes / 60);
-                                            const m = minutes % 60;
-                                            if (h > 0 && m > 0) return `${h}h ${m}m`;
-                                            if (h > 0) return `${h}h`;
-                                            return `${m}m`;
-                                        })()}
-                                        onBlur={(e) => {
-                                            const val = e.target.value.trim().toLowerCase();
-                                            if (!val) {
-                                                updateProblem(list.id, currentProblem!.id, { estimatedDuration: undefined });
-                                                return;
-                                            }
-
-                                            let totalMinutes = 0;
-                                            // Extract hours
-                                            const hMatch = val.match(/(\d+)\s*h/);
-                                            if (hMatch) totalMinutes += parseInt(hMatch[1], 10) * 60;
-
-                                            // Extract minutes
-                                            const mMatch = val.match(/(\d+)\s*m/);
-                                            if (mMatch) totalMinutes += parseInt(mMatch[1], 10);
-
-                                            // Fallback: if just a number, assume minutes
-                                            if (!hMatch && !mMatch) {
-                                                const num = parseInt(val, 10);
-                                                if (!isNaN(num)) totalMinutes = num;
-                                            }
-
-                                            if (totalMinutes > 0) {
-                                                updateProblem(list.id, currentProblem!.id, { estimatedDuration: totalMinutes * 60000 });
-                                                // Update input value to formatted version
-                                                const h = Math.floor(totalMinutes / 60);
-                                                const m = totalMinutes % 60;
-                                                let formatted = '';
-                                                if (h > 0 && m > 0) formatted = `${h}h ${m}m`;
-                                                else if (h > 0) formatted = `${h}h`;
-                                                else formatted = `${m}m`;
-                                                e.target.value = formatted;
-                                            } else {
-                                                // Reset or clear if invalid
-                                                if (val === '') updateProblem(list.id, currentProblem!.id, { estimatedDuration: undefined });
-                                                else e.target.value = '';
-                                            }
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                e.currentTarget.blur();
-                                            }
-                                        }}
+                                {/* Back Link */}
+                                <div style={{ marginTop: '1.5rem' }}>
+                                    <button
+                                        onClick={() => navigate(-1)}
                                         style={{
+                                            background: 'none',
                                             border: 'none',
-                                            backgroundColor: 'transparent',
-                                            fontSize: '14px',
-                                            color: '#111',
-                                            fontFamily: 'inherit',
                                             padding: 0,
-                                            width: '100%',
-                                            outline: 'none'
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.25rem',
+                                            color: '#888',
+                                            fontSize: '0.9rem',
+                                            fontFamily: 'inherit'
                                         }}
-                                    />
+                                        onMouseEnter={(e) => e.currentTarget.style.color = '#333'}
+                                        onMouseLeave={(e) => e.currentTarget.style.color = '#888'}
+                                    >
+                                        <span>&larr;</span>
+                                        Back
+                                    </button>
                                 </div>
-
-                                {/* Notes */}
-                                <div style={{ color: '#888', fontSize: '14px', alignSelf: 'flex-start' }}>Notes</div>
-                                <div>
-                                    <textarea
-                                        className="notes-textarea"
-                                        value={currentProblem.notes || ''}
-                                        onChange={(e) => {
-                                            handleNotesChange(e);
-                                            // Auto-resize
-                                            e.target.style.height = 'auto';
-                                            e.target.style.height = e.target.scrollHeight + 'px';
-                                        }}
-                                        onFocus={(e) => {
-                                            e.target.style.height = 'auto';
-                                            e.target.style.height = e.target.scrollHeight + 'px';
-                                        }}
-                                        placeholder="Add notes"
-                                        rows={1}
-                                        style={{
-                                            width: '100%',
-                                            fontSize: '14px',
-                                            color: '#111',
-                                            resize: 'none',
-                                            lineHeight: '1.5',
-                                            border: 'none',
-                                            outline: 'none',
-                                            backgroundColor: 'transparent',
-                                            fontFamily: 'inherit',
-                                            padding: 0,
-                                            overflow: 'hidden',
-                                            minHeight: '24px'
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Back Link */}
-                            <div style={{ marginTop: '1.5rem' }}>
-                                <button
-                                    onClick={() => navigate(-1)}
-                                    style={{
-                                        background: 'none',
-                                        border: 'none',
-                                        padding: 0,
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '0.25rem',
-                                        color: '#888',
-                                        fontSize: '0.9rem',
-                                        fontFamily: 'inherit'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.color = '#333'}
-                                    onMouseLeave={(e) => e.currentTarget.style.color = '#888'}
-                                >
-                                    <span>&larr;</span>
-                                    Back
-                                </button>
                             </div>
                         </div>
                     )
@@ -1221,25 +1230,14 @@ export default function ProblemPage() {
                                             }} />
                                         </div>
                                     )}
-                                    <button
-                                        title="solve problem"
+                                    <CheckButton
+                                        completed={child.completed}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             toggleComplete(child);
                                         }}
-                                        style={{
-                                            color: child.completed ? '#22c55e' : '#e5e5e5',
-                                            cursor: 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            background: 'none',
-                                            border: 'none',
-                                            padding: 0
-                                        }}
-                                    >
-                                        <CheckCircle2 size={24} fill={child.completed ? "#22c55e" : "transparent"} color={child.completed ? "#fff" : "#e5e5e5"} />
-                                    </button>
+                                        size={24}
+                                    />
                                 </div>
                                 <Link
                                     to={`/list/${list.id}/problem/${child.id}`}

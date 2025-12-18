@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { CheckCircle2, ChevronRight } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 import type { Problem } from '../types';
+import CheckButton from '../components/CheckButton';
 
 interface FlatTask {
     problem: Problem;
@@ -412,26 +413,14 @@ function TaskItemInline({
                         }} />
                     </div>
                 )}
-                <button
-                    title="solve problem"
-                    onMouseDown={(e) => e.stopPropagation()}
+                <CheckButton
+                    completed={problem.completed}
                     onClick={(e) => {
                         e.stopPropagation();
                         toggleComplete(problem, listId);
                     }}
-                    style={{
-                        color: problem.completed ? '#22c55e' : '#e5e5e5',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: 'none',
-                        border: 'none',
-                        padding: 0
-                    }}
-                >
-                    <CheckCircle2 size={24} fill={problem.completed ? "#22c55e" : "transparent"} color={problem.completed ? "#fff" : "#e5e5e5"} />
-                </button>
+                    size={24}
+                />
             </div>
 
             <div style={{ flex: 1 }}>
