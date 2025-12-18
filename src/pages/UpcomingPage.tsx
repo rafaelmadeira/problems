@@ -287,8 +287,8 @@ export default function UpcomingPage() {
     if (totalCount === 0) {
         return (
             <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
-                <h2>No problems here.</h2>
-                <p>And Alexander wept, for there were no more problems to solve.</p>
+                <h2 style={{ padding: '1rem', color: '#333' }}>No problems here.</h2>
+                <p style={{ fontStyle: 'italic' }}>And Alexander wept, for there were no more problems to solve.</p>
             </div>
         );
     }

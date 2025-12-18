@@ -250,7 +250,7 @@ export default function InboxPage() {
                 <div>
                     <h1 style={{ fontSize: '2rem', fontWeight: '700', margin: 0, marginBottom: '0.5rem' }}>Inbox</h1>
                     <p style={{ color: '#666', margin: 0, fontSize: '0.875rem' }}>
-                        Capture tasks here before organizing
+                        Capture problems here for organizing
                     </p>
                 </div>
             </div>

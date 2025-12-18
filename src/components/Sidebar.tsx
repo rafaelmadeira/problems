@@ -190,7 +190,7 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
             <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: '800', fontSize: '1.2rem', textDecoration: 'none', color: '#111' }}>
                     {/* Only showing count text as per screenshot "37 problems" */}
-                    {totalProblems} problems
+                    {totalProblems === 0 ? 'Problems' : `${totalProblems} problems`}
                 </Link>
 
                 <button

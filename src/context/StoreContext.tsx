@@ -25,7 +25,7 @@ const defaultState: AppState = {
         {
             id: 'inbox',
             name: 'Inbox',
-            description: 'Default list',
+            description: 'Capture problems here for organizing',
             problems: []
         }
     ],
