@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Link, useLocation } from 'react-router-dom';
-import { Inbox, Calendar, Target, CalendarRange, Settings, CheckCircle2, RotateCcw, Plus, Zap, CalendarClock } from 'lucide-react'; // Using Target for Unfinished/Focus
+import { Inbox, Calendar, Target, CalendarRange, Settings, CheckCircle2, Plus } from 'lucide-react'; // Using Target for Unfinished/Focus
 import type { Problem } from '../types';
 import CreateListModal from './CreateListModal';
 

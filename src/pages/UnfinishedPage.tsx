@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { CheckCircle2, ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
@@ -186,7 +186,6 @@ const InternalTaskNode = ({
 
 export default function UnfinishedPage() {
     const { state, updateProblem } = useStore();
-    const navigate = useNavigate();
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
 
     // CHANGED: Default state is empty {} meaning everything is COLLAPSED (because undefined/false = collapsed).

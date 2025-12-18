@@ -1,14 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { CheckCircle2, ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizontal, Zap } from 'lucide-react';
+import { CheckCircle2, ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
 import type { Problem } from '../types';
 
-interface FlatTask {
-    problem: Problem;
-    listId: string;
-    path: { id: string, name: string, type: 'list' | 'problem' }[];
-}
+
 
 /* 
   Recursive component for rendering a task and its children 
@@ -37,7 +33,7 @@ const InternalTaskNode = ({
     // NOTE: In the page logic we filter for problems that have NO subproblems or subproblems are completed?
     // User definition: "tasks that have no children".
     // So if subproblems.length === 0, it's a leaf.
-    const isLeaf = problem.subproblems.filter(p => !p.completed).length === 0;
+
 
     // We only traverse down if there's a match below. 
     // The filtering logic in the parent component ensures we only render nodes that are part of a matching branch.

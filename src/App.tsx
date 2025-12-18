@@ -170,13 +170,7 @@ function App() {
     return acc + countWeekProblems(list.problems);
   }, 0);
 
-  const upcomingProblemsCount = state.lists.reduce((acc, list) => {
-    return acc + countUpcomingProblems(list.problems);
-  }, 0);
 
-  const nextActionsCount = state.lists.reduce((acc, list) => {
-    return acc + countNextActionsProblems(list.problems);
-  }, 0);
 
 
   const title = totalProblems === 0 ? '0 problems' : `${totalProblems} problems`;
