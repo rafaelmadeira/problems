@@ -679,7 +679,7 @@ export default function ProblemPage() {
                             {/* Task Details Grid */}
                             <div style={{ display: 'grid', gridTemplateColumns: '100px 1fr', gap: '0.5rem 1rem', alignItems: 'center' }}>
                                 {/* Priority */}
-                                <div style={{ color: '#888', fontSize: '0.95rem' }}>Priority</div>
+                                <div style={{ color: '#888', fontSize: '14px' }}>Priority</div>
                                 <div style={{ marginTop: '-1px' }}>
                                     <select
                                         value={currentProblem.priority || 'today'}
@@ -688,7 +688,7 @@ export default function ProblemPage() {
                                             appearance: 'none',
                                             backgroundColor: 'transparent',
                                             border: 'none',
-                                            fontSize: '0.95rem',
+                                            fontSize: '14px',
                                             color: '#111',
                                             cursor: 'pointer',
                                             padding: 0,
@@ -710,7 +710,7 @@ export default function ProblemPage() {
 
 
                                 {/* Status */}
-                                <div style={{ color: '#888', fontSize: '0.95rem' }}>Status</div>
+                                <div style={{ color: '#888', fontSize: '14px' }}>Status</div>
                                 <div style={{ marginTop: '-1px', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                                     <select
                                         value={currentProblem.status || 'to_solve'}
@@ -725,7 +725,7 @@ export default function ProblemPage() {
                                             appearance: 'none',
                                             backgroundColor: 'transparent',
                                             border: 'none',
-                                            fontSize: '0.95rem',
+                                            fontSize: '14px',
                                             color: '#111',
                                             cursor: 'pointer',
                                             padding: 0,
@@ -751,7 +751,7 @@ export default function ProblemPage() {
                                 </div>
 
                                 {/* Due Date */}
-                                <div style={{ color: '#888', fontSize: '0.95rem' }}>Due Date</div>
+                                <div style={{ color: '#888', fontSize: '14px' }}>Due Date</div>
                                 <div style={{ marginTop: '-1px' }}>
                                     {currentProblem.dueDate ? (
                                         <input
@@ -761,7 +761,7 @@ export default function ProblemPage() {
                                             style={{
                                                 border: 'none',
                                                 backgroundColor: 'transparent',
-                                                fontSize: '0.95rem',
+                                                fontSize: '14px',
                                                 color: '#111',
                                                 fontFamily: 'inherit',
                                                 cursor: 'pointer',
@@ -788,7 +788,7 @@ export default function ProblemPage() {
                                                     color: '#999',
                                                     textDecoration: 'none',
                                                     cursor: 'pointer',
-                                                    fontSize: '0.95rem',
+                                                    fontSize: '14px',
                                                     fontFamily: 'sans-serif'
                                                 }}
                                             >
@@ -814,8 +814,8 @@ export default function ProblemPage() {
                                 </div>
 
                                 {/* Time Spent (Focus Mode Metadata) */}
-                                <div style={{ color: '#888', fontSize: '0.95rem' }}>Time Spent</div>
-                                <div style={{ fontSize: '0.95rem', color: '#111', fontFamily: 'monospace', marginTop: '1px' }}>
+                                <div style={{ color: '#888', fontSize: '14px' }}>Time Spent</div>
+                                <div style={{ fontSize: '14px', color: '#111', fontFamily: 'monospace', marginTop: '1px' }}>
                                     {currentProblem.totalTime ? (
                                         <button
                                             onClick={() => setIsHistoryOpen(true)}
@@ -824,7 +824,7 @@ export default function ProblemPage() {
                                                 border: 'none',
                                                 padding: 0,
                                                 cursor: 'pointer',
-                                                fontSize: '0.95rem',
+                                                fontSize: '14px',
                                                 fontFamily: 'monospace',
                                                 color: '#111',
                                                 textDecoration: 'underline',
@@ -850,7 +850,7 @@ export default function ProblemPage() {
                                                 color: '#999',
                                                 textDecoration: 'none',
                                                 cursor: 'pointer',
-                                                fontSize: '0.95rem',
+                                                fontSize: '14px',
                                                 fontFamily: 'sans-serif'
                                             }}
                                         >
@@ -860,7 +860,7 @@ export default function ProblemPage() {
                                 </div>
 
                                 {/* Estimated Duration */}
-                                <div style={{ color: '#888', fontSize: '0.95rem' }}>Estimated</div>
+                                <div style={{ color: '#888', fontSize: '14px' }}>Estimated</div>
                                 <div style={{ marginTop: '-1px' }}>
                                     <input
                                         type="text"
@@ -921,7 +921,7 @@ export default function ProblemPage() {
                                         style={{
                                             border: 'none',
                                             backgroundColor: 'transparent',
-                                            fontSize: '0.95rem',
+                                            fontSize: '14px',
                                             color: '#111',
                                             fontFamily: 'inherit',
                                             padding: 0,
@@ -932,7 +932,7 @@ export default function ProblemPage() {
                                 </div>
 
                                 {/* Notes */}
-                                <div style={{ color: '#888', fontSize: '0.95rem', alignSelf: 'flex-start' }}>Notes</div>
+                                <div style={{ color: '#888', fontSize: '14px', alignSelf: 'flex-start' }}>Notes</div>
                                 <div>
                                     <textarea
                                         className="notes-textarea"
@@ -951,7 +951,7 @@ export default function ProblemPage() {
                                         rows={1}
                                         style={{
                                             width: '100%',
-                                            fontSize: '0.95rem',
+                                            fontSize: '14px',
                                             color: '#111',
                                             resize: 'none',
                                             lineHeight: '1.5',
