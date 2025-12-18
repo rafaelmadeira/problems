@@ -273,20 +273,36 @@ export default function ProblemPage() {
             )}
 
             {/* Breadcrumbs */}
-            <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', color: '#888', fontSize: '0.9rem' }}>
-                <Link to="/" style={{ color: 'inherit' }}>Home</Link>
-                <ChevronRight size={14} />
+            <nav style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '2rem',
+                color: '#888',
+                fontSize: '0.9rem',
+                overflowX: 'auto', // Enable horizontal scroll
+                whiteSpace: 'nowrap', // Prevent wrapping
+                scrollbarWidth: 'none', // Hide scrollbar Firefox
+                msOverflowStyle: 'none' // Hide scrollbar IE/Edge
+            }}>
+                <style>{`
+                    nav::-webkit-scrollbar {
+                        display: none; /* Hide scrollbar Chrome/Safari */
+                    }
+                `}</style>
+                <Link to="/" style={{ color: 'inherit', flexShrink: 0 }}>Home</Link>
+                <ChevronRight size={14} style={{ flexShrink: 0 }} />
                 {!currentProblem ? (
-                    <span style={{ fontWeight: 600, color: '#333' }}>{list.name}</span>
+                    <span style={{ fontWeight: 600, color: '#333', flexShrink: 0 }}>{list.name}</span>
                 ) : (
-                    <Link to={list.id === 'inbox' ? '/inbox' : `/list/${list.id}`} style={{ color: 'inherit' }}>{list.name}</Link>
+                    <Link to={list.id === 'inbox' ? '/inbox' : `/list/${list.id}`} style={{ color: 'inherit', flexShrink: 0 }}>{list.name}</Link>
                 )}
                 {breadcrumbs.slice(0, -1).map(p => (
                     <React.Fragment key={p.id}>
-                        <ChevronRight size={14} />
+                        <ChevronRight size={14} style={{ flexShrink: 0 }} />
                         <Link
                             to={`/list/${list.id}/problem/${p.id}`}
-                            style={{ fontWeight: p.name.endsWith('!') ? 'bold' : 'normal' }}
+                            style={{ fontWeight: p.name.endsWith('!') ? 'bold' : 'normal', flexShrink: 0 }}
                         >
                             {p.name}
                         </Link>
@@ -294,8 +310,8 @@ export default function ProblemPage() {
                 ))}
                 {currentProblem && (
                     <>
-                        <ChevronRight size={14} />
-                        <span style={{ fontWeight: 600, color: '#333' }}>{currentProblem.name}</span>
+                        <ChevronRight size={14} style={{ flexShrink: 0 }} />
+                        <span style={{ fontWeight: 600, color: '#333', flexShrink: 0 }}>{currentProblem.name}</span>
                     </>
                 )}
             </nav>
@@ -323,6 +339,7 @@ export default function ProblemPage() {
                     justifyContent: 'center',
                     zIndex: 200
                 }} onClick={() => setIsHistoryOpen(false)}>
+                    {/* ... modal content ... */}
                     <div style={{
                         backgroundColor: '#fff',
                         padding: '1.5rem',
@@ -580,11 +597,15 @@ export default function ProblemPage() {
                         </div>
                     ) : (
                         <div style={{ flex: 1 }}>
-                            {/* Task Name */}
-                            <input
-                                type="text"
+                            {/* Task Name - REPLACED WITH TEXTAREA */}
+                            <textarea
                                 value={currentProblem.name}
-                                onChange={(e) => updateProblem(list.id, currentProblem!.id, { name: e.target.value })}
+                                onChange={(e) => {
+                                    updateProblem(list.id, currentProblem!.id, { name: e.target.value });
+                                    e.target.style.height = 'auto';
+                                    e.target.style.height = e.target.scrollHeight + 'px';
+                                }}
+                                rows={1}
                                 style={{
                                     fontSize: '1.5rem',
                                     fontWeight: '700',
@@ -594,7 +615,16 @@ export default function ProblemPage() {
                                     outline: 'none',
                                     backgroundColor: 'transparent',
                                     fontFamily: 'inherit',
-                                    color: '#111'
+                                    color: '#111',
+                                    resize: 'none',
+                                    overflow: 'hidden',
+                                    height: 'auto'
+                                }}
+                                ref={el => {
+                                    if (el) {
+                                        el.style.height = 'auto';
+                                        el.style.height = el.scrollHeight + 'px';
+                                    }
                                 }}
                             />
 
