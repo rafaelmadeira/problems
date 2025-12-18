@@ -67,6 +67,16 @@ export default function ProblemPage() {
     const completedSubElements = subElements.filter(p => p.completed);
     const currentParentId = currentProblem ? currentProblem.id : null;
 
+    // Reset UI state when navigating (e.g. from child to parent)
+    useEffect(() => {
+        setIsMenuOpen(false);
+        setIsMoveListOpen(false);
+        setIsFocusOpen(false);
+        setIsHistoryOpen(false);
+        setActiveMenuId(null);
+        setDraggedIndex(null);
+    }, [listId, problemId]);
+
     useEffect(() => {
         if (currentProblem) {
             document.title = `Problem: ${currentProblem.name}`;
