@@ -13,6 +13,9 @@ export default function Sidebar() {
     const [isCreatingProblem, setIsCreatingProblem] = useState(false);
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
+    const [isAddProblemHovered, setIsAddProblemHovered] = useState(false);
+    const [isAddListHovered, setIsAddListHovered] = useState(false);
+
     // --- Logic from App.tsx (Counts) ---
     // Duplicate logic for now. Ideally should be in a hook or helper.
     const countProblems = (problems: Problem[]): number => {
@@ -193,26 +196,20 @@ export default function Sidebar() {
 
                 <button
                     onClick={() => setIsCreatingProblem(true)}
+                    onMouseEnter={() => setIsAddProblemHovered(true)}
+                    onMouseLeave={() => setIsAddProblemHovered(false)}
                     style={{
                         width: '24px',
                         height: '24px',
                         borderRadius: '50%',
-                        backgroundColor: '#f0f0f0',
+                        backgroundColor: isAddProblemHovered ? '#3b82f6' : '#f0f0f0',
                         border: 'none',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
-                        color: '#666',
+                        color: isAddProblemHovered ? 'white' : '#666',
                         transition: 'background-color 0.2s, color 0.2s'
-                    }}
-                    onMouseEnter={e => {
-                        e.currentTarget.style.backgroundColor = '#3b82f6';
-                        e.currentTarget.style.color = 'white';
-                    }}
-                    onMouseLeave={e => {
-                        e.currentTarget.style.backgroundColor = '#f0f0f0';
-                        e.currentTarget.style.color = '#666';
                     }}
                 >
                     <Plus size={14} />
@@ -245,6 +242,8 @@ export default function Sidebar() {
                 </div>
                 <button
                     onClick={() => setIsCreatingList(true)}
+                    onMouseEnter={() => setIsAddListHovered(true)}
+                    onMouseLeave={() => setIsAddListHovered(false)}
                     style={{
                         width: '24px',
                         height: '24px',
@@ -252,20 +251,12 @@ export default function Sidebar() {
                         alignItems: 'center',
                         justifyContent: 'center',
                         cursor: 'pointer',
-                        color: '#aaa',
+                        color: isAddListHovered ? '#666' : '#aaa',
                         border: 'none',
-                        background: 'transparent',
+                        background: isAddListHovered ? '#f0f0f0' : 'transparent',
                         borderRadius: '50%',
                         transition: 'background-color 0.2s, color 0.2s',
                         padding: 0
-                    }}
-                    onMouseEnter={e => {
-                        e.currentTarget.style.backgroundColor = '#f0f0f0';
-                        e.currentTarget.style.color = '#666';
-                    }}
-                    onMouseLeave={e => {
-                        e.currentTarget.style.backgroundColor = 'transparent';
-                        e.currentTarget.style.color = '#aaa';
                     }}
                 >
                     <Plus size={16} />
