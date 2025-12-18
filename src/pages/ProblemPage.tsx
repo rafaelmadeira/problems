@@ -78,6 +78,13 @@ export default function ProblemPage() {
     // A top-level task has breadcrumbs length of 1 (just itself)
     const isRootTask = breadcrumbs.length === 1 && currentProblem;
 
+    // Redirect generic Inbox view to dedicated InboxPage
+    useEffect(() => {
+        if (list?.id === 'inbox' && !problemId) {
+            navigate('/inbox', { replace: true });
+        }
+    }, [list, problemId, navigate]);
+
     const toggleMenu = (id: string) => {
         setActiveMenuId(activeMenuId === id ? null : id);
     };
@@ -127,7 +134,11 @@ export default function ProblemPage() {
                     const parent = breadcrumbs[breadcrumbs.length - 2];
                     navigate(`/list/${list.id}/problem/${parent.id}`);
                 } else {
-                    navigate(`/list/${list.id}`);
+                    if (list.id === 'inbox') {
+                        navigate('/inbox');
+                    } else {
+                        navigate(`/list/${list.id}`);
+                    }
                 }
             }
         }
@@ -137,7 +148,11 @@ export default function ProblemPage() {
         if (currentProblem && list) {
             moveProblemToList(currentProblem.id, list.id, targetListId);
             setIsMoveListOpen(false);
-            navigate(`/list/${list.id}`);
+            if (list.id === 'inbox') {
+                navigate('/inbox');
+            } else {
+                navigate(`/list/${list.id}`);
+            }
         }
     };
 
@@ -264,7 +279,7 @@ export default function ProblemPage() {
                 {!currentProblem ? (
                     <span style={{ fontWeight: 600, color: '#333' }}>{list.name}</span>
                 ) : (
-                    <Link to={`/list/${list.id}`} style={{ color: 'inherit' }}>{list.name}</Link>
+                    <Link to={list.id === 'inbox' ? '/inbox' : `/list/${list.id}`} style={{ color: 'inherit' }}>{list.name}</Link>
                 )}
                 {breadcrumbs.slice(0, -1).map(p => (
                     <React.Fragment key={p.id}>
@@ -501,10 +516,11 @@ export default function ProblemPage() {
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', position: 'relative' }}>
                                 <button
                                     onClick={() => setShowListEmojiPicker(!showListEmojiPicker)}
+                                    disabled={list.id === 'inbox'}
                                     style={{
                                         background: 'none',
                                         border: 'none',
-                                        cursor: 'pointer',
+                                        cursor: list.id === 'inbox' ? 'default' : 'pointer',
                                         padding: 0,
                                         display: 'flex',
                                         alignItems: 'center',
@@ -547,6 +563,7 @@ export default function ProblemPage() {
                                     type="text"
                                     value={list.name}
                                     onChange={(e) => updateList(list.id, { name: e.target.value })}
+                                    disabled={list.id === 'inbox'}
                                     style={{
                                         fontSize: '2rem',
                                         fontWeight: '700',
@@ -554,39 +571,12 @@ export default function ProblemPage() {
                                         border: 'none',
                                         outline: 'none',
                                         backgroundColor: 'transparent',
-                                        fontFamily: 'inherit'
+                                        fontFamily: 'inherit',
+                                        opacity: list.id === 'inbox' ? 1 : undefined,
+                                        cursor: list.id === 'inbox' ? 'default' : 'text'
                                     }}
                                 />
                             </div>
-                            <textarea
-                                value={list.description || ''}
-                                onChange={(e) => {
-                                    updateList(list.id, { description: e.target.value });
-                                    e.target.style.height = 'auto';
-                                    e.target.style.height = e.target.scrollHeight + 'px';
-                                }}
-                                onFocus={(e) => {
-                                    e.target.style.height = 'auto';
-                                    e.target.style.height = e.target.scrollHeight + 'px';
-                                }}
-                                placeholder="Description..."
-                                maxLength={500}
-                                rows={1}
-                                style={{
-                                    width: '100%',
-                                    // minHeight: '100px', // Removed fixed height
-                                    fontSize: '0.875rem',
-                                    color: '#555',
-                                    resize: 'none',
-                                    lineHeight: '1.6',
-                                    border: 'none',
-                                    outline: 'none',
-                                    backgroundColor: 'transparent',
-                                    fontFamily: 'inherit',
-                                    overflow: 'hidden',
-                                    minHeight: '24px' // Consistent with single line
-                                }}
-                            />
                         </div>
                     ) : (
                         <div style={{ flex: 1 }}>
