@@ -202,7 +202,10 @@ export default function TodayPage() {
                 <span style={{ fontWeight: 600, color: '#333' }}>Today</span>
             </nav>
 
-            <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '2rem' }}>Today</h1>
+            <h1 style={{ fontSize: '2rem', fontWeight: '700', marginBottom: '0.5rem' }}>Today</h1>
+            <p style={{ color: '#666', marginBottom: '2rem', fontSize: '0.95rem' }}>
+                Problems due today or with Priority: Today
+            </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
 

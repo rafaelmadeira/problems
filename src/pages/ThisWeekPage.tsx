@@ -398,7 +398,12 @@ export default function ThisWeekPage() {
             </nav>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem', position: 'relative' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: '700', margin: 0 }}>This Week</h1>
+                <div>
+                    <h1 style={{ fontSize: '2rem', fontWeight: '700', margin: 0, marginBottom: '0.5rem' }}>This Week</h1>
+                    <p style={{ color: '#666', margin: 0, fontSize: '0.95rem' }}>
+                        Problems due this week or with Priority: This Week
+                    </p>
+                </div>
 
                 {/* Menu Button */}
                 <div ref={menuRef} style={{ position: 'relative' }}>

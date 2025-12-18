@@ -265,7 +265,12 @@ export default function UpcomingPage() {
             </nav>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '2rem' }}>
-                <h1 style={{ fontSize: '2rem', fontWeight: '700', margin: 0 }}>Upcoming</h1>
+                <div>
+                    <h1 style={{ fontSize: '2rem', fontWeight: '700', margin: 0, marginBottom: '0.5rem' }}>Upcoming</h1>
+                    <p style={{ color: '#666', margin: 0, fontSize: '0.95rem' }}>
+                        Problems due in the future
+                    </p>
+                </div>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
