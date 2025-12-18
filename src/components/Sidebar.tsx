@@ -212,8 +212,10 @@ export default function Sidebar() {
 
                 <NavItem to="/today" label="Today" icon={Calendar} count={todayProblemsCount} isActive={isTodayActive} />
                 <NavItem to="/week" label="This Week" icon={CalendarRange} count={weekProblemsCount} isActive={isWeekActive} />
-                <NavItem to="/unfinished" label="Unfinished" icon={Target} count={unfinishedProblemsCount} isActive={isUnfinishedActive} />
-                <NavItem to="/next-actions" label="Next Actions" icon={Zap} count={nextActionsCount} isActive={isNextActionsActive} />
+                <div style={{ display: 'none' }}>
+                    <NavItem to="/unfinished" label="Unfinished" icon={Target} count={unfinishedProblemsCount} isActive={isUnfinishedActive} />
+                    <NavItem to="/next-actions" label="Next Actions" icon={Zap} count={nextActionsCount} isActive={isNextActionsActive} />
+                </div>
             </div>
 
             {/* Lists Header */}
