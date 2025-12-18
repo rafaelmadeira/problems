@@ -1,10 +1,7 @@
 import { useState } from 'react';
 import { useStore } from '../context/StoreContext';
 import { Link, useLocation } from 'react-router-dom';
-import {
-    Plus, CheckCircle2,
-    Calendar, Target, CalendarRange, Settings, Inbox
-} from 'lucide-react';
+import { Inbox, Calendar, Target, CalendarRange, Settings, CheckCircle2, RotateCcw, Plus, Zap } from 'lucide-react'; // Using Target for Unfinished/Focus
 import type { Problem } from '../types';
 import CreateListModal from './CreateListModal';
 import CreateProblemModal from './CreateProblemModal';
@@ -69,11 +66,25 @@ export default function Sidebar() {
         }
         return count;
     };
+    const countNextActionsProblems = (problems: Problem[]): number => {
+        let count = 0;
+        for (const p of problems) {
+            if (!p.completed) {
+                const incompleteChildren = p.subproblems.filter(sub => !sub.completed);
+                if (incompleteChildren.length === 0) {
+                    count += 1;
+                }
+            }
+            count += countNextActionsProblems(p.subproblems);
+        }
+        return count;
+    };
 
     const totalProblems = state.lists.reduce((acc, list) => acc + countProblems(list.problems), 0);
     const todayProblemsCount = state.lists.reduce((acc, list) => acc + countTodayProblems(list.problems), 0);
     const unfinishedProblemsCount = state.lists.reduce((acc, list) => acc + countUnfinishedProblems(list.problems), 0);
     const weekProblemsCount = state.lists.reduce((acc, list) => acc + countWeekProblems(list.problems), 0);
+    const nextActionsCount = state.lists.reduce((acc, list) => acc + countNextActionsProblems(list.problems), 0);
 
     const inboxList = state.lists.find(l => l.id === 'inbox');
     const inboxCount = inboxList ? countProblems(inboxList.problems) : 0;
@@ -82,6 +93,7 @@ export default function Sidebar() {
     const isTodayActive = location.pathname === '/today';
     const isWeekActive = location.pathname === '/week';
     const isUnfinishedActive = location.pathname === '/unfinished';
+    const isNextActionsActive = location.pathname === '/next-actions';
     const isSettingsActive = location.pathname === '/settings';
 
     // --- Logic from HomePage.tsx (Lists) ---
@@ -201,6 +213,7 @@ export default function Sidebar() {
                 <NavItem to="/today" label="Today" icon={Calendar} count={todayProblemsCount} isActive={isTodayActive} />
                 <NavItem to="/week" label="This Week" icon={CalendarRange} count={weekProblemsCount} isActive={isWeekActive} />
                 <NavItem to="/unfinished" label="Unfinished" icon={Target} count={unfinishedProblemsCount} isActive={isUnfinishedActive} />
+                <NavItem to="/next-actions" label="Next Actions" icon={Zap} count={nextActionsCount} isActive={isNextActionsActive} />
             </div>
 
             {/* Lists Header */}
@@ -241,7 +254,7 @@ export default function Sidebar() {
             <div style={{ flex: 1, overflowY: 'auto' }}>
                 {visibleLists.map((list, index) => {
                     const count = countProblems(list.problems);
-                    const isActive = location.pathname.includes(`/list/${list.id}`);
+                    const isActive = location.pathname.includes(`/ list / ${list.id} `);
 
                     return (
                         <div
@@ -254,7 +267,7 @@ export default function Sidebar() {
                             style={{ opacity: draggedIndex === index ? 0.5 : 1 }}
                         >
                             <NavItem
-                                to={`/list/${list.id}`}
+                                to={`/ list / ${list.id} `}
                                 label={list.name}
                                 icon={CheckCircle2}
                                 emoji={list.emoji}

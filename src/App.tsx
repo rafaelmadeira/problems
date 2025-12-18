@@ -7,7 +7,8 @@ import UnfinishedPage from './pages/UnfinishedPage';
 import ThisWeekPage from './pages/ThisWeekPage';
 import SettingsPage from './pages/SettingsPage';
 import Sidebar from './components/Sidebar';
-import { CheckCircle2, Calendar, Target, CalendarRange, Settings } from 'lucide-react'; // Using Target icon for Unfinished/Focus
+import NextActionsPage from './pages/NextActionsPage';
+import { CheckCircle2, Calendar, Target, CalendarRange, Settings, Zap } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 
 function App() {
@@ -91,6 +92,21 @@ function App() {
     return count;
   };
 
+  // Calculate Next Actions (recursive, incomplete, no incomplete children)
+  const countNextActionsProblems = (problems: Problem[]): number => {
+    let count = 0;
+    for (const p of problems) {
+      if (!p.completed) {
+        const incompleteChildren = p.subproblems.filter(sub => !sub.completed);
+        if (incompleteChildren.length === 0) {
+          count += 1;
+        }
+      }
+      count += countNextActionsProblems(p.subproblems);
+    }
+    return count;
+  };
+
 
   const totalProblems = state.lists.reduce((acc, list) => {
     return acc + countProblems(list.problems);
@@ -108,6 +124,10 @@ function App() {
     return acc + countWeekProblems(list.problems);
   }, 0);
 
+  const nextActionsCount = state.lists.reduce((acc, list) => {
+    return acc + countNextActionsProblems(list.problems);
+  }, 0);
+
 
   const title = totalProblems === 0 ? '0 problems' : `${totalProblems} problems`;
 
@@ -118,6 +138,7 @@ function App() {
   const isTodayActive = location.pathname === '/today';
   const isWeekActive = location.pathname === '/week';
   const isUnfinishedActive = location.pathname === '/unfinished';
+  const isNextActionsActive = location.pathname === '/next-actions';
   const isSettingsActive = location.pathname === '/settings';
 
   // --- Two Column Layout ---
@@ -133,6 +154,7 @@ function App() {
               <Route path="/today" element={<TodayPage />} />
               <Route path="/week" element={<ThisWeekPage />} />
               <Route path="/unfinished" element={<UnfinishedPage />} />
+              <Route path="/next-actions" element={<NextActionsPage />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="/list/:listId" element={<ProblemPage />} />
               <Route path="/list/:listId/problem/:problemId" element={<ProblemPage />} />
