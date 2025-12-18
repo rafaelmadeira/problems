@@ -4,13 +4,12 @@ import { Link, useLocation } from 'react-router-dom';
 import { Inbox, Calendar, Target, CalendarRange, Settings, CheckCircle2, RotateCcw, Plus, Zap, CalendarClock } from 'lucide-react'; // Using Target for Unfinished/Focus
 import type { Problem } from '../types';
 import CreateListModal from './CreateListModal';
-import CreateProblemModal from './CreateProblemModal';
 
-export default function Sidebar() {
+export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: () => void }) {
     const { state, addList, reorderLists } = useStore();
     const location = useLocation();
     const [isCreatingList, setIsCreatingList] = useState(false);
-    const [isCreatingProblem, setIsCreatingProblem] = useState(false);
+    // const [isCreatingProblem, setIsCreatingProblem] = useState(false); // Moved to App
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
 
     const [isAddProblemHovered, setIsAddProblemHovered] = useState(false);
@@ -195,7 +194,8 @@ export default function Sidebar() {
                 </Link>
 
                 <button
-                    onClick={() => setIsCreatingProblem(true)}
+                    onClick={onOpenCreateProblem}
+                    title="Add new problem"
                     onMouseEnter={() => setIsAddProblemHovered(true)}
                     onMouseLeave={() => setIsAddProblemHovered(false)}
                     style={{
@@ -300,14 +300,6 @@ export default function Sidebar() {
                     isOpen={isCreatingList}
                     onClose={() => setIsCreatingList(false)}
                     onCreate={handleCreate}
-                />
-
-                <CreateProblemModal
-                    isOpen={isCreatingProblem}
-                    onClose={() => setIsCreatingProblem(false)}
-                    defaultListId="inbox"
-                    showListSelector={true}
-                    parentId={null}
                 />
             </div>
 

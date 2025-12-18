@@ -93,7 +93,7 @@ export default function CreateProblemModal({ isOpen, onClose, defaultListId, sho
                     <input
                         autoFocus
                         type="text"
-                        placeholder="Task name"
+                        placeholder="Problem name"
                         value={name}
                         onChange={e => setName(e.target.value)}
                         style={{

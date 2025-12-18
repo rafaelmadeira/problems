@@ -12,11 +12,36 @@ import UpcomingPage from './pages/UpcomingPage';
 import InboxPage from './pages/InboxPage';
 import { CheckCircle2, Calendar, Target, CalendarRange, Settings, Zap, CalendarClock } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
+import CreateProblemModal from './components/CreateProblemModal';
+import { useState, useEffect } from 'react';
 
 function App() {
   const { state } = useStore();
   const location = useLocation();
   const layout = state.settings?.layout || 'one-column';
+  const [isCreatingProblem, setIsCreatingProblem] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Check if user is typing in an input
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
+      if (e.key === 'c' || e.key === 'n') {
+        e.preventDefault();
+        setIsCreatingProblem(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   // Calculate total recursive problems (only incomplete)
   const countProblems = (problems: Problem[]): number => {
@@ -172,7 +197,7 @@ function App() {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', minHeight: '100vh', backgroundColor: '#fff' }}>
         <div style={{ display: 'flex', width: '100%', maxWidth: '1200px' }}>
-          <Sidebar />
+          <Sidebar onOpenCreateProblem={() => setIsCreatingProblem(true)} />
           <main style={{ flex: 1, padding: '2rem 3rem' }}>
             <Routes>
               {/* Redirect root to /today in 2-column mode to avoid empty/redundant page */}
@@ -189,6 +214,13 @@ function App() {
             </Routes>
           </main>
         </div>
+        <CreateProblemModal
+          isOpen={isCreatingProblem}
+          onClose={() => setIsCreatingProblem(false)}
+          defaultListId="inbox"
+          showListSelector={true}
+          parentId={null}
+        />
       </div>
     );
   }
@@ -367,6 +399,13 @@ function App() {
           <Route path="/list/:listId/problem/:problemId" element={<ProblemPage />} />
         </Routes>
       </main>
+      <CreateProblemModal
+        isOpen={isCreatingProblem}
+        onClose={() => setIsCreatingProblem(false)}
+        defaultListId="inbox"
+        showListSelector={true}
+        parentId={null}
+      />
     </div>
   );
 }
