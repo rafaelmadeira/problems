@@ -276,7 +276,7 @@ export default function Sidebar() {
             <div style={{ flex: 1, overflowY: 'auto' }}>
                 {visibleLists.map((list, index) => {
                     const count = countProblems(list.problems);
-                    const isActive = location.pathname.includes(`/ list / ${list.id} `);
+                    const isActive = location.pathname.includes(`/list/${list.id}`);
 
                     return (
                         <div
@@ -289,7 +289,7 @@ export default function Sidebar() {
                             style={{ opacity: draggedIndex === index ? 0.5 : 1 }}
                         >
                             <NavItem
-                                to={`/ list / ${list.id} `}
+                                to={`/list/${list.id}`}
                                 label={list.name}
                                 icon={CheckCircle2}
                                 emoji={list.emoji}

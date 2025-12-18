@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { CheckCircle2, ChevronRight, ChevronRight as ChevronRightIcon } from 'lucide-react';
+import { CheckCircle2, ChevronRight, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
 import type { Problem } from '../types';
 
 interface FlatTask {
@@ -40,26 +40,25 @@ function SimpleTaskItem({
             onClick={() => navigate(`/list/${listId}/problem/${problem.id}`)}
             style={{
                 display: 'flex',
-                alignItems: 'flex-start',
+                alignItems: 'center', // Changed to center vertical alignment
                 gap: '0.75rem',
-                padding: '1rem',
-                backgroundColor: '#fff',
+                padding: '0.75rem 1rem', // Adjusted padding
+                backgroundColor: isHovered ? '#f9f9f9' : '#fff', // Hover effect
                 borderBottom: '1px solid #f0f0f0',
                 cursor: 'pointer',
                 borderRadius: '8px',
                 opacity: problem.completed ? (isHovered ? 1 : 0.5) : 1,
-                transition: 'opacity 0.2s, background-color 0.2s'
+                transition: 'opacity 0.2s, background-color 0.2s',
+                position: 'relative'
             }}
-            onMouseEnter={(e) => {
+            onMouseEnter={() => {
                 setIsHovered(true);
-                e.currentTarget.style.backgroundColor = '#f9f9f9';
             }}
-            onMouseLeave={(e) => {
+            onMouseLeave={() => {
                 setIsHovered(false);
-                e.currentTarget.style.backgroundColor = '#fff';
             }}
         >
-            <div style={{ position: 'relative', paddingTop: '2px' }}>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                 {solvedMessages[problem.id] && (
                     <div style={{
                         position: 'absolute',
@@ -113,58 +112,64 @@ function SimpleTaskItem({
                 </button>
             </div>
 
-            <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <div style={{
-                        fontSize: '1.1rem',
-                        color: '#333',
-                        fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
-                        lineHeight: '1.4',
-                        textDecoration: problem.completed ? 'line-through' : 'none',
-                    }}>
-                        {problem.name}
-                    </div>
-                    {subtaskCount > 0 && (
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            width: '20px',
-                            height: '20px',
-                            borderRadius: '50%',
-                            backgroundColor: '#f0f0f0',
-                            color: '#666',
-                            fontSize: '0.75rem',
-                            fontWeight: 600
-                        }}>
-                            {subtaskCount}
-                        </div>
-                    )}
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                <div style={{
+                    fontSize: '1rem', // Adjusted font size slightly
+                    color: '#333',
+                    fontWeight: problem.name.endsWith('!') ? 'bold' : 'normal',
+                    lineHeight: '1.4',
+                    textDecoration: problem.completed ? 'line-through' : 'none',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                }}>
+                    {problem.name}
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.85rem', color: '#888' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                        {path.map((crumb, index) => {
-                            const linkPath = crumb.type === 'list'
-                                ? `/list/${crumb.id}`
-                                : `/list/${listId}/problem/${crumb.id}`;
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.75rem', color: '#888', marginTop: '2px' }}>
+                    {path.map((crumb, index) => {
+                        const linkPath = crumb.type === 'list'
+                            ? `/list/${crumb.id}`
+                            : `/list/${listId}/problem/${crumb.id}`;
 
-                            return (
-                                <React.Fragment key={index}>
-                                    {index > 0 && <ChevronRightIcon size={12} />}
-                                    <Link
-                                        to={linkPath}
-                                        onClick={(e) => e.stopPropagation()}
-                                        style={{ color: '#888', textDecoration: 'none', borderBottom: '1px solid transparent' }}
-                                        onMouseEnter={e => e.currentTarget.style.borderBottom = '1px solid #888'}
-                                        onMouseLeave={e => e.currentTarget.style.borderBottom = '1px solid transparent'}
-                                    >
-                                        {crumb.name}
-                                    </Link>
-                                </React.Fragment>
-                            );
-                        })}
+                        return (
+                            <React.Fragment key={index}>
+                                {index > 0 && <ChevronRightIcon size={10} />}
+                                <Link
+                                    to={linkPath}
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{ color: '#888', textDecoration: 'none', borderBottom: '1px solid transparent' }}
+                                    onMouseEnter={e => e.currentTarget.style.borderBottom = '1px solid #888'}
+                                    onMouseLeave={e => e.currentTarget.style.borderBottom = '1px solid transparent'}
+                                >
+                                    {crumb.name}
+                                </Link>
+                            </React.Fragment>
+                        );
+                    })}
+                </div>
+            </div>
+
+            {/* Right side: Badge + Menu */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {subtaskCount > 0 && (
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: '24px', // Slightly larger circle
+                        height: '24px',
+                        borderRadius: '50%',
+                        backgroundColor: '#e5e5e5', // Grey background
+                        color: '#666',
+                        fontSize: '0.75rem',
+                        fontWeight: 600
+                    }}>
+                        {subtaskCount}
                     </div>
+                )}
+                <div style={{ color: '#aaa' }}>
+                    <MoreHorizontal size={20} />
                 </div>
             </div>
         </div>
