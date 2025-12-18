@@ -345,7 +345,7 @@ function App() {
         </header>
 
         {/* Content Area */}
-        <main style={{ flex: 1, paddingBottom: '90px' }}> {/* Padding for bottom bar */}
+        <main style={{ flex: 1, paddingBottom: '90px', paddingLeft: '1rem', paddingRight: '1rem' }}> {/* Padding for bottom bar */}
           <Routes>
             <Route path="/" element={<Navigate to="/today" replace />} />
             <Route path="/inbox" element={<InboxPage />} />
