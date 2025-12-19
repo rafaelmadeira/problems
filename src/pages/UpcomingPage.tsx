@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
+import { ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
 import type { Problem } from '../types';
 import CheckButton from '../components/CheckButton';
 
@@ -273,6 +273,25 @@ export default function UpcomingPage() {
         }
     };
 
+    // Expanded State for Dates
+    const [expandedDates, setExpandedDates] = useState<{ [key: string]: boolean }>({});
+
+    // Initialize all dates as expanded by default (optional, checks user pref usually, but here we can default open or closed)
+    // List view usually defaults open. ThisWeekPage defaults closed?
+    // ThisWeekPage: `const [expandedIds, setExpandedIds] = useState<{ [id: string]: boolean }>({});` defaults closed.
+    // But ThisWeekPage expands "matches".
+    // Let's default to OPEN for dates in Upcoming, otherwise it's empty.
+    // Actually, let's look at TodayPage... I initialized them to true.
+    useEffect(() => {
+        const initial: { [key: string]: boolean } = {};
+        sortedDates.forEach(d => initial[d] = true);
+        setExpandedDates(prev => ({ ...initial, ...prev }));
+    }, [sortedDates.length]); // Re-init when dates change (simple approach)
+
+    const toggleDate = (date: string) => {
+        setExpandedDates(prev => ({ ...prev, [date]: !prev[date] }));
+    };
+
     if (totalCount === 0) {
         return (
             <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
@@ -314,27 +333,36 @@ export default function UpcomingPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                 {sortedDates.map(date => (
                     <div key={date}>
-                        <h2 style={{
-                            fontSize: '1rem',
-                            fontWeight: '600',
-                            color: '#333',
-                            borderBottom: '1px solid #eee',
-                            paddingBottom: '0.5rem',
-                            marginBottom: '1rem'
-                        }}>
-                            {formatDateHeading(date)}
-                        </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                            {groupedTasks[date].map(t => (
-                                <SimpleTaskItem
-                                    key={t.problem.id}
-                                    task={t}
-                                    navigate={navigate}
-                                    toggleComplete={toggleComplete}
-                                    solvedMessages={solvedMessages}
-                                />
-                            ))}
+                        <div
+                            onClick={() => toggleDate(date)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                cursor: 'pointer',
+                                padding: '0.5rem 0',
+                                borderBottom: '1px solid #eee',
+                                userSelect: 'none'
+                            }}
+                        >
+                            {expandedDates[date] ? <ChevronDown size={16} color="#999" /> : <ChevronRightIcon size={16} color="#999" />}
+                            <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>{formatDateHeading(date)}</h2>
+                            <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{groupedTasks[date].length}</span>
                         </div>
+
+                        {expandedDates[date] && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+                                {groupedTasks[date].map(t => (
+                                    <SimpleTaskItem
+                                        key={t.problem.id}
+                                        task={t}
+                                        navigate={navigate}
+                                        toggleComplete={toggleComplete}
+                                        solvedMessages={solvedMessages}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </div>
                 ))}
             </div>

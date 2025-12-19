@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 import type { Problem } from '../types';
 import CheckButton from '../components/CheckButton';
 
@@ -52,6 +52,17 @@ export default function TodayPage() {
 
     // START: DnD Local State
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+    // Expanded State for Sections
+    const [expandedSections, setExpandedSections] = useState<{ [key: string]: boolean }>({
+        overdue: true,
+        dueToday: true,
+        doToday: true
+    });
+
+    const toggleSection = (section: string) => {
+        setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+    };
 
     // Helpers
 
@@ -216,66 +227,114 @@ export default function TodayPage() {
 
                 {overdueTasks.length > 0 && (
                     <section>
-                        <h2 style={{ fontSize: '1rem', fontWeight: '600', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#333' }}>
-                            Overdue
-                        </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {overdueTasks.map(t => (
-                                <TaskItemInline
-                                    key={t.problem.id}
-                                    task={t}
-                                    navigate={navigate}
-                                    toggleComplete={toggleComplete}
-                                    solvedMessages={solvedMessages}
-                                    draggedIndex={draggedIndex}
-                                />
-                            ))}
+                        <div
+                            onClick={() => toggleSection('overdue')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                cursor: 'pointer',
+                                padding: '0.5rem 0',
+                                borderBottom: '1px solid #eee',
+                                userSelect: 'none'
+                            }}
+                        >
+                            {expandedSections['overdue'] ? <ChevronDown size={16} color="#999" /> : <ChevronRight size={16} color="#999" />}
+                            <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#ef4444' }}>Overdue</h2>
+                            <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{overdueTasks.length}</span>
                         </div>
+
+                        {expandedSections['overdue'] && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                                {overdueTasks.map(t => (
+                                    <TaskItemInline
+                                        key={t.problem.id}
+                                        task={t}
+                                        navigate={navigate}
+                                        toggleComplete={toggleComplete}
+                                        solvedMessages={solvedMessages}
+                                        draggedIndex={draggedIndex}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </section>
                 )}
 
                 {dueTodayTasks.length > 0 && (
                     <section>
-                        <h2 style={{ fontSize: '1rem', fontWeight: '600', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#333' }}>
-                            Due Today
-                        </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {dueTodayTasks.map(t => (
-                                <TaskItemInline
-                                    key={t.problem.id}
-                                    task={t}
-                                    navigate={navigate}
-                                    toggleComplete={toggleComplete}
-                                    solvedMessages={solvedMessages}
-                                    draggedIndex={draggedIndex}
-                                />
-                            ))}
+                        <div
+                            onClick={() => toggleSection('dueToday')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                cursor: 'pointer',
+                                padding: '0.5rem 0',
+                                borderBottom: '1px solid #eee',
+                                userSelect: 'none'
+                            }}
+                        >
+                            {expandedSections['dueToday'] ? <ChevronDown size={16} color="#999" /> : <ChevronRight size={16} color="#999" />}
+                            <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>Due Today</h2>
+                            <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{dueTodayTasks.length}</span>
                         </div>
+
+                        {expandedSections['dueToday'] && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                                {dueTodayTasks.map(t => (
+                                    <TaskItemInline
+                                        key={t.problem.id}
+                                        task={t}
+                                        navigate={navigate}
+                                        toggleComplete={toggleComplete}
+                                        solvedMessages={solvedMessages}
+                                        draggedIndex={draggedIndex}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </section>
                 )}
 
                 {doTodayTasks.length > 0 && (
                     <section>
-                        <h2 style={{ fontSize: '1rem', fontWeight: '600', borderBottom: '1px solid #eee', paddingBottom: '0.5rem', marginBottom: '1rem', color: '#333' }}>
-                            Do Today
-                        </h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {doTodayTasks.map((t, index) => (
-                                <TaskItemInline
-                                    key={t.problem.id}
-                                    task={t}
-                                    isDraggable={true}
-                                    index={index}
-                                    onDragStart={handleDragStart}
-                                    onDragEnter={handleDragEnter}
-                                    onDragEnd={handleDragEnd}
-                                    navigate={navigate}
-                                    toggleComplete={toggleComplete}
-                                    solvedMessages={solvedMessages}
-                                    draggedIndex={draggedIndex}
-                                />
-                            ))}
+                        <div
+                            onClick={() => toggleSection('doToday')}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                cursor: 'pointer',
+                                padding: '0.5rem 0',
+                                borderBottom: '1px solid #eee',
+                                userSelect: 'none'
+                            }}
+                        >
+                            {expandedSections['doToday'] ? <ChevronDown size={16} color="#999" /> : <ChevronRight size={16} color="#999" />}
+                            <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>Do Today</h2>
+                            <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{doTodayTasks.length}</span>
                         </div>
+
+                        {expandedSections['doToday'] && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                                {doTodayTasks.map((t, index) => (
+                                    <TaskItemInline
+                                        key={t.problem.id}
+                                        task={t}
+                                        isDraggable={true}
+                                        index={index}
+                                        onDragStart={handleDragStart}
+                                        onDragEnter={handleDragEnter}
+                                        onDragEnd={handleDragEnd}
+                                        navigate={navigate}
+                                        toggleComplete={toggleComplete}
+                                        solvedMessages={solvedMessages}
+                                        draggedIndex={draggedIndex}
+                                    />
+                                ))}
+                            </div>
+                        )}
                     </section>
                 )}
 
