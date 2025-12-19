@@ -319,22 +319,12 @@ export default function ProblemPage() {
                         <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Move to...</h3>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                             {state.lists.map(l => (
-                                l.id !== list.id && (
-                                    <button
+                                l.id !== list.id && l.name !== 'Inbox' && (
+                                    <MoveListOption
                                         key={l.id}
-                                        onClick={() => handleMoveToList(l.id)}
-                                        style={{
-                                            padding: '0.75rem',
-                                            textAlign: 'left',
-                                            backgroundColor: '#f9f9f9',
-                                            border: 'none',
-                                            borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            fontWeight: '500'
-                                        }}
-                                    >
-                                        {l.name}
-                                    </button>
+                                        list={l}
+                                        onMove={() => handleMoveToList(l.id)}
+                                    />
                                 )
                             ))}
                             {state.lists.length <= 1 && <p style={{ color: '#888' }}>No other lists available.</p>}
@@ -1547,3 +1537,30 @@ function CompletedTaskRow({
     );
 }
 
+
+function MoveListOption({ list, onMove }: { list: { id: string, name: string, emoji?: string }, onMove: () => void }) {
+    const [isHovered, setIsHovered] = React.useState(false);
+    return (
+        <button
+            onClick={onMove}
+            style={{
+                padding: '0.75rem',
+                textAlign: 'left',
+                backgroundColor: isHovered ? '#eee' : '#f9f9f9',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                transition: 'background-color 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%'
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {list.emoji && <span style={{ marginRight: '0.5rem' }}>{list.emoji}</span>}
+            {list.name}
+        </button>
+    );
+}
