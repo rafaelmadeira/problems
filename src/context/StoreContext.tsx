@@ -14,6 +14,8 @@ interface StoreContextType {
     reorderTodayProblems: (items: { id: string, listId: string }[]) => void;
     moveProblemToList: (problemId: string, fromListId: string, toListId: string) => void;
     updateSettings: (newSettings: Partial<AppSettings>) => void;
+    isCreateListModalOpen: boolean;
+    setCreateListModalOpen: (isOpen: boolean) => void;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -326,6 +328,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }));
     };
 
+    const [isCreateListModalOpen, setCreateListModalOpen] = useState(false);
+
     return (
         <StoreContext.Provider value={{
             state,
@@ -339,7 +343,9 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             reorderProblems,
             reorderTodayProblems,
             moveProblemToList,
-            updateSettings
+            updateSettings,
+            isCreateListModalOpen,
+            setCreateListModalOpen
         }}>
             {children}
         </StoreContext.Provider>

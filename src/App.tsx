@@ -1,4 +1,4 @@
-import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
+import { Routes, Route, Link, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { useStore } from './context/StoreContext';
 import { Analytics } from "@vercel/analytics/react";
 
@@ -15,19 +15,21 @@ import ListsPage from './pages/ListsPage';
 import { Calendar, CalendarRange, Settings, Inbox, CalendarClock, List as ListIcon, Plus } from 'lucide-react'; // Using Target icon for Unfinished/Focus
 import type { Problem } from './types';
 import CreateProblemModal from './components/CreateProblemModal';
+import CreateListModal from './components/CreateListModal';
 import { useState, useEffect } from 'react';
 
 function App() {
-  const { state } = useStore();
+  const { state, addList, isCreateListModalOpen, setCreateListModalOpen } = useStore();
   const location = useLocation();
+  const navigate = useNavigate();
   const layout = state.settings?.layout || 'two-columns';
   const [isCreatingProblem, setIsCreatingProblem] = useState(false);
+  const [createProblemContext, setCreateProblemContext] = useState<{ listId: string, parentId: string | null }>({ listId: 'inbox', parentId: null });
 
-  // Auto-detect mobile and switch to single-column logic (but we respect user setting if explicitly set... 
-  // actually, since we persist it, if user is on mobile we probably want to FORCE single column or just default it?
-  // The user said "one column version to be the default version for mobile".
-  // This implies if I'm on mobile, it should behave as single column.
-  // Track window resize to reactively switch layouts
+  // Filter user lists (excluding inbox)
+  const userLists = state.lists.filter(l => l.id !== 'inbox');
+
+  // Auto-detect mobile and switch to single-column logic
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   useEffect(() => {
@@ -37,8 +39,6 @@ function App() {
   }, []);
 
   const isMobile = windowWidth < 768;
-
-  // Force single-column on mobile, otherwise respect user setting
   const effectiveLayout = isMobile ? 'single-column' : layout;
 
   useEffect(() => {
@@ -53,15 +53,89 @@ function App() {
         return;
       }
 
-      if (e.key === 'c' || e.key === 'n') {
-        e.preventDefault();
-        setIsCreatingProblem(true);
+      // Check for modifier keys to avoid overriding browser shortcuts
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
+      // Navigation Shortcuts
+      switch (e.key.toLowerCase()) {
+        case 'i':
+          navigate('/inbox');
+          break;
+        case 't':
+          navigate('/today');
+          break;
+        case 'w':
+          navigate('/week');
+          break;
+        case 'u':
+          navigate('/upcoming');
+          break;
+        case 'h':
+          navigate('/');
+          break;
+        case 'l':
+          e.preventDefault();
+          setCreateListModalOpen(true);
+          break;
+        case 'c': {
+          e.preventDefault();
+          setCreateProblemContext({ listId: 'inbox', parentId: null });
+          setIsCreatingProblem(true);
+          break;
+        }
+        case 'n': {
+          e.preventDefault();
+          // Context detection
+          let listId = 'inbox';
+          let parentId: string | null = null;
+
+          if (location.pathname.startsWith('/list/')) {
+            const parts = location.pathname.split('/');
+            // /list/:listId
+            if (parts.length >= 3) {
+              listId = parts[2];
+            }
+            // /list/:listId/problem/:problemId
+            if (parts.length >= 5 && parts[3] === 'problem') {
+              parentId = parts[4];
+            }
+          }
+
+          setCreateProblemContext({ listId, parentId });
+          setIsCreatingProblem(true);
+          break;
+        }
+        case '0': {
+          // Cycle user lists
+          if (userLists.length === 0) break;
+
+          // Current list ID from URL
+          let currentIndex = -1;
+          if (location.pathname.startsWith('/list/')) {
+            const parts = location.pathname.split('/');
+            const currentListId = parts[2];
+            currentIndex = userLists.findIndex(l => l.id === currentListId);
+          }
+
+          const nextIndex = (currentIndex + 1) % userLists.length;
+          navigate(`/list/${userLists[nextIndex].id}`);
+          break;
+        }
+        default:
+          // 1-9 for user lists
+          if (e.key >= '1' && e.key <= '9') {
+            const index = parseInt(e.key) - 1;
+            if (index < userLists.length) {
+              navigate(`/list/${userLists[index].id}`);
+            }
+          }
+          break;
       }
     };
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [navigate, userLists, location.pathname, setCreateListModalOpen]);
 
   // Calculate total recursive problems (only incomplete)
   const countProblems = (problems: Problem[]): number => {
@@ -445,9 +519,14 @@ function App() {
         <CreateProblemModal
           isOpen={isCreatingProblem}
           onClose={() => setIsCreatingProblem(false)}
-          defaultListId="inbox"
+          defaultListId={createProblemContext.listId}
           showListSelector={true}
-          parentId={null}
+          parentId={createProblemContext.parentId}
+        />
+        <CreateListModal
+          isOpen={isCreateListModalOpen}
+          onClose={() => setCreateListModalOpen(false)}
+          onCreate={addList}
         />
       </div>
       <Analytics />
