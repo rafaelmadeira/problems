@@ -307,35 +307,37 @@ export default function ProblemPage() {
                     e.stopPropagation();
                     setIsMoveListOpen(false);
                 }}>
-                    <div style={{
-                        backgroundColor: '#fff',
-                        padding: '1.5rem',
-                        borderRadius: '12px',
-                        width: '300px',
-                        maxWidth: '90%',
-                        maxHeight: '80vh',
-                        overflowY: 'auto'
-                    }} onClick={e => e.stopPropagation()}>
-                        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Move to...</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {state.lists.map(l => (
-                                l.id !== list.id && l.name !== 'Inbox' && (
-                                    <MoveListOption
-                                        key={l.id}
-                                        list={l}
-                                        onMove={() => handleMoveToList(l.id)}
-                                    />
-                                )
-                            ))}
-                            {state.lists.length <= 1 && <p style={{ color: '#888' }}>No other lists available.</p>}
+                    <MoveListModalContent onClose={() => setIsMoveListOpen(false)}>
+                        <div style={{
+                            backgroundColor: '#fff',
+                            padding: '1.5rem',
+                            borderRadius: '12px',
+                            width: '300px',
+                            maxWidth: '90%',
+                            maxHeight: '80vh',
+                            overflowY: 'auto'
+                        }} onClick={e => e.stopPropagation()}>
+                            <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Move to...</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {state.lists.map(l => (
+                                    l.id !== list.id && l.name !== 'Inbox' && (
+                                        <MoveListOption
+                                            key={l.id}
+                                            list={l}
+                                            onMove={() => handleMoveToList(l.id)}
+                                        />
+                                    )
+                                ))}
+                                {state.lists.length <= 1 && <p style={{ color: '#888' }}>No other lists available.</p>}
+                            </div>
+                            <button
+                                onClick={() => setIsMoveListOpen(false)}
+                                style={{ marginTop: '1rem', width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '8px', background: 'none', cursor: 'pointer' }}
+                            >
+                                Cancel
+                            </button>
                         </div>
-                        <button
-                            onClick={() => setIsMoveListOpen(false)}
-                            style={{ marginTop: '1rem', width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '8px', background: 'none', cursor: 'pointer' }}
-                        >
-                            Cancel
-                        </button>
-                    </div>
+                    </MoveListModalContent>
                 </div>
             )}
 
@@ -1563,4 +1565,15 @@ function MoveListOption({ list, onMove }: { list: { id: string, name: string, em
             {list.name}
         </button>
     );
+}
+
+function MoveListModalContent({ children, onClose }: { children: React.ReactNode, onClose: () => void }) {
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
+    return <>{children}</>;
 }
