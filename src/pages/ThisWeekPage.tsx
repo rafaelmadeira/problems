@@ -515,13 +515,15 @@ export default function ThisWeekPage() {
                                     alignItems: 'center',
                                     gap: '0.5rem',
                                     cursor: 'pointer',
-                                    marginBottom: '1rem',
+                                    padding: '0.5rem 0',
+                                    borderBottom: '1px solid #eee',
                                     userSelect: 'none'
                                 }}
                             >
-                                {isExpanded ? <ChevronDown size={20} /> : <ChevronRightIcon size={20} />}
-                                <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: 0 }}>{list.name}</h2>
-                                <span style={{ color: '#888', fontSize: '0.9rem', fontWeight: 'normal' }}>({matchCount})</span>
+                                {isExpanded ? <ChevronDown size={16} color="#999" /> : <ChevronRightIcon size={16} color="#999" />}
+                                {list.emoji && <span style={{ fontSize: '1rem' }}>{list.emoji}</span>}
+                                <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>{list.name}</h2>
+                                <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{matchCount}</span>
                             </div>
 
                             {isExpanded && (
