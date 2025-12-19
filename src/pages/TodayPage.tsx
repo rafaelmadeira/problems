@@ -358,7 +358,7 @@ export default function TodayPage() {
                         }}
                     >
                         <span style={{ transform: showSolved ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
-                            <ChevronRight size={16} />
+                            <ChevronRight size={16} color="#999" />
                         </span>
                         {solvedTodayTasks.length} problems solved today
                     </button>

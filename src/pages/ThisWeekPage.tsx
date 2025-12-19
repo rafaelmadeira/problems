@@ -568,7 +568,7 @@ export default function ThisWeekPage() {
                         }}
                     >
                         <span style={{ transform: showSolved ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
-                            <ChevronRightIcon size={16} />
+                            <ChevronRightIcon size={16} color="#999" />
                         </span>
                         {solvedThisWeekTasks.length} problems solved this week
                     </button>

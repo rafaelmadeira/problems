@@ -1417,7 +1417,7 @@ export default function ProblemPage() {
                             }}
                         >
                             <span style={{ transform: showCompleted ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
-                                <ChevronRight size={16} />
+                                <ChevronRight size={16} color="#999" />
                             </span>
                             {completedSubElements.length} problems solved
                         </button>
