@@ -296,6 +296,11 @@ function App() {
           showListSelector={createProblemContext.showSelector}
           parentId={createProblemContext.parentId}
         />
+        <CreateListModal
+          isOpen={isCreateListModalOpen}
+          onClose={() => setCreateListModalOpen(false)}
+          onCreate={addList}
+        />
       </div>
     );
   }
