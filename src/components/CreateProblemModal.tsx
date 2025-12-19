@@ -9,17 +9,26 @@ interface CreateProblemModalProps {
     defaultListId: string;
     showListSelector?: boolean;
     parentId?: string | null;
+    defaultPriority?: Problem['priority'];
 }
 
-export default function CreateProblemModal({ isOpen, onClose, defaultListId, showListSelector = false, parentId = null }: CreateProblemModalProps) {
+export default function CreateProblemModal({ isOpen, onClose, defaultListId, showListSelector = false, parentId = null, defaultPriority = 'someday' }: CreateProblemModalProps) {
     const { state, addProblem } = useStore();
     const [name, setName] = useState('');
-    const [priority, setPriority] = useState<Problem['priority']>('someday');
+    const [priority, setPriority] = useState<Problem['priority']>(defaultPriority);
     const [status, setStatus] = useState<Problem['status']>('to_solve');
     const [dueDate, setDueDate] = useState('');
     const [estimatedDuration, setEstimatedDuration] = useState('');
     const [notes, setNotes] = useState('');
     const [selectedListId, setSelectedListId] = useState(defaultListId);
+
+    // Update priority when defaultPriority changes or modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setPriority(defaultPriority);
+            setSelectedListId(defaultListId);
+        }
+    }, [isOpen, defaultPriority, defaultListId]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {

@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { ChevronRight, ChevronDown, Plus } from 'lucide-react';
 import type { Problem } from '../types';
 import CheckButton from '../components/CheckButton';
+import CreateProblemModal from '../components/CreateProblemModal';
 
 interface FlatTask {
     problem: Problem;
@@ -49,6 +50,7 @@ export default function TodayPage() {
     const navigate = useNavigate();
     const [solvedMessages, setSolvedMessages] = useState<{ [key: string]: boolean }>({});
     const [showSolved, setShowSolved] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
 
     // START: DnD Local State
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
@@ -191,17 +193,6 @@ export default function TodayPage() {
 
     const hasAnyContent = overdueTasks.length > 0 || dueTodayTasks.length > 0 || doTodayTasks.length > 0;
 
-    if (!hasAnyContent) {
-        return (
-            <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
-                <h2 style={{ padding: '1rem', color: '#333' }}>No problems here.</h2>
-                <p style={{ fontStyle: 'italic' }}>And Alexander wept, for there were no more worlds to conquer.</p>
-            </div>
-        );
-    }
-
-
-
     return (
         <div style={{ paddingBottom: '4rem' }}>
             <style>{`
@@ -223,121 +214,160 @@ export default function TodayPage() {
                 Problems due today or with Priority: Today
             </p>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+            {!hasAnyContent ? (
+                <div style={{ textAlign: 'center', padding: '4rem 0', color: '#888' }}>
+                    <h2 style={{ padding: '1rem', color: '#333', fontWeight: 600, fontSize: '20px' }}>No problems here.</h2>
+                    <p style={{ fontStyle: 'italic' }}>And Alexander wept, for there were no more worlds to conquer.</p>
+                </div>
+            ) : (
 
-                {overdueTasks.length > 0 && (
-                    <section>
-                        <div
-                            onClick={() => toggleSection('overdue')}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                cursor: 'pointer',
-                                padding: '0.5rem 0',
-                                borderBottom: '1px solid #eee',
-                                userSelect: 'none'
-                            }}
-                        >
-                            {expandedSections['overdue'] ? <ChevronDown size={16} color="#999" /> : <ChevronRight size={16} color="#999" />}
-                            <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#ef4444' }}>Overdue</h2>
-                            <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{overdueTasks.length}</span>
-                        </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
 
-                        {expandedSections['overdue'] && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-                                {overdueTasks.map(t => (
-                                    <TaskItemInline
-                                        key={t.problem.id}
-                                        task={t}
-                                        navigate={navigate}
-                                        toggleComplete={toggleComplete}
-                                        solvedMessages={solvedMessages}
-                                        draggedIndex={draggedIndex}
-                                    />
-                                ))}
+                    {overdueTasks.length > 0 && (
+                        <section>
+                            <div
+                                onClick={() => toggleSection('overdue')}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    cursor: 'pointer',
+                                    padding: '0.5rem 0',
+                                    borderBottom: '1px solid #eee',
+                                    userSelect: 'none'
+                                }}
+                            >
+                                {expandedSections['overdue'] ? <ChevronDown size={16} color="#999" /> : <ChevronRight size={16} color="#999" />}
+                                <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#ef4444' }}>Overdue</h2>
+                                <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{overdueTasks.length}</span>
                             </div>
-                        )}
-                    </section>
-                )}
 
-                {dueTodayTasks.length > 0 && (
-                    <section>
-                        <div
-                            onClick={() => toggleSection('dueToday')}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                cursor: 'pointer',
-                                padding: '0.5rem 0',
-                                borderBottom: '1px solid #eee',
-                                userSelect: 'none'
-                            }}
-                        >
-                            {expandedSections['dueToday'] ? <ChevronDown size={16} color="#999" /> : <ChevronRight size={16} color="#999" />}
-                            <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>Due Today</h2>
-                            <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{dueTodayTasks.length}</span>
-                        </div>
+                            {expandedSections['overdue'] && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                                    {overdueTasks.map(t => (
+                                        <TaskItemInline
+                                            key={t.problem.id}
+                                            task={t}
+                                            navigate={navigate}
+                                            toggleComplete={toggleComplete}
+                                            solvedMessages={solvedMessages}
+                                            draggedIndex={draggedIndex}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+                    )}
 
-                        {expandedSections['dueToday'] && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-                                {dueTodayTasks.map(t => (
-                                    <TaskItemInline
-                                        key={t.problem.id}
-                                        task={t}
-                                        navigate={navigate}
-                                        toggleComplete={toggleComplete}
-                                        solvedMessages={solvedMessages}
-                                        draggedIndex={draggedIndex}
-                                    />
-                                ))}
+                    {dueTodayTasks.length > 0 && (
+                        <section>
+                            <div
+                                onClick={() => toggleSection('dueToday')}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    cursor: 'pointer',
+                                    padding: '0.5rem 0',
+                                    borderBottom: '1px solid #eee',
+                                    userSelect: 'none'
+                                }}
+                            >
+                                {expandedSections['dueToday'] ? <ChevronDown size={16} color="#999" /> : <ChevronRight size={16} color="#999" />}
+                                <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>Due Today</h2>
+                                <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{dueTodayTasks.length}</span>
                             </div>
-                        )}
-                    </section>
-                )}
 
-                {doTodayTasks.length > 0 && (
-                    <section>
-                        <div
-                            onClick={() => toggleSection('doToday')}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                cursor: 'pointer',
-                                padding: '0.5rem 0',
-                                borderBottom: '1px solid #eee',
-                                userSelect: 'none'
-                            }}
-                        >
-                            {expandedSections['doToday'] ? <ChevronDown size={16} color="#999" /> : <ChevronRight size={16} color="#999" />}
-                            <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>Do Today</h2>
-                            <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{doTodayTasks.length}</span>
-                        </div>
+                            {expandedSections['dueToday'] && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                                    {dueTodayTasks.map(t => (
+                                        <TaskItemInline
+                                            key={t.problem.id}
+                                            task={t}
+                                            navigate={navigate}
+                                            toggleComplete={toggleComplete}
+                                            solvedMessages={solvedMessages}
+                                            draggedIndex={draggedIndex}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+                    )}
 
-                        {expandedSections['doToday'] && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-                                {doTodayTasks.map((t, index) => (
-                                    <TaskItemInline
-                                        key={t.problem.id}
-                                        task={t}
-                                        isDraggable={true}
-                                        index={index}
-                                        onDragStart={handleDragStart}
-                                        onDragEnter={handleDragEnter}
-                                        onDragEnd={handleDragEnd}
-                                        navigate={navigate}
-                                        toggleComplete={toggleComplete}
-                                        solvedMessages={solvedMessages}
-                                        draggedIndex={draggedIndex}
-                                    />
-                                ))}
+                    {doTodayTasks.length > 0 && (
+                        <section>
+                            <div
+                                onClick={() => toggleSection('doToday')}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.5rem',
+                                    cursor: 'pointer',
+                                    padding: '0.5rem 0',
+                                    borderBottom: '1px solid #eee',
+                                    userSelect: 'none'
+                                }}
+                            >
+                                {expandedSections['doToday'] ? <ChevronDown size={16} color="#999" /> : <ChevronRight size={16} color="#999" />}
+                                <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>Do Today</h2>
+                                <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{doTodayTasks.length}</span>
                             </div>
-                        )}
-                    </section>
-                )}
 
+                            {expandedSections['doToday'] && (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                                    {doTodayTasks.map((t, index) => (
+                                        <TaskItemInline
+                                            key={t.problem.id}
+                                            task={t}
+                                            isDraggable={true}
+                                            index={index}
+                                            onDragStart={handleDragStart}
+                                            onDragEnter={handleDragEnter}
+                                            onDragEnd={handleDragEnd}
+                                            navigate={navigate}
+                                            toggleComplete={toggleComplete}
+                                            solvedMessages={solvedMessages}
+                                            draggedIndex={draggedIndex}
+                                        />
+                                    ))}
+                                </div>
+                            )}
+                        </section>
+                    )}
+
+                </div>
+            )}
+
+            {/* New Task Modal */}
+            <CreateProblemModal
+                isOpen={isAdding}
+                onClose={() => setIsAdding(false)}
+                defaultListId="inbox"
+                showListSelector={true}
+                parentId={null}
+                defaultPriority="today"
+            />
+
+            <div style={{ marginTop: '2rem' }}>
+                <button
+                    onClick={() => setIsAdding(true)}
+                    style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        color: '#888',
+                        padding: '0.5rem 0',
+                        fontFamily: 'inherit',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        fontSize: '0.875rem'
+                    }}
+                >
+                    <Plus size={20} />
+                    <span>New Problem</span>
+                </button>
             </div>
 
             {solvedTodayTasks.length > 0 && (

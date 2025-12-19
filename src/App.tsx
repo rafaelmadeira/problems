@@ -24,7 +24,7 @@ function App() {
   const navigate = useNavigate();
   const layout = state.settings?.layout || 'two-columns';
   const [isCreatingProblem, setIsCreatingProblem] = useState(false);
-  const [createProblemContext, setCreateProblemContext] = useState<{ listId: string, parentId: string | null, showSelector: boolean }>({ listId: 'inbox', parentId: null, showSelector: true });
+  const [createProblemContext, setCreateProblemContext] = useState<{ listId: string, parentId: string | null, showSelector: boolean, priority?: Problem['priority'] }>({ listId: 'inbox', parentId: null, showSelector: true });
 
   // Filter user lists (excluding inbox)
   const userLists = state.lists.filter(l => l.id !== 'inbox');
@@ -89,6 +89,7 @@ function App() {
           // Context detection
           let listId = 'inbox';
           let parentId: string | null = null;
+          let priority: Problem['priority'] | undefined = undefined;
 
           if (location.pathname.startsWith('/list/')) {
             const parts = location.pathname.split('/');
@@ -100,9 +101,15 @@ function App() {
             if (parts.length >= 5 && parts[3] === 'problem') {
               parentId = parts[4];
             }
+          } else if (location.pathname === '/today') {
+            priority = 'today';
+          } else if (location.pathname === '/week') {
+            priority = 'this_week';
           }
 
-          setCreateProblemContext({ listId, parentId, showSelector: false });
+          // Show selector if we are NOT in a specific list (i.e. Today/Week/Global)
+          const showSelector = !location.pathname.startsWith('/list/');
+          setCreateProblemContext({ listId, parentId, showSelector, priority });
           setIsCreatingProblem(true);
           break;
         }
@@ -544,6 +551,7 @@ function App() {
           defaultListId={createProblemContext.listId}
           showListSelector={createProblemContext.showSelector}
           parentId={createProblemContext.parentId}
+          defaultPriority={createProblemContext.priority}
         />
         <CreateListModal
           isOpen={isCreateListModalOpen}

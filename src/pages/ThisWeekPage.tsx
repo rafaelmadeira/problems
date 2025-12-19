@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
+import { ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizontal, Plus } from 'lucide-react';
 import type { Problem } from '../types';
 import CheckButton from '../components/CheckButton';
+import CreateProblemModal from '../components/CreateProblemModal';
 
 interface FlatTask {
     problem: Problem;
@@ -232,6 +233,7 @@ export default function ThisWeekPage() {
     const [expandedIds, setExpandedIds] = useState<{ [id: string]: boolean }>({});
     const [menuOpen, setMenuOpen] = useState(false);
     const [showSolved, setShowSolved] = useState(false);
+    const [isAdding, setIsAdding] = useState(false);
     const menuRef = useRef<HTMLDivElement>(null);
 
     // Close menu on click outside
@@ -399,15 +401,6 @@ export default function ThisWeekPage() {
     }, [totalMatching]);
 
 
-    if (visibleLists.length === 0) {
-        return (
-            <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
-                <h2 style={{ padding: '1rem', color: '#333' }}>No problems here.</h2>
-                <p style={{ fontStyle: 'italic' }}>And Alexander wept, for there were no more worlds to conquer.</p>
-            </div>
-        );
-    }
-
     return (
         <div style={{ paddingBottom: '4rem' }}>
             <style>{`
@@ -417,7 +410,6 @@ export default function ThisWeekPage() {
                     100% { opacity: 0; transform: translateX(-50%) translateY(-15px); }
                 }
             `}</style>
-
             <nav style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '2rem', color: '#888', fontSize: '0.9rem' }}>
                 <Link to="/" style={{ color: 'inherit' }}>Home</Link>
                 <ChevronRight size={14} />
@@ -513,103 +505,146 @@ export default function ThisWeekPage() {
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                {visibleLists.map(list => {
-                    const isExpanded = expandedIds[list.id] || false;
+            {
+                visibleLists.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '4rem 0', color: '#888' }}>
+                        <h2 style={{ padding: '1rem', color: '#333', fontWeight: 600, fontSize: '20px' }}>No problems here.</h2>
+                        <p style={{ fontStyle: 'italic' }}>And Alexander wept, for there were no more worlds to conquer.</p>
+                    </div>
+                ) : (
 
-                    const countMatching = (problems: Problem[]): number => {
-                        let c = 0;
-                        for (const p of problems) {
-                            if (isMatch(p)) c++;
-                            c += countMatching(p.subproblems);
-                        }
-                        return c;
-                    };
-                    const matchCount = countMatching(list.problems);
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                        {visibleLists.map(list => {
+                            const isExpanded = expandedIds[list.id] || false;
 
-                    return (
-                        <div key={list.id}>
-                            <div
-                                onClick={() => toggleExpand(list.id)}
+                            const countMatching = (problems: Problem[]): number => {
+                                let c = 0;
+                                for (const p of problems) {
+                                    if (isMatch(p)) c++;
+                                    c += countMatching(p.subproblems);
+                                }
+                                return c;
+                            };
+                            const matchCount = countMatching(list.problems);
+
+                            return (
+                                <div key={list.id}>
+                                    <div
+                                        onClick={() => toggleExpand(list.id)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            cursor: 'pointer',
+                                            padding: '0.5rem 0',
+                                            borderBottom: '1px solid #eee',
+                                            userSelect: 'none'
+                                        }}
+                                    >
+                                        {isExpanded ? <ChevronDown size={16} color="#999" /> : <ChevronRightIcon size={16} color="#999" />}
+                                        {list.emoji && <span style={{ fontSize: '1rem' }}>{list.emoji}</span>}
+                                        <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>{list.name}</h2>
+                                        <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{matchCount}</span>
+                                    </div>
+
+                                    {isExpanded && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                            {list.problems
+                                                .filter(p => hasMatchingDescendants(p))
+                                                .map(p => (
+                                                    <InternalTaskNode
+                                                        key={p.id}
+                                                        problem={p}
+                                                        listId={list.id}
+                                                        depth={0}
+                                                        toggleComplete={toggleComplete}
+                                                        solvedMessages={solvedMessages}
+                                                        expandedIds={expandedIds}
+                                                        onToggleExpand={toggleExpand}
+                                                    />
+                                                ))
+                                            }
+                                        </div>
+                                    )}
+
+
+
+                                </div >
+                            );
+                        })}
+                        {/* New Task Modal */}
+                        <CreateProblemModal
+                            isOpen={isAdding}
+                            onClose={() => setIsAdding(false)}
+                            defaultListId="inbox"
+                            showListSelector={true}
+                            parentId={null}
+                            defaultPriority="this_week"
+                        />
+
+                        <div style={{ marginTop: '2rem' }}>
+                            <button
+                                onClick={() => setIsAdding(true)}
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '0.5rem',
-                                    cursor: 'pointer',
+                                    color: '#888',
                                     padding: '0.5rem 0',
-                                    borderBottom: '1px solid #eee',
-                                    userSelect: 'none'
+                                    fontFamily: 'inherit',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem'
                                 }}
                             >
-                                {isExpanded ? <ChevronDown size={16} color="#999" /> : <ChevronRightIcon size={16} color="#999" />}
-                                {list.emoji && <span style={{ fontSize: '1rem' }}>{list.emoji}</span>}
-                                <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>{list.name}</h2>
-                                <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{matchCount}</span>
-                            </div>
+                                <Plus size={20} />
+                                <span>New Problem</span>
+                            </button>
+                        </div>
 
-                            {isExpanded && (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                    {list.problems
-                                        .filter(p => hasMatchingDescendants(p))
-                                        .map(p => (
-                                            <InternalTaskNode
-                                                key={p.id}
-                                                problem={p}
-                                                listId={list.id}
-                                                depth={0}
-                                                toggleComplete={toggleComplete}
-                                                solvedMessages={solvedMessages}
-                                                expandedIds={expandedIds}
-                                                onToggleExpand={toggleExpand}
-                                            />
-                                        ))
-                                    }
+                        {
+                            solvedThisWeekTasks.length > 0 && (
+                                <div style={{ marginTop: '3rem' }}>
+                                    <button
+                                        onClick={() => setShowSolved(!showSolved)}
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '0.5rem',
+                                            background: 'none',
+                                            border: 'none',
+                                            color: '#888',
+                                            fontSize: '0.875rem',
+                                            fontWeight: 'normal',
+                                            cursor: 'pointer',
+                                            padding: '0.5rem 0'
+                                        }}
+                                    >
+                                        <span style={{ transform: showSolved ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
+                                            <ChevronRightIcon size={16} color="#999" />
+                                        </span>
+                                        {solvedThisWeekTasks.length} problems solved this week
+                                    </button>
+
+                                    {showSolved && (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
+                                            {solvedThisWeekTasks.map(t => (
+                                                <SimpleTaskItem
+                                                    key={t.problem.id}
+                                                    task={t}
+                                                    navigate={navigate}
+                                                    toggleComplete={toggleComplete}
+                                                    solvedMessages={solvedMessages}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-
-            {solvedThisWeekTasks.length > 0 && (
-                <div style={{ marginTop: '3rem' }}>
-                    <button
-                        onClick={() => setShowSolved(!showSolved)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.5rem',
-                            background: 'none',
-                            border: 'none',
-                            color: '#888',
-                            fontSize: '0.875rem',
-                            fontWeight: 'normal',
-                            cursor: 'pointer',
-                            padding: '0.5rem 0'
-                        }}
-                    >
-                        <span style={{ transform: showSolved ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'flex' }}>
-                            <ChevronRightIcon size={16} color="#999" />
-                        </span>
-                        {solvedThisWeekTasks.length} problems solved this week
-                    </button>
-
-                    {showSolved && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginTop: '1rem' }}>
-                            {solvedThisWeekTasks.map(t => (
-                                <SimpleTaskItem
-                                    key={t.problem.id}
-                                    task={t}
-                                    navigate={navigate}
-                                    toggleComplete={toggleComplete}
-                                    solvedMessages={solvedMessages}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-            )}
-
+                            )
+                        }
+                    </div>
+                )}
         </div>
     );
 }

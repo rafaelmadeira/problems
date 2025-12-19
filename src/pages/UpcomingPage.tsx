@@ -294,15 +294,6 @@ export default function UpcomingPage() {
         setExpandedDates(prev => ({ ...prev, [date]: !prev[date] }));
     };
 
-    if (totalCount === 0) {
-        return (
-            <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
-                <h2 style={{ padding: '1rem', color: '#333' }}>No problems here.</h2>
-                <p style={{ fontStyle: 'italic' }}>And Alexander wept, for there were no more worlds to conquer.</p>
-            </div>
-        );
-    }
-
     const formatDateHeading = (dateStr: string) => {
         const date = new Date(dateStr + 'T12:00:00'); // midday to avoid timezone shift
         return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
@@ -332,42 +323,51 @@ export default function UpcomingPage() {
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                {sortedDates.map(date => (
-                    <div key={date}>
-                        <div
-                            onClick={() => toggleDate(date)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                cursor: 'pointer',
-                                padding: '0.5rem 0',
-                                borderBottom: '1px solid #eee',
-                                userSelect: 'none'
-                            }}
-                        >
-                            {expandedDates[date] ? <ChevronDown size={16} color="#999" /> : <ChevronRightIcon size={16} color="#999" />}
-                            <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>{formatDateHeading(date)}</h2>
-                            <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{groupedTasks[date].length}</span>
-                        </div>
-
-                        {expandedDates[date] && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
-                                {groupedTasks[date].map(t => (
-                                    <SimpleTaskItem
-                                        key={t.problem.id}
-                                        task={t}
-                                        navigate={navigate}
-                                        toggleComplete={toggleComplete}
-                                        solvedMessages={solvedMessages}
-                                    />
-                                ))}
-                            </div>
-                        )}
+            {
+                totalCount === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '4rem 0', color: '#888' }}>
+                        <h2 style={{ padding: '1rem', color: '#333', fontWeight: 600, fontSize: '20px' }}>No problems here.</h2>
+                        <p style={{ fontStyle: 'italic' }}>And Alexander wept, for there were no more worlds to conquer.</p>
                     </div>
-                ))}
-            </div>
+                ) : (
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                        {sortedDates.map(date => (
+                            <div key={date}>
+                                <div
+                                    onClick={() => toggleDate(date)}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem',
+                                        cursor: 'pointer',
+                                        padding: '0.5rem 0',
+                                        borderBottom: '1px solid #eee',
+                                        userSelect: 'none'
+                                    }}
+                                >
+                                    {expandedDates[date] ? <ChevronDown size={16} color="#999" /> : <ChevronRightIcon size={16} color="#999" />}
+                                    <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>{formatDateHeading(date)}</h2>
+                                    <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{groupedTasks[date].length}</span>
+                                </div>
+
+                                {expandedDates[date] && (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1rem' }}>
+                                        {groupedTasks[date].map(t => (
+                                            <SimpleTaskItem
+                                                key={t.problem.id}
+                                                task={t}
+                                                navigate={navigate}
+                                                toggleComplete={toggleComplete}
+                                                solvedMessages={solvedMessages}
+                                            />
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                )}
         </div>
     );
 }
