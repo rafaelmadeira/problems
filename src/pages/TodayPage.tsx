@@ -195,7 +195,7 @@ export default function TodayPage() {
         return (
             <div style={{ textAlign: 'center', padding: '4rem', color: '#888' }}>
                 <h2 style={{ padding: '1rem', color: '#333' }}>No problems here.</h2>
-                <p style={{ fontStyle: 'italic' }}>And Alexander wept, for there were no more problems to solve.</p>
+                <p style={{ fontStyle: 'italic' }}>And Alexander wept, for there were no more worlds to conquer.</p>
             </div>
         );
     }
