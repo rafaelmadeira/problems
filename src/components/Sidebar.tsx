@@ -109,7 +109,7 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
     const inboxList = state.lists.find(l => l.id === 'inbox');
     const inboxCount = inboxList ? countProblems(inboxList.problems) : 0;
 
-    const isInboxActive = location.pathname.includes('/list/inbox');
+    const isInboxActive = location.pathname === '/inbox' || location.pathname.includes('/list/inbox');
     const isTodayActive = location.pathname === '/today';
     const isWeekActive = location.pathname === '/week';
     const isUpcomingActive = location.pathname === '/upcoming';
