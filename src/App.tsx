@@ -121,6 +121,9 @@ function App() {
           navigate(`/list/${userLists[nextIndex].id}`);
           break;
         }
+        case 'b':
+          navigate(-1);
+          break;
         default:
           // 1-9 for user lists
           if (e.key >= '1' && e.key <= '9') {

@@ -104,6 +104,32 @@ export default function ProblemPage() {
         }
     }, [list, problemId, navigate]);
 
+    // Keyboard Shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!currentProblem) return;
+
+            // Ignore if typing in an input
+            const target = e.target as HTMLElement;
+            if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
+            // Shortcuts
+            if (e.key.toLowerCase() === 'd') {
+                e.preventDefault();
+                handleDeleteProblem(currentProblem.id);
+            } else if (e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                toggleComplete(currentProblem);
+            } else if (e.key.toLowerCase() === 'f') {
+                e.preventDefault();
+                setIsFocusOpen(true);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentProblem, list, updateProblem, deleteProblem]);
+
     const toggleMenu = (id: string) => {
         setActiveMenuId(activeMenuId === id ? null : id);
     };
