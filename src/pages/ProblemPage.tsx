@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw, Smile } from 'lucide-react';
+import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw, Smile, ArrowRight } from 'lucide-react';
 import type { Problem, List, AppSettings } from '../types';
 import type { EmojiClickData } from 'emoji-picker-react';
 import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
@@ -1060,28 +1060,22 @@ export default function ProblemPage() {
                             style={{
                                 padding: '0.5rem',
                                 cursor: 'pointer',
-                                color: '#888',
+                                color: isMenuOpen ? '#333' : '#888',
                                 display: (!currentProblem && list.id === 'inbox') ? 'none' : 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center'
+                                justifyContent: 'center',
+                                background: isMenuOpen ? '#eee' : 'none',
+                                borderRadius: '4px',
+                                transition: 'color 0.2s, background-color 0.2s'
                             }}
                             aria-label="Menu"
                         >
                             <MoreHorizontal size={24} />
                         </button>
                         {isMenuOpen && (
-                            <div style={{
-                                position: 'absolute',
-                                top: '100%',
-                                right: 0,
-                                backgroundColor: '#fff',
-                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
-                                borderRadius: '8px',
-                                padding: '0.5rem',
-                                zIndex: 10,
-                                minWidth: '160px',
-                                border: '1px solid #f0f0f0'
-                            }}>
+                            <MenuDropdown
+                                onClose={() => setIsMenuOpen(false)}
+                            >
                                 {!currentProblem ? (
                                     <button
                                         type="button"
@@ -1089,20 +1083,12 @@ export default function ProblemPage() {
                                             e.stopPropagation();
                                             handleDeleteList();
                                         }}
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '0.75rem',
-                                            padding: '0.75rem 1rem',
-                                            width: '100%',
-                                            color: '#ef4444',
-                                            fontWeight: '500',
-                                            textAlign: 'left',
-                                            fontSize: '0.9rem',
-                                        }}
+                                        style={menuItemStyle}
+                                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                     >
                                         <Trash2 size={16} />
-                                        Delete List
+                                        <span style={{ color: '#ef4444' }}>Delete List</span>
                                     </button>
                                 ) : (
                                     <>
@@ -1114,19 +1100,11 @@ export default function ProblemPage() {
                                                 setIsMenuOpen(false);
                                                 setIsFocusOpen(true);
                                             }}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.75rem',
-                                                padding: '0.75rem 1rem',
-                                                width: '100%',
-                                                color: '#333',
-                                                fontWeight: '500',
-                                                textAlign: 'left',
-                                                fontSize: '0.9rem',
-                                            }}
+                                            style={menuItemStyle}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
-                                            <CheckCircle2 size={16} /> {/* Use CheckCircle as icon or maybe something else? Lucide has Focus or Target? Using CheckCircle for now as placeholder for Focus */}
+                                            <CheckCircle2 size={16} />
                                             Focus
                                         </button>
 
@@ -1138,19 +1116,11 @@ export default function ProblemPage() {
                                                     setIsMenuOpen(false);
                                                     setIsMoveListOpen(true);
                                                 }}
-                                                style={{
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '0.75rem',
-                                                    padding: '0.75rem 1rem',
-                                                    width: '100%',
-                                                    color: '#333',
-                                                    fontWeight: '500',
-                                                    textAlign: 'left',
-                                                    fontSize: '0.9rem',
-                                                }}
+                                                style={menuItemStyle}
+                                                onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                                                onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                             >
-                                                <ChevronRight size={16} />
+                                                <ArrowRight size={16} />
                                                 Move to list
                                             </button>
                                         )}
@@ -1160,24 +1130,16 @@ export default function ProblemPage() {
                                                 e.stopPropagation();
                                                 handleDeleteProblem();
                                             }}
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '0.75rem',
-                                                padding: '0.75rem 1rem',
-                                                width: '100%',
-                                                color: '#ef4444',
-                                                fontWeight: '500',
-                                                textAlign: 'left',
-                                                fontSize: '0.9rem',
-                                            }}
+                                            style={{ ...menuItemStyle, color: '#ef4444' }}
+                                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
                                         >
                                             <Trash2 size={16} />
                                             Delete Task
                                         </button>
                                     </>
                                 )}
-                            </div>
+                            </MenuDropdown>
                         )}
                     </div>
                 </div >
@@ -1575,6 +1537,7 @@ function MoveListOption({ list, onMove }: { list: { id: string, name: string, em
     );
 }
 
+
 function MoveListModalContent({ children, onClose }: { children: React.ReactNode, onClose: () => void }) {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -1584,4 +1547,56 @@ function MoveListModalContent({ children, onClose }: { children: React.ReactNode
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [onClose]);
     return <>{children}</>;
+}
+
+const menuItemStyle: React.CSSProperties = {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    width: '100%',
+    padding: '8px 12px',
+    textAlign: 'left',
+    background: 'none',
+    border: 'none',
+    borderRadius: '4px',
+    cursor: 'pointer',
+    fontSize: '0.875rem',
+    color: '#333'
+};
+
+function MenuDropdown({ children, onClose }: { children: React.ReactNode, onClose: () => void }) {
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        const handleClickOutside = () => onClose();
+
+        window.addEventListener('keydown', handleKeyDown);
+        window.addEventListener('click', handleClickOutside);
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown);
+            window.removeEventListener('click', handleClickOutside);
+        };
+    }, [onClose]);
+
+    return (
+        <div
+            style={{
+                position: 'absolute',
+                top: '100%',
+                right: 0,
+                marginTop: '4px',
+                backgroundColor: '#fff',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                borderRadius: '8px',
+                padding: '4px',
+                zIndex: 10,
+                minWidth: '160px',
+                border: '1px solid #eee'
+            }}
+            onClick={(e) => e.stopPropagation()}
+        >
+            {children}
+        </div>
+    );
 }

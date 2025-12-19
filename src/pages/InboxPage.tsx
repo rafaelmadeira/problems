@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
-import { Plus, ChevronRight, MoreHorizontal } from 'lucide-react';
+import { Plus, ChevronRight, MoreHorizontal, ArrowRight, Trash2 } from 'lucide-react';
 import type { Problem } from '../types';
 import CreateProblemModal from '../components/CreateProblemModal';
+import ConfirmationModal from '../components/ConfirmationModal';
 import CheckButton from '../components/CheckButton';
 import { formatDueDate } from '../utils/dateUtils';
 
 export default function InboxPage() {
-    const { state, updateProblem, moveProblemToList } = useStore();
+    const { state, updateProblem, moveProblemToList, deleteProblem } = useStore();
     const navigate = useNavigate();
 
     const [isAdding, setIsAdding] = useState(false);
@@ -16,6 +17,10 @@ export default function InboxPage() {
     const [showCompleted, setShowCompleted] = useState(false);
     const [isMoveListOpen, setIsMoveListOpen] = useState(false);
     const [currentProblemForMove, setCurrentProblemForMove] = useState<Problem | null>(null);
+
+    const [activeMenuTaskId, setActiveMenuId] = useState<string | null>(null);
+    const [problemToDelete, setProblemToDelete] = useState<Problem | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
     // Filter logic for Inbox
     const inboxList = state.lists.find(l => l.id === 'inbox');
@@ -31,6 +36,24 @@ export default function InboxPage() {
     useEffect(() => {
         document.title = `Problems Inbox (${activeSubElements.length})`;
     }, [activeSubElements.length]);
+
+    // Handle global clicks to close menu
+    useEffect(() => {
+        const handleClickOutside = () => setActiveMenuId(null);
+        window.addEventListener('click', handleClickOutside);
+        return () => window.removeEventListener('click', handleClickOutside);
+    }, []);
+
+    // Handle Esc key to close menu
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') {
+                setActiveMenuId(null);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
 
     const toggleComplete = (p: Problem) => {
         const newCompleted = !p.completed;
@@ -51,10 +74,11 @@ export default function InboxPage() {
         }
     };
 
+    const toggleMenu = (id: string) => {
+        setActiveMenuId(prev => (prev === id ? null : id));
+    };
 
-
-    const handleOpenMoveModal = (p: Problem, e: React.MouseEvent) => {
-        e.stopPropagation();
+    const handleOpenMoveModal = (p: Problem) => {
         setCurrentProblemForMove(p);
         setIsMoveListOpen(true);
     };
@@ -71,10 +95,7 @@ export default function InboxPage() {
         const isCompleted = task.completed;
         const isSolvedMessage = solvedMessages[task.id];
         const [isHovered, setIsHovered] = React.useState(false);
-
-        // Derived logic for display (flattening recursive structure for summary if needed, but here likely just top level)
-        // Note: ProblemPage supports recursion, but Inbox usually captures "quick capture". 
-        // If Inbox supports sub-problems, we should link to ProblemPage for details.
+        const isMenuOpen = activeMenuTaskId === task.id;
 
         return (
             <div
@@ -82,8 +103,7 @@ export default function InboxPage() {
                 style={{
                     padding: '1rem',
                     backgroundColor: '#fff',
-                    // border: '1px solid #f0f0f0', // Removed full border
-                    borderBottom: '1px solid #f0f0f0', // Matched TaskItemInline
+                    borderBottom: '1px solid #f0f0f0',
                     borderRadius: '8px',
                     marginBottom: '0.5rem',
                     cursor: 'pointer',
@@ -91,11 +111,12 @@ export default function InboxPage() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    opacity: isCompleted ? (isHovered ? 1 : 0.5) : 1 // Added opacity logic
+                    opacity: isCompleted ? (isHovered ? 1 : 0.5) : 1,
+                    position: 'relative' // Needed for menu positioning
                 }}
                 onMouseEnter={e => {
                     setIsHovered(true);
-                    e.currentTarget.style.backgroundColor = '#f9f9f9'; // Matched hover bg
+                    e.currentTarget.style.backgroundColor = '#f9f9f9';
                 }}
                 onMouseLeave={e => {
                     setIsHovered(false);
@@ -116,14 +137,13 @@ export default function InboxPage() {
                         <div style={{
                             fontSize: '1rem',
                             textDecoration: isCompleted ? 'line-through' : 'none',
-                            color: isCompleted ? '#333' : '#111', // Updated color
+                            color: isCompleted ? '#333' : '#111',
                             fontWeight: 500
                         }}>
                             {task.name}
                         </div>
                         {isSolvedMessage && <span style={{ fontSize: '0.8rem', color: '#22c55e', marginLeft: '0.5rem' }}>Splendid!</span>}
 
-                        {/* Metadata Row */}
                         {!isCompleted && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.25rem', fontSize: '0.75rem', color: '#888' }}>
                                 {task.priority && task.priority !== 'later' && (
@@ -143,10 +163,6 @@ export default function InboxPage() {
                                             const [y, m, d] = task.dueDate.split('-').map(Number);
                                             const due = new Date(y, m - 1, d);
                                             if (due < today) return '#ef4444';
-                                            if (due.getTime() === today.getTime()) return 'inherit'; // Inbox uses inherit for today usually? No, orange.
-                                            // Wait, previous code was: if (due.getTime() === today.getTime()) return '#f97316';
-                                            // But "Today" tasks usually aren't in Inbox?
-                                            // If they are, let's stick to previous code logic.
                                             if (due.getTime() === today.getTime()) return '#f97316';
                                             return 'inherit';
                                         })(),
@@ -166,24 +182,99 @@ export default function InboxPage() {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', position: 'relative' }}>
                     <button
-                        onClick={(e) => handleOpenMoveModal(task, e)}
-                        title="Move to list"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMenu(task.id);
+                        }}
+                        title="More options"
                         style={{
                             padding: '6px',
-                            background: 'none',
+                            background: isMenuOpen ? '#eee' : 'none',
                             border: 'none',
+                            borderRadius: '4px',
                             cursor: 'pointer',
-                            color: '#ccc',
-                            transition: 'color 0.2s',
+                            color: isMenuOpen ? '#333' : '#ccc',
+                            transition: 'color 0.2s, background-color 0.2s',
                             display: 'flex'
                         }}
                         onMouseEnter={e => e.currentTarget.style.color = '#666'}
-                        onMouseLeave={e => e.currentTarget.style.color = '#ccc'}
+                        onMouseLeave={e => e.currentTarget.style.color = isMenuOpen ? '#333' : '#ccc'}
                     >
                         <MoreHorizontal size={18} />
                     </button>
+
+                    {isMenuOpen && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                top: '100%',
+                                right: 0,
+                                marginTop: '4px',
+                                backgroundColor: '#fff',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                                borderRadius: '8px',
+                                zIndex: 10,
+                                minWidth: '160px',
+                                padding: '4px',
+                                border: '1px solid #eee'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                onClick={() => {
+                                    handleOpenMoveModal(task);
+                                    setActiveMenuId(null);
+                                }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    width: '100%',
+                                    padding: '8px 12px',
+                                    textAlign: 'left',
+                                    background: 'none',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem',
+                                    color: '#333'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                                <ArrowRight size={14} />
+                                Move to list
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setProblemToDelete(task);
+                                    setIsDeleteModalOpen(true);
+                                    setActiveMenuId(null);
+                                }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    width: '100%',
+                                    padding: '8px 12px',
+                                    textAlign: 'left',
+                                    background: 'none',
+                                    border: 'none',
+                                    borderRadius: '4px',
+                                    cursor: 'pointer',
+                                    fontSize: '0.875rem',
+                                    color: '#ef4444'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.backgroundColor = '#fee2e2'}
+                                onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                                <Trash2 size={14} />
+                                Delete
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         );
@@ -209,45 +300,37 @@ export default function InboxPage() {
                     e.stopPropagation();
                     setIsMoveListOpen(false);
                 }}>
-                    <div style={{
-                        backgroundColor: '#fff',
-                        padding: '1.5rem',
-                        borderRadius: '12px',
-                        width: '300px',
-                        maxWidth: '90%',
-                        maxHeight: '80vh',
-                        overflowY: 'auto'
-                    }} onClick={e => e.stopPropagation()}>
-                        <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Move to...</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {state.lists.map(l => (
-                                l.id !== 'inbox' && (
-                                    <button
-                                        key={l.id}
-                                        onClick={() => handleMoveToList(l.id)}
-                                        style={{
-                                            padding: '0.75rem',
-                                            textAlign: 'left',
-                                            backgroundColor: '#f9f9f9',
-                                            border: 'none',
-                                            borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            fontWeight: '500'
-                                        }}
-                                    >
-                                        {l.name}
-                                    </button>
-                                )
-                            ))}
-                            {state.lists.length <= 1 && <p style={{ color: '#888' }}>No other lists available.</p>}
+                    <InboxMoveListModalContent onClose={() => setIsMoveListOpen(false)}>
+                        <div style={{
+                            backgroundColor: '#fff',
+                            padding: '1.5rem',
+                            borderRadius: '12px',
+                            width: '300px',
+                            maxWidth: '90%',
+                            maxHeight: '80vh',
+                            overflowY: 'auto'
+                        }} onClick={e => e.stopPropagation()}>
+                            <h3 style={{ marginTop: 0, marginBottom: '1rem' }}>Move to...</h3>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {state.lists.map(l => (
+                                    l.id !== 'inbox' && (
+                                        <InboxMoveListOption
+                                            key={l.id}
+                                            list={l}
+                                            onMove={() => handleMoveToList(l.id)}
+                                        />
+                                    )
+                                ))}
+                                {state.lists.length <= 1 && <p style={{ color: '#888' }}>No other lists available.</p>}
+                            </div>
+                            <button
+                                onClick={() => setIsMoveListOpen(false)}
+                                style={{ marginTop: '1rem', width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '8px', background: 'none', cursor: 'pointer' }}
+                            >
+                                Cancel
+                            </button>
                         </div>
-                        <button
-                            onClick={() => setIsMoveListOpen(false)}
-                            style={{ marginTop: '1rem', width: '100%', padding: '0.5rem', border: '1px solid #ddd', borderRadius: '8px', background: 'none', cursor: 'pointer' }}
-                        >
-                            Cancel
-                        </button>
-                    </div>
+                    </InboxMoveListModalContent>
                 </div>
             )}
 
@@ -341,6 +424,65 @@ export default function InboxPage() {
                 parentId={null}
                 showListSelector={false}
             />
+
+            <ConfirmationModal
+                isOpen={isDeleteModalOpen}
+                onCancel={() => {
+                    setIsDeleteModalOpen(false);
+                    setProblemToDelete(null);
+                }}
+                onConfirm={() => {
+                    if (problemToDelete) {
+                        deleteProblem('inbox', problemToDelete.id);
+                        setIsDeleteModalOpen(false);
+                        setProblemToDelete(null);
+                    }
+                }}
+                title="Delete Problem"
+                message={`Are you sure you want to delete "${problemToDelete?.name || 'this problem'}"? This cannot be undone.`}
+                confirmText="Delete"
+                isDestructive={true}
+            />
         </div>
     );
 }
+
+
+function InboxMoveListOption({ list, onMove }: { list: { id: string, name: string, emoji?: string }, onMove: () => void }) {
+    const [isHovered, setIsHovered] = React.useState(false);
+    return (
+        <button
+            onClick={onMove}
+            style={{
+                padding: '0.75rem',
+                textAlign: 'left',
+                backgroundColor: isHovered ? '#eee' : '#f9f9f9',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                transition: 'background-color 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%'
+            }}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+        >
+            {list.emoji && <span style={{ marginRight: '0.5rem' }}>{list.emoji}</span>}
+            {list.name}
+        </button>
+    );
+}
+
+function InboxMoveListModalContent({ children, onClose }: { children: React.ReactNode, onClose: () => void }) {
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Escape') onClose();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [onClose]);
+    return <>{children}</>;
+}
+
