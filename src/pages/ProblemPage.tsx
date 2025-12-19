@@ -114,6 +114,8 @@ export default function ProblemPage() {
             if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
 
             // Shortcuts
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+
             if (e.key.toLowerCase() === 'd') {
                 e.preventDefault();
                 handleDeleteProblem(currentProblem.id);

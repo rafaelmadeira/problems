@@ -78,6 +78,7 @@ function App() {
           setCreateListModalOpen(true);
           break;
         case 'c': {
+          if (e.ctrlKey || e.metaKey || e.altKey) return;
           e.preventDefault();
           setCreateProblemContext({ listId: 'inbox', parentId: null, showSelector: true });
           setIsCreatingProblem(true);
