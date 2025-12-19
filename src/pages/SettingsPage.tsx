@@ -92,6 +92,55 @@ export default function SettingsPage() {
                     </div>
                 </section>
 
+                {/* Default View Setting */}
+                <section>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+                        <Layout size={20} color="#333" />
+                        <h2 style={{ fontSize: '1.2rem', fontWeight: 600, margin: 0 }}>Default View</h2>
+                    </div>
+                    <p style={{ margin: '0 0 1rem 0', color: '#666', fontSize: '0.9rem' }}>
+                        Choose which page opens when you start the app or click Home.
+                    </p>
+
+                    <div style={{
+                        padding: '1.5rem',
+                        backgroundColor: '#fff',
+                        borderRadius: '12px',
+                        border: '1px solid #f0f0f0'
+                    }}>
+                        <select
+                            value={state.settings.defaultView || 'inbox'}
+                            onChange={(e) => updateSettings({ defaultView: e.target.value })}
+                            style={{
+                                width: '100%',
+                                padding: '0.75rem',
+                                borderRadius: '8px',
+                                border: '1px solid #ddd',
+                                fontSize: '1rem',
+                                backgroundColor: '#fff',
+                                color: '#333',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <optgroup label="System Views">
+                                <option value="inbox">📥 Inbox</option>
+                                <option value="today">📅 Today</option>
+                                <option value="week">📅 This Week</option>
+                                <option value="upcoming">🗓️ Upcoming</option>
+                            </optgroup>
+                            {state.lists.length > 1 && (
+                                <optgroup label="My Lists">
+                                    {state.lists.filter(l => l.id !== 'inbox').map(list => (
+                                        <option key={list.id} value={list.id}>
+                                            {list.emoji ? `${list.emoji} ${list.name}` : list.name}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
+                        </select>
+                    </div>
+                </section>
+
             </div>
         </div>
     );

@@ -71,7 +71,7 @@ function App() {
           navigate('/upcoming');
           break;
         case 'h':
-          navigate('/');
+          navigate(getDefaultViewPath());
           break;
         case 'l':
           e.preventDefault();
@@ -271,6 +271,19 @@ function App() {
 
   const isSettingsActive = location.pathname === '/settings';
 
+  const getDefaultViewPath = () => {
+    const defaultView = state.settings.defaultView || 'inbox';
+    if (defaultView === 'inbox') return '/inbox';
+    if (defaultView === 'today') return '/today';
+    if (defaultView === 'week') return '/week';
+    if (defaultView === 'upcoming') return '/upcoming';
+    // Check if it's a list ID
+    if (state.lists.some(l => l.id === defaultView)) {
+      return `/list/${defaultView}`;
+    }
+    return '/inbox'; // Fallback
+  };
+
   // --- Two Column Layout ---
   if (effectiveLayout === 'two-columns') {
     return (
@@ -279,8 +292,8 @@ function App() {
           <Sidebar onOpenCreateProblem={() => setIsCreatingProblem(true)} />
           <main style={{ flex: 1, padding: '2rem 3rem' }}>
             <Routes>
-              {/* Redirect root to /today in 2-column mode to avoid empty/redundant page */}
-              <Route path="/" element={<Navigate to="/today" replace />} />
+              {/* Redirect root to configured default view */}
+              <Route path="/" element={<Navigate to={getDefaultViewPath()} replace />} />
               <Route path="/today" element={<TodayPage />} />
               <Route path="/inbox" element={<InboxPage />} />
               <Route path="/week" element={<ThisWeekPage />} />

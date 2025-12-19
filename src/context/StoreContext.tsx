@@ -32,7 +32,8 @@ const defaultState: AppState = {
         }
     ],
     settings: {
-        layout: 'two-columns'
+        layout: 'two-columns',
+        defaultView: 'inbox'
     }
 };
 
@@ -56,7 +57,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         if (!state.settings) {
             setState(prev => ({
                 ...prev,
-                settings: { layout: 'two-columns' }
+                settings: { layout: 'two-columns', defaultView: 'inbox' }
+            }));
+        } else if (!state.settings.defaultView) {
+            setState(prev => ({
+                ...prev,
+                settings: { ...prev.settings, defaultView: 'inbox' }
             }));
         }
     }, [state.lists]); // Check when lists change, though essentially runs once on load if needed.

@@ -32,6 +32,7 @@ export interface List {
 
 export interface AppSettings {
   layout: 'single-column' | 'two-columns';
+  defaultView?: string;
 }
 
 export interface AppState {
