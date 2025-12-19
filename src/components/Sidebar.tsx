@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Inbox, Calendar, Target, CalendarRange, Settings, CheckCircle2, Plus, Zap, CalendarClock } from 'lucide-react'; // Using Target for Unfinished/Focus
 import type { Problem } from '../types';
 import CreateListModal from './CreateListModal';
+import ShortcutsModal from './ShortcutsModal';
 
 export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: () => void }) {
     const { state, addList, reorderLists } = useStore();
@@ -11,6 +12,7 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
     const [isCreatingList, setIsCreatingList] = useState(false);
     // const [isCreatingProblem, setIsCreatingProblem] = useState(false); // Moved to App
     const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [isShortcutsOpen, setIsShortcutsOpen] = useState(false);
 
     const [isAddProblemHovered, setIsAddProblemHovered] = useState(false);
     const [isAddListHovered, setIsAddListHovered] = useState(false);
@@ -304,7 +306,7 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
             </div>
 
             {/* Footer Settings */}
-            <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '1rem', marginTop: '1rem' }}>
+            <div style={{ borderTop: '1px solid #f0f0f0', paddingTop: '1rem', marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Link
                     to="/settings"
                     style={{
@@ -319,7 +321,38 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
                     <Settings size={16} />
                     Settings
                 </Link>
+
+                <button
+                    onClick={() => setIsShortcutsOpen(true)}
+                    title="Keyboard Shortcuts"
+                    style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        border: '1px solid #eee',
+                        backgroundColor: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        color: '#999',
+                        fontSize: '0.875rem',
+                        padding: 0,
+                        fontWeight: 600
+                    }}
+                    onMouseEnter={e => {
+                        e.currentTarget.style.backgroundColor = '#f0f0f0';
+                        e.currentTarget.style.color = '#111';
+                    }}
+                    onMouseLeave={e => {
+                        e.currentTarget.style.backgroundColor = '#fff';
+                        e.currentTarget.style.color = '#999';
+                    }}
+                >
+                    ?
+                </button>
             </div>
+            <ShortcutsModal isOpen={isShortcutsOpen} onClose={() => setIsShortcutsOpen(false)} />
         </div>
     );
 }
