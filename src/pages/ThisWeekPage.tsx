@@ -14,6 +14,24 @@ interface FlatTask {
 /* 
   Recursive component for rendering a task and its children 
 */
+const isOverdue = (p: Problem): boolean => {
+    if (p.completed || !p.dueDate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [y, m, d] = p.dueDate.split('-').map(Number);
+    const due = new Date(y, m - 1, d);
+    return due < today;
+};
+
+const isDueToday = (p: Problem): boolean => {
+    if (p.completed || !p.dueDate) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const [y, m, d] = p.dueDate.split('-').map(Number);
+    const due = new Date(y, m - 1, d);
+    return due.getTime() === today.getTime();
+};
+
 const InternalTaskNode = ({
     problem,
     listId,
@@ -176,7 +194,10 @@ const InternalTaskNode = ({
                             )}
                             {problem.priority && problem.dueDate && <span>&middot;</span>}
                             {problem.dueDate && (
-                                <span>Due {problem.dueDate}</span>
+                                <span style={{
+                                    color: isOverdue(problem) ? '#ef4444' : isDueToday(problem) ? '#f97316' : 'inherit',
+                                    fontWeight: isOverdue(problem) || isDueToday(problem) ? 'bold' : 'normal'
+                                }}>Due {problem.dueDate}</span>
                             )}
                         </div>
                     )}

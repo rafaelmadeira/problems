@@ -135,7 +135,26 @@ export default function InboxPage() {
                                     </span>
                                 )}
                                 {task.dueDate && (
-                                    <span>Due {new Date(task.dueDate).toLocaleDateString()}</span>
+                                    <span style={{
+                                        color: (() => {
+                                            const today = new Date();
+                                            today.setHours(0, 0, 0, 0);
+                                            const [y, m, d] = task.dueDate.split('-').map(Number);
+                                            const due = new Date(y, m - 1, d);
+                                            if (due < today) return '#ef4444';
+                                            if (due.getTime() === today.getTime()) return '#f97316';
+                                            return 'inherit';
+                                        })(),
+                                        fontWeight: (() => {
+                                            const today = new Date();
+                                            today.setHours(0, 0, 0, 0);
+                                            const [y, m, d] = task.dueDate.split('-').map(Number);
+                                            const due = new Date(y, m - 1, d);
+                                            return (due < today || due.getTime() === today.getTime()) ? 'bold' : 'normal';
+                                        })()
+                                    }}>
+                                        Due {new Date(task.dueDate).toLocaleDateString()}
+                                    </span>
                                 )}
                             </div>
                         )}

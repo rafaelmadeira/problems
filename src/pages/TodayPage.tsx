@@ -523,7 +523,7 @@ function TaskItemInline({
                             <span>&middot;</span>
                             {problem.dueDate && (
                                 <span style={{
-                                    color: isOverdue(problem) ? '#ef4444' : 'inherit',
+                                    color: isOverdue(problem) ? '#ef4444' : isDueToday(problem) ? '#f97316' : '#888',
                                     fontWeight: isOverdue(problem) || isDueToday(problem) ? 'bold' : 'normal',
                                     marginRight: problem.estimatedDuration ? '0.5rem' : 0
                                 }}>
