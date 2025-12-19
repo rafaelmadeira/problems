@@ -181,7 +181,7 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
                 )}
                 <span style={{ fontSize: '0.875rem' }}>{label}</span>
             </div>
-            {count > 0 && <span style={{ fontSize: '0.8rem', color: '#999', fontWeight: isActive ? 600 : 400 }}>{count}</span>}
+            {count > 0 && <span style={{ fontSize: '12px', color: '#999', fontWeight: isActive ? 600 : 400 }}>{count}</span>}
         </Link>
     );
 
