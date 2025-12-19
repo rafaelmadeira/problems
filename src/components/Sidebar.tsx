@@ -127,8 +127,10 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
         setIsCreatingList(false);
     };
 
-    const handleDragStart = (index: number) => {
+    const handleDragStart = (e: React.DragEvent, index: number) => {
         setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = 'move';
+        // Optional: Set a drag image or transparent image if needed
     };
 
     const handleDragEnter = (targetIndex: number) => {
@@ -137,7 +139,12 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
         const draggedItem = newVisibleLists[draggedIndex];
         newVisibleLists.splice(draggedIndex, 1);
         newVisibleLists.splice(targetIndex, 0, draggedItem);
-        const newFullLists = inboxList ? [inboxList, ...newVisibleLists] : newVisibleLists;
+
+        // Reconstruct full list: verified Inbox always first, followed by reordered custom lists
+        const newFullLists = [];
+        if (inboxList) newFullLists.push(inboxList);
+        newFullLists.push(...newVisibleLists);
+
         reorderLists(newFullLists);
         setDraggedIndex(targetIndex);
     };
@@ -149,6 +156,7 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
     const NavItem = ({ to, label, icon: Icon, emoji, count, isActive }: any) => (
         <Link
             to={to}
+            draggable="false" // Prevent native link dragging
             style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -159,7 +167,8 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
                 backgroundColor: isActive ? '#f0f0f0' : 'transparent',
                 fontWeight: isActive ? 600 : 400,
                 textDecoration: 'none',
-                marginBottom: '0.25rem'
+                marginBottom: '0.25rem',
+                userSelect: 'none' // Prevent text selection while dragging
             }}
             onMouseEnter={e => !isActive && (e.currentTarget.style.backgroundColor = '#f9f9f9')}
             onMouseLeave={e => !isActive && (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -279,11 +288,17 @@ export default function Sidebar({ onOpenCreateProblem }: { onOpenCreateProblem: 
                         <div
                             key={list.id}
                             draggable
-                            onDragStart={() => handleDragStart(index)}
+                            onDragStart={(e) => handleDragStart(e, index)}
                             onDragEnter={() => handleDragEnter(index)}
                             onDragEnd={handleDragEnd}
-                            onDragOver={(e) => e.preventDefault()}
-                            style={{ opacity: draggedIndex === index ? 0.5 : 1 }}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                e.dataTransfer.dropEffect = 'move';
+                            }}
+                            style={{
+                                opacity: draggedIndex === index ? 0.5 : 1,
+                                cursor: 'grab'
+                            }}
                         >
                             <NavItem
                                 to={`/list/${list.id}`}
