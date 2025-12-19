@@ -5,6 +5,7 @@ import { ChevronRight, ChevronDown, Plus } from 'lucide-react';
 import type { Problem } from '../types';
 import CheckButton from '../components/CheckButton';
 import CreateProblemModal from '../components/CreateProblemModal';
+import { formatDueDate } from '../utils/dateUtils';
 
 interface FlatTask {
     problem: Problem;
@@ -557,7 +558,7 @@ function TaskItemInline({
                                     fontWeight: isOverdue(problem) || isDueToday(problem) ? 'bold' : 'normal',
                                     marginRight: problem.estimatedDuration ? '0.5rem' : 0
                                 }}>
-                                    Due {problem.dueDate}
+                                    Due {formatDueDate(problem.dueDate)}
                                 </span>
                             )}
                             {problem.estimatedDuration && (

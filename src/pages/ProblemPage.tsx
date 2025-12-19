@@ -2,14 +2,16 @@
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw, Smile } from 'lucide-react';
-import type { Problem } from '../types';
+import type { Problem, List, AppSettings } from '../types';
 import type { EmojiClickData } from 'emoji-picker-react';
 import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
 
 import FocusSession from '../components/FocusSession';
 import CreateProblemModal from '../components/CreateProblemModal';
 import ConfirmationModal from '../components/ConfirmationModal';
+import ShortcutsModal from '../components/ShortcutsModal';
 import CheckButton from '../components/CheckButton';
+import { formatDueDate } from '../utils/dateUtils';
 
 export default function ProblemPage() {
     const { listId, problemId } = useParams();
@@ -421,6 +423,12 @@ export default function ProblemPage() {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
                             <h3 style={{ margin: 0 }}>Session History</h3>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                {currentProblem.dueDate && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginRight: '0.5rem' }}>
+                                        <span style={{ color: '#888' }}>Due</span>
+                                        <span>{formatDueDate(currentProblem.dueDate)}</span>
+                                    </div>
+                                )}
                                 <div style={{ position: 'relative' }}>
                                     <button
                                         onClick={() => setIsHistoryMenuOpen(!isHistoryMenuOpen)}

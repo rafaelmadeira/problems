@@ -5,6 +5,7 @@ import { ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizo
 import type { Problem } from '../types';
 import CheckButton from '../components/CheckButton';
 import CreateProblemModal from '../components/CreateProblemModal';
+import { formatDueDate } from '../utils/dateUtils';
 
 interface FlatTask {
     problem: Problem;
@@ -196,9 +197,12 @@ const InternalTaskNode = ({
                             {problem.priority && problem.dueDate && <span>&middot;</span>}
                             {problem.dueDate && (
                                 <span style={{
-                                    color: isOverdue(problem) ? '#ef4444' : isDueToday(problem) ? '#f97316' : 'inherit',
-                                    fontWeight: isOverdue(problem) || isDueToday(problem) ? 'bold' : 'normal'
-                                }}>Due {problem.dueDate}</span>
+                                    color: isOverdue(problem) ? '#ef4444' : isDueToday(problem) ? '#f97316' : '#888',
+                                    fontWeight: isOverdue(problem) || isDueToday(problem) ? 'bold' : 'normal',
+                                    marginRight: problem.estimatedDuration ? '0.5rem' : 0
+                                }}>
+                                    Due {formatDueDate(problem.dueDate)}
+                                </span>
                             )}
                         </div>
                     )}

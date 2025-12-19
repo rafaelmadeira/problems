@@ -5,6 +5,7 @@ import { Plus, ChevronRight, MoreHorizontal } from 'lucide-react';
 import type { Problem } from '../types';
 import CreateProblemModal from '../components/CreateProblemModal';
 import CheckButton from '../components/CheckButton';
+import { formatDueDate } from '../utils/dateUtils';
 
 export default function InboxPage() {
     const { state, updateProblem, moveProblemToList } = useStore();
@@ -142,6 +143,10 @@ export default function InboxPage() {
                                             const [y, m, d] = task.dueDate.split('-').map(Number);
                                             const due = new Date(y, m - 1, d);
                                             if (due < today) return '#ef4444';
+                                            if (due.getTime() === today.getTime()) return 'inherit'; // Inbox uses inherit for today usually? No, orange.
+                                            // Wait, previous code was: if (due.getTime() === today.getTime()) return '#f97316';
+                                            // But "Today" tasks usually aren't in Inbox?
+                                            // If they are, let's stick to previous code logic.
                                             if (due.getTime() === today.getTime()) return '#f97316';
                                             return 'inherit';
                                         })(),
@@ -153,7 +158,7 @@ export default function InboxPage() {
                                             return (due < today || due.getTime() === today.getTime()) ? 'bold' : 'normal';
                                         })()
                                     }}>
-                                        Due {new Date(task.dueDate).toLocaleDateString()}
+                                        Due {formatDueDate(task.dueDate)}
                                     </span>
                                 )}
                             </div>

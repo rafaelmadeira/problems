@@ -4,6 +4,7 @@ import { useStore } from '../context/StoreContext';
 import { ChevronRight, ChevronDown, ChevronRight as ChevronRightIcon, MoreHorizontal } from 'lucide-react';
 import type { Problem } from '../types';
 import CheckButton from '../components/CheckButton';
+import { formatDueDate } from '../utils/dateUtils';
 
 interface FlatTask {
     problem: Problem;
@@ -294,10 +295,7 @@ export default function UpcomingPage() {
         setExpandedDates(prev => ({ ...prev, [date]: !prev[date] }));
     };
 
-    const formatDateHeading = (dateStr: string) => {
-        const date = new Date(dateStr + 'T12:00:00'); // midday to avoid timezone shift
-        return date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-    };
+
 
     return (
         <div style={{ paddingBottom: '4rem' }}>
@@ -347,7 +345,7 @@ export default function UpcomingPage() {
                                     }}
                                 >
                                     {expandedDates[date] ? <ChevronDown size={16} color="#999" /> : <ChevronRightIcon size={16} color="#999" />}
-                                    <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>{formatDateHeading(date)}</h2>
+                                    <h2 style={{ fontSize: '16px', fontWeight: '600', margin: 0, color: '#333' }}>{formatDueDate(date)}</h2>
                                     <span style={{ color: '#999', fontSize: '12px', fontWeight: 'normal', marginLeft: '0.25rem' }}>{groupedTasks[date].length}</span>
                                 </div>
 
