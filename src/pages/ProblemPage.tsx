@@ -2,14 +2,13 @@
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useStore } from '../context/StoreContext';
 import { ChevronRight, Plus, CheckCircle2, MoreHorizontal, Trash2, X, RotateCcw, Smile, ArrowRight } from 'lucide-react';
-import type { Problem, List, AppSettings } from '../types';
+import type { Problem } from '../types';
 import type { EmojiClickData } from 'emoji-picker-react';
 import EmojiPicker, { EmojiStyle } from 'emoji-picker-react';
 
 import FocusSession from '../components/FocusSession';
 import CreateProblemModal from '../components/CreateProblemModal';
 import ConfirmationModal from '../components/ConfirmationModal';
-import ShortcutsModal from '../components/ShortcutsModal';
 import CheckButton from '../components/CheckButton';
 import { formatDueDate } from '../utils/dateUtils';
 
