@@ -24,7 +24,7 @@ function App() {
   const navigate = useNavigate();
   const layout = state.settings?.layout || 'two-columns';
   const [isCreatingProblem, setIsCreatingProblem] = useState(false);
-  const [createProblemContext, setCreateProblemContext] = useState<{ listId: string, parentId: string | null }>({ listId: 'inbox', parentId: null });
+  const [createProblemContext, setCreateProblemContext] = useState<{ listId: string, parentId: string | null, showSelector: boolean }>({ listId: 'inbox', parentId: null, showSelector: true });
 
   // Filter user lists (excluding inbox)
   const userLists = state.lists.filter(l => l.id !== 'inbox');
@@ -79,7 +79,7 @@ function App() {
           break;
         case 'c': {
           e.preventDefault();
-          setCreateProblemContext({ listId: 'inbox', parentId: null });
+          setCreateProblemContext({ listId: 'inbox', parentId: null, showSelector: true });
           setIsCreatingProblem(true);
           break;
         }
@@ -101,7 +101,7 @@ function App() {
             }
           }
 
-          setCreateProblemContext({ listId, parentId });
+          setCreateProblemContext({ listId, parentId, showSelector: false });
           setIsCreatingProblem(true);
           break;
         }
@@ -292,9 +292,9 @@ function App() {
         <CreateProblemModal
           isOpen={isCreatingProblem}
           onClose={() => setIsCreatingProblem(false)}
-          defaultListId="inbox"
-          showListSelector={true}
-          parentId={null}
+          defaultListId={createProblemContext.listId}
+          showListSelector={createProblemContext.showSelector}
+          parentId={createProblemContext.parentId}
         />
       </div>
     );
@@ -520,7 +520,7 @@ function App() {
           isOpen={isCreatingProblem}
           onClose={() => setIsCreatingProblem(false)}
           defaultListId={createProblemContext.listId}
-          showListSelector={true}
+          showListSelector={createProblemContext.showSelector}
           parentId={createProblemContext.parentId}
         />
         <CreateListModal
